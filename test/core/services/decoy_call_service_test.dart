@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:safora_sos/core/services/audio_service.dart';
-import 'package:safora_sos/core/services/decoy_call_service.dart';
+import 'package:safora/core/services/audio_service.dart';
+import 'package:safora/core/services/decoy_call_service.dart';
 
 class MockAudioService extends Mock implements AudioService {}
 

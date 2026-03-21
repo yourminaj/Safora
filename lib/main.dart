@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:safora_sos/l10n/app_localizations.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'app.dart';
 import 'core/services/notification_service.dart';
@@ -98,7 +98,7 @@ void main() async {
   );
 }
 
-/// Root widget of the Safora SOS application.
+/// Root widget of the Safora application.
 class SaforaSosApp extends StatelessWidget {
   const SaforaSosApp({super.key});
 
@@ -106,7 +106,7 @@ class SaforaSosApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return wrapWithProviders(
       MaterialApp.router(
-        title: 'Safora SOS',
+        title: 'Safora',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,

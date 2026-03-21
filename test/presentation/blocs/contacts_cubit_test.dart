@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:safora_sos/data/datasources/contacts_local_datasource.dart';
-import 'package:safora_sos/data/models/emergency_contact.dart';
-import 'package:safora_sos/data/repositories/contacts_repository.dart';
-import 'package:safora_sos/presentation/blocs/contacts/contacts_cubit.dart';
-import 'package:safora_sos/presentation/blocs/contacts/contacts_state.dart';
+import 'package:safora/data/datasources/contacts_local_datasource.dart';
+import 'package:safora/data/models/emergency_contact.dart';
+import 'package:safora/data/repositories/contacts_repository.dart';
+import 'package:safora/presentation/blocs/contacts/contacts_cubit.dart';
+import 'package:safora/presentation/blocs/contacts/contacts_state.dart';
 
 class MockContactsRepository extends Mock implements ContactsRepository {}
 

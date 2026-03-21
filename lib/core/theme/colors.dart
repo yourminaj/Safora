@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Safora SOS brand color palette.
+/// Safora brand color palette.
 ///
 /// Emergency-focused with bold reds, calming blues, and status colors.
 abstract final class AppColors {

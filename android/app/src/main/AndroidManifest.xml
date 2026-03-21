@@ -19,7 +19,7 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
-        android:label="Safora SOS"
+        android:label="Safora"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

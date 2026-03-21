@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:safora_sos/data/datasources/profile_local_datasource.dart';
-import 'package:safora_sos/data/models/user_profile.dart';
-import 'package:safora_sos/data/repositories/profile_repository.dart';
+import 'package:safora/data/datasources/profile_local_datasource.dart';
+import 'package:safora/data/models/user_profile.dart';
+import 'package:safora/data/repositories/profile_repository.dart';
 
 class MockProfileLocalDataSource extends Mock
     implements ProfileLocalDataSource {}

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Safora SOS typography scale using Inter font family.
+/// Safora typography scale using Inter font family.
 abstract final class AppTypography {
   // ─── Display ─────────────────────────────────────────────
   static TextStyle displayLarge = GoogleFonts.inter(

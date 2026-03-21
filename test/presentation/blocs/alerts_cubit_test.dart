@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:safora_sos/core/constants/alert_types.dart';
-import 'package:safora_sos/core/services/notification_service.dart';
-import 'package:safora_sos/data/models/alert_event.dart';
-import 'package:safora_sos/data/repositories/alerts_repository.dart';
-import 'package:safora_sos/presentation/blocs/alerts/alerts_cubit.dart';
-import 'package:safora_sos/presentation/blocs/alerts/alerts_state.dart';
+import 'package:safora/core/constants/alert_types.dart';
+import 'package:safora/core/services/notification_service.dart';
+import 'package:safora/data/models/alert_event.dart';
+import 'package:safora/data/repositories/alerts_repository.dart';
+import 'package:safora/presentation/blocs/alerts/alerts_cubit.dart';
+import 'package:safora/presentation/blocs/alerts/alerts_state.dart';
 
 class MockAlertsRepository extends Mock implements AlertsRepository {}
 

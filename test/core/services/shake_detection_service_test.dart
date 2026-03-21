@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safora_sos/core/services/shake_detection_service.dart';
+import 'package:safora/core/services/shake_detection_service.dart';
 
 void main() {
   late ShakeDetectionService service;

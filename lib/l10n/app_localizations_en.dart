@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Safora SOS';
+  String get appTitle => 'Safora';
 
   @override
   String get allSafe => 'All Safe';

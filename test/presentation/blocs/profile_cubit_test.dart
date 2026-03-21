@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:safora_sos/data/models/user_profile.dart';
-import 'package:safora_sos/data/repositories/profile_repository.dart';
-import 'package:safora_sos/presentation/blocs/profile/profile_cubit.dart';
-import 'package:safora_sos/presentation/blocs/profile/profile_state.dart';
+import 'package:safora/data/models/user_profile.dart';
+import 'package:safora/data/repositories/profile_repository.dart';
+import 'package:safora/presentation/blocs/profile/profile_cubit.dart';
+import 'package:safora/presentation/blocs/profile/profile_state.dart';
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
 

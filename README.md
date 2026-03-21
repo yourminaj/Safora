@@ -1,3 +1,3 @@
-# safora_sos
+# Safora
 
 A new Flutter project.

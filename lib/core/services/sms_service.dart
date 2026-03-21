@@ -31,7 +31,7 @@ class SmsService {
     final message = '🚨 EMERGENCY SOS!\n\n'
         '$name needs immediate help!\n\n'
         '$locationMsg\n\n'
-        'Sent via Safora SOS';
+        'Sent via Safora';
 
     int sent = 0;
     for (final contact in contacts) {
@@ -57,7 +57,7 @@ class SmsService {
     final message = '🔋 LOW BATTERY ALERT\n\n'
         '$name\'s phone is at $batteryLevel% battery.\n\n'
         'Last known $locationMsg\n\n'
-        'Sent via Safora SOS';
+        'Sent via Safora';
 
     return _sendSms(phone: contact.phone, message: message);
   }

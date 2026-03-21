@@ -172,11 +172,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _SettingsTile(
                 icon: Icons.info_outline_rounded,
                 title: 'About',
-                subtitle: 'Safora SOS v1.0.0',
+                subtitle: 'Safora v1.0.0',
                 onTap: () {
                   showAboutDialog(
                     context: context,
-                    applicationName: 'Safora SOS',
+                    applicationName: 'Safora',
                     applicationVersion: '0.1.0',
                     applicationLegalese: '© 2026 Safora Technologies',
                     children: [

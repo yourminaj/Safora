@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:safora_sos/core/services/audio_service.dart';
-import 'package:safora_sos/data/repositories/contacts_repository.dart';
-import 'package:safora_sos/domain/usecases/trigger_sos_usecase.dart';
-import 'package:safora_sos/presentation/blocs/sos/sos_cubit.dart';
-import 'package:safora_sos/presentation/blocs/sos/sos_state.dart';
+import 'package:safora/core/services/audio_service.dart';
+import 'package:safora/data/repositories/contacts_repository.dart';
+import 'package:safora/domain/usecases/trigger_sos_usecase.dart';
+import 'package:safora/presentation/blocs/sos/sos_cubit.dart';
+import 'package:safora/presentation/blocs/sos/sos_state.dart';
 
 class MockAudioService extends Mock implements AudioService {}
 

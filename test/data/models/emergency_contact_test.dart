@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safora_sos/data/models/emergency_contact.dart';
+import 'package:safora/data/models/emergency_contact.dart';
 
 void main() {
   group('EmergencyContact', () {

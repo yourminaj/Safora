@@ -26,7 +26,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       icon: Icons.notifications_active_rounded,
       title: 'Stay Protected 24/7',
       description:
-          'Safora SOS monitors for emergencies, disasters, and safety threats — alerting your family instantly with your GPS location.',
+          'Safora monitors for emergencies, disasters, and safety threats — alerting your family instantly with your GPS location.',
       color: AppColors.primary,
     ),
     _OnboardingPage(

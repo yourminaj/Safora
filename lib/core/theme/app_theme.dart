@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'colors.dart';
 
-/// Safora SOS Material 3 theme configuration.
+/// Safora Material 3 theme configuration.
 abstract final class AppTheme {
   // ─── Light Theme ─────────────────────────────────────────
   static ThemeData get light => ThemeData(

@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// The application name
   ///
   /// In en, this message translates to:
-  /// **'Safora SOS'**
+  /// **'Safora'**
   String get appTitle;
 
   /// No description provided for @allSafe.

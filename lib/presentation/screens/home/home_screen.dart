@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Icon(Icons.shield_rounded, color: Colors.white),
                   const SizedBox(width: 8),
                   Text(
-                    'Safora SOS',
+                    'Safora',
                     style: AppTypography.titleLarge.copyWith(
                       color: Colors.white,
                     ),

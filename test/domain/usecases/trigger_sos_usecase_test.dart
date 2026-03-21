@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:safora_sos/core/services/location_service.dart';
-import 'package:safora_sos/core/services/notification_service.dart';
-import 'package:safora_sos/core/services/sms_service.dart';
-import 'package:safora_sos/data/models/emergency_contact.dart';
-import 'package:safora_sos/domain/usecases/trigger_sos_usecase.dart';
+import 'package:safora/core/services/location_service.dart';
+import 'package:safora/core/services/notification_service.dart';
+import 'package:safora/core/services/sms_service.dart';
+import 'package:safora/data/models/emergency_contact.dart';
+import 'package:safora/domain/usecases/trigger_sos_usecase.dart';
 
 class MockSmsService extends Mock implements SmsService {}
 

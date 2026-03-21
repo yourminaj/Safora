@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Safora SOS",
+  "appTitle": "Safora",
   "@appTitle": { "description": "The application name" },
 
   "allSafe": "All Safe",

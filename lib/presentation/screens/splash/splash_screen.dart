@@ -6,7 +6,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../injection.dart';
 
-/// Animated splash screen with Safora SOS branding.
+/// Animated splash screen with Safora branding.
 ///
 /// Checks if the user has completed onboarding — navigates to
 /// `/onboarding` on first launch, `/home` on subsequent launches.

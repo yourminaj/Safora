@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Safora SOS</string>
+	<string>Safora</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Safora SOS</string>
+	<string>Safora</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -29,9 +29,9 @@
 
 	<!-- Location permission: used to send GPS coordinates in SOS alerts -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Safora SOS needs your location to share GPS coordinates with your emergency contacts during SOS alerts and to show nearby disaster warnings.</string>
+	<string>Safora needs your location to share GPS coordinates with your emergency contacts during SOS alerts and to show nearby disaster warnings.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Safora SOS needs background location access to send accurate GPS coordinates during emergencies, even when the app is in the background.</string>
+	<string>Safora needs background location access to send accurate GPS coordinates during emergencies, even when the app is in the background.</string>
 
 	<key>UIApplicationSceneManifest</key>
 	<dict>
