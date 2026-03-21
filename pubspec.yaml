@@ -1,0 +1,94 @@
+name: safora_sos
+description: "Your Family's Safety Guardian — All-in-one personal safety & emergency alert app."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.8
+
+  # Navigation
+  go_router: ^17.1.0
+
+  # Dependency Injection
+  get_it: ^9.2.1
+
+  # Firebase (will configure later)
+  # firebase_core: any
+  # firebase_auth: any
+  # cloud_firestore: any
+  # firebase_messaging: any
+  # firebase_crashlytics: any
+  # firebase_analytics: any
+  # firebase_remote_config: any
+
+  # Location & Maps
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+
+  # Sensors
+  sensors_plus: ^7.0.0
+
+  # Audio
+  audioplayers: ^6.6.0
+
+  # Permissions
+  permission_handler: ^12.0.1
+
+  # Local Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Notifications
+  flutter_local_notifications: ^21.0.0
+
+  # UI Enhancements
+  google_fonts: ^8.0.2
+  shimmer: ^3.0.0
+  animate_do: ^4.2.0
+  flutter_svg: ^2.2.4
+
+  # Connectivity
+  connectivity_plus: ^7.0.0
+
+  # Battery
+  battery_plus: ^7.0.0
+
+  # URL Launcher
+  url_launcher: ^6.3.2
+
+  # HTTP Client
+  http: ^1.6.0
+
+  # Share
+  share_plus: ^12.0.1
+
+  # Intl / Date
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.13
+  hive_generator: ^2.0.1
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/sounds/
+    - assets/images/
+    - assets/lottie/
+    - assets/ml_models/
