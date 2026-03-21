@@ -75,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen> {
               duration: const Duration(milliseconds: 800),
               delay: const Duration(milliseconds: 400),
               child: Text(
-                'SAFORA SOS',
+                'SAFORA',
                 style: AppTypography.emergencyBanner.copyWith(
                   color: Colors.white,
                   letterSpacing: 4,
