@@ -89,7 +89,7 @@ void main() async {
 
   // Catch all uncaught async errors in the zone.
   runZonedGuarded(
-    () => runApp(const SaforaSosApp()),
+    () => runApp(const SaforaApp()),
     (error, stackTrace) {
       // TODO: Replace with FirebaseCrashlytics.instance.recordError(error, stackTrace);
       debugPrint('[UncaughtError] $error');
@@ -99,8 +99,8 @@ void main() async {
 }
 
 /// Root widget of the Safora application.
-class SaforaSosApp extends StatelessWidget {
-  const SaforaSosApp({super.key});
+class SaforaApp extends StatelessWidget {
+  const SaforaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
