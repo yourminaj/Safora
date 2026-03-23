@@ -13,6 +13,8 @@ import 'presentation/blocs/reminders/reminders_cubit.dart';
 import 'presentation/blocs/sos/sos_cubit.dart';
 import 'presentation/screens/splash/splash_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
+import 'presentation/screens/auth/login_screen.dart';
+import 'presentation/screens/auth/signup_screen.dart';
 import 'presentation/screens/home/home_screen.dart';
 import 'presentation/screens/contacts/contacts_screen.dart';
 import 'presentation/screens/contacts/add_contact_screen.dart';
@@ -27,6 +29,8 @@ import 'presentation/screens/decoycall/decoy_call_screen.dart';
 abstract final class AppRoutes {
   static const String splash = '/';
   static const String onboarding = '/onboarding';
+  static const String login = '/login';
+  static const String signup = '/signup';
   static const String home = '/home';
   static const String contacts = '/contacts';
   static const String addContact = '/contacts/add';
@@ -71,6 +75,14 @@ GoRouter createRouter() => GoRouter(
         GoRoute(
           path: AppRoutes.onboarding,
           builder: (context, state) => const OnboardingScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.login,
+          builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.signup,
+          builder: (context, state) => const SignupScreen(),
         ),
         GoRoute(
           path: AppRoutes.home,

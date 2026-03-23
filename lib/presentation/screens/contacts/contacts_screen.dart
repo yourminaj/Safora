@@ -4,9 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/services/ad_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
+import '../../../data/datasources/contacts_cloud_sync.dart';
 import '../../../data/models/emergency_contact.dart';
+import '../../../injection.dart';
 import '../../blocs/contacts/contacts_cubit.dart';
 import '../../blocs/contacts/contacts_state.dart';
 import '../../widgets/ad_banner_widget.dart';
@@ -26,12 +29,108 @@ class _ContactsScreenState extends State<ContactsScreen> {
     context.read<ContactsCubit>().loadContacts();
   }
 
+  Future<void> _handleCloudSync(String action, BuildContext ctx) async {
+    final cloudSync = getIt<ContactsCloudSync>();
+    final messenger = ScaffoldMessenger.of(ctx);
+
+    // Show loading.
+    showDialog(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      if (action == 'backup') {
+        final state = ctx.read<ContactsCubit>().state;
+        final contacts =
+            state is ContactsLoaded ? state.contacts : <EmergencyContact>[];
+        await cloudSync.syncToCloud(contacts);
+        if (ctx.mounted) Navigator.pop(ctx);
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('${contacts.length} contacts backed up ✓'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else if (action == 'restore') {
+        final cloudContacts = await cloudSync.syncFromCloud();
+        if (ctx.mounted) Navigator.pop(ctx);
+        if (cloudContacts.isEmpty) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('No contacts found in cloud'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else {
+          // Add each cloud contact locally.
+          for (final contact in cloudContacts) {
+            if (ctx.mounted) {
+              ctx.read<ContactsCubit>().addContact(
+                    name: contact.name,
+                    phone: contact.phone,
+                    relationship: contact.relationship,
+                  );
+            }
+          }
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text('${cloudContacts.length} contacts restored ✓'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (ctx.mounted) Navigator.pop(ctx);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Sync failed: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
       bottomNavigationBar: AdBanner(adUnitId: AdService.bannerContacts),
-      appBar: AppBar(title: Text(l.emergencyContacts)),
+      appBar: AppBar(
+        title: Text(l.emergencyContacts),
+        actions: [
+          if (getIt<AuthService>().isSignedIn)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.cloud_outlined),
+              tooltip: 'Cloud Sync',
+              onSelected: (value) => _handleCloudSync(value, context),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'backup',
+                  child: Row(
+                    children: [
+                      Icon(Icons.cloud_upload_outlined, size: 20),
+                      SizedBox(width: 8),
+                      Text('Backup to Cloud'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'restore',
+                  child: Row(
+                    children: [
+                      Icon(Icons.cloud_download_outlined, size: 20),
+                      SizedBox(width: 8),
+                      Text('Restore from Cloud'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
       floatingActionButton: BlocBuilder<ContactsCubit, ContactsState>(
         builder: (context, state) {
           final isLimit = state is ContactsLoaded && state.isLimitReached;

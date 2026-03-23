@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:hive/hive.dart';
 import 'package:safora/l10n/app_localizations.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../injection.dart';
@@ -37,7 +38,13 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (onboardingDone) {
-      context.go('/home');
+      // Check if user is signed in.
+      final isSignedIn = getIt<AuthService>().isSignedIn;
+      if (isSignedIn) {
+        context.go('/home');
+      } else {
+        context.go('/login');
+      }
     } else {
       context.go('/onboarding');
     }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/services/ad_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/services/shake_detection_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
@@ -288,7 +289,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   showAboutDialog(
                     context: context,
                     applicationName: l.appTitle,
-                    applicationVersion: '0.1.0',
+                    applicationVersion: '1.1.0',
                     applicationLegalese: l.saforaLegalese,
                     children: [
                       const SizedBox(height: 16),
@@ -299,6 +300,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
+          // ── Account Actions ────────────────────────────
+          const Divider(height: 32),
+          if (getIt<AuthService>().isSignedIn)
+            _SettingsTile(
+              icon: Icons.logout_rounded,
+              title: 'Sign Out',
+              subtitle: getIt<AuthService>().currentUser?.email ?? '',
+              onTap: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Sign Out'),
+                    content: const Text('Are you sure you want to sign out?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Sign Out'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true && context.mounted) {
+                  await getIt<AuthService>().signOut();
+                  if (context.mounted) context.go('/login');
+                }
+              },
+            )
+          else
+            _SettingsTile(
+              icon: Icons.login_rounded,
+              title: 'Sign In',
+              subtitle: 'Sync your contacts to the cloud',
+              onTap: () => context.go('/login'),
+            ),
         ],
       ),
     );

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:safora/core/services/auth_service.dart';
 import 'package:safora/core/services/audio_service.dart';
 import 'package:safora/core/services/notification_service.dart';
+import 'package:safora/data/datasources/contacts_cloud_sync.dart';
 import 'package:safora/data/repositories/alerts_repository.dart';
 import 'package:safora/data/repositories/contacts_repository.dart';
 import 'package:safora/data/repositories/profile_repository.dart';
@@ -31,6 +34,10 @@ class MockRemindersRepository extends Mock implements RemindersRepository {}
 
 class MockNotificationService extends Mock implements NotificationService {}
 
+class MockAuthService extends Mock implements AuthService {}
+
+class MockContactsCloudSync extends Mock implements ContactsCloudSync {}
+
 // ─── Test Wrapper ─────────────────────────────────────────────
 /// Wraps a widget under test with all required providers and
 /// MaterialApp shell so localization and BLoC access work in tests.
@@ -49,6 +56,18 @@ Widget buildTestableWidget({
   final mockProfileRepo = MockProfileRepository();
   final mockRemindersRepo = MockRemindersRepository();
   final mockNotificationSvc = MockNotificationService();
+
+  // Register GetIt mocks for screens that use getIt<> directly.
+  final getIt = GetIt.instance;
+  if (!getIt.isRegistered<AuthService>()) {
+    final mockAuth = MockAuthService();
+    when(() => mockAuth.isSignedIn).thenReturn(false);
+    when(() => mockAuth.currentUser).thenReturn(null);
+    getIt.registerSingleton<AuthService>(mockAuth);
+  }
+  if (!getIt.isRegistered<ContactsCloudSync>()) {
+    getIt.registerSingleton<ContactsCloudSync>(MockContactsCloudSync());
+  }
 
   // Stub commonly-called methods.
   when(() => mockAudio.playSiren()).thenAnswer((_) async {});
