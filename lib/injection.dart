@@ -12,6 +12,7 @@ import 'core/services/shake_detection_service.dart';
 import 'core/services/sms_service.dart';
 import 'detection/ml/crash_fall_detection_service.dart';
 import 'data/datasources/alerts_local_datasource.dart';
+import 'data/datasources/contacts_cloud_sync.dart';
 import 'data/datasources/contacts_local_datasource.dart';
 import 'data/datasources/disaster_api_client.dart';
 import 'data/datasources/profile_local_datasource.dart';
@@ -97,6 +98,10 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<DisasterApiClient>(
     () => DisasterApiClient(),
     dispose: (client) => client.dispose(),
+  );
+
+  getIt.registerLazySingleton<ContactsCloudSync>(
+    () => ContactsCloudSync(authService: getIt<AuthService>()),
   );
 
   // ── Repositories ───────────────────────────────────────

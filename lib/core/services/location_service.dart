@@ -84,10 +84,7 @@ class LocationService {
 
   /// Generate a Google Maps link for the given position.
   String generateMapsLink(Position position) {
-    return ApiEndpoints.googleMapsLink(
-      position.latitude,
-      position.longitude,
-    );
+    return ApiEndpoints.googleMapsLink(position.latitude, position.longitude);
   }
 
   /// Build a full emergency location message.

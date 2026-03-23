@@ -51,9 +51,9 @@ class _ContactsScreenState extends State<ContactsScreen> {
             _showLimitDialog(context);
           }
           if (state is ContactsError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         builder: (context, state) {
@@ -112,10 +112,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l.ok),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.ok)),
         ],
       ),
     );
@@ -140,9 +137,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                 context.read<ContactsCubit>().deleteContact(contact.id!);
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.danger,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             child: Text(l.remove),
           ),
         ],
@@ -214,28 +209,18 @@ class _ContactCard extends StatelessWidget {
               ? AppColors.primary
               : AppColors.secondary.withValues(alpha: 0.1),
           child: Icon(
-            contact.isPrimary
-                ? Icons.star_rounded
-                : Icons.person_rounded,
-            color: contact.isPrimary
-                ? Colors.white
-                : AppColors.secondary,
+            contact.isPrimary ? Icons.star_rounded : Icons.person_rounded,
+            color: contact.isPrimary ? Colors.white : AppColors.secondary,
           ),
         ),
         title: Row(
           children: [
             Expanded(
-              child: Text(
-                contact.name,
-                style: AppTypography.titleSmall,
-              ),
+              child: Text(contact.name, style: AppTypography.titleSmall),
             ),
             if (contact.isPrimary)
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -301,11 +286,16 @@ class _ContactCard extends StatelessWidget {
               value: 'delete',
               child: Row(
                 children: [
-                  const Icon(Icons.delete_rounded,
-                      size: 18, color: AppColors.danger),
+                  const Icon(
+                    Icons.delete_rounded,
+                    size: 18,
+                    color: AppColors.danger,
+                  ),
                   const SizedBox(width: 8),
-                  Text(l.remove,
-                      style: const TextStyle(color: AppColors.danger)),
+                  Text(
+                    l.remove,
+                    style: const TextStyle(color: AppColors.danger),
+                  ),
                 ],
               ),
             ),

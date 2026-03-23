@@ -14,36 +14,32 @@ import '../../data/models/alert_event.dart';
 /// - Medium → yellow
 /// - Low → green
 class AlertCard extends StatelessWidget {
-  const AlertCard({
-    super.key,
-    required this.alert,
-    this.onTap,
-  });
+  const AlertCard({super.key, required this.alert, this.onTap});
 
   final AlertEvent alert;
   final VoidCallback? onTap;
 
   Color get _priorityColor => switch (alert.type.priority) {
-        AlertPriority.critical => AppColors.danger,
-        AlertPriority.high => AppColors.warning,
-        AlertPriority.medium => const Color(0xFFFFD54F),
-        AlertPriority.low => AppColors.safe,
-      };
+    AlertPriority.critical => AppColors.danger,
+    AlertPriority.high => AppColors.warning,
+    AlertPriority.medium => const Color(0xFFFFD54F),
+    AlertPriority.low => AppColors.safe,
+  };
 
   IconData get _categoryIcon => switch (alert.type.category) {
-        AlertCategory.naturalDisaster => Icons.public_rounded,
-        AlertCategory.weatherEmergency => Icons.thunderstorm_rounded,
-        AlertCategory.healthMedical => Icons.medical_services_rounded,
-        AlertCategory.vehicleTransport => Icons.directions_car_rounded,
-        AlertCategory.personalSafety => Icons.shield_rounded,
-        AlertCategory.homeDomestic => Icons.home_rounded,
-        AlertCategory.workplace => Icons.engineering_rounded,
-        AlertCategory.waterMarine => Icons.water_rounded,
-        AlertCategory.travelOutdoor => Icons.terrain_rounded,
-        AlertCategory.environmentalChemical => Icons.science_rounded,
-        AlertCategory.digitalCyber => Icons.phone_android_rounded,
-        AlertCategory.childElder => Icons.child_care_rounded,
-      };
+    AlertCategory.naturalDisaster => Icons.public_rounded,
+    AlertCategory.weatherEmergency => Icons.thunderstorm_rounded,
+    AlertCategory.healthMedical => Icons.medical_services_rounded,
+    AlertCategory.vehicleTransport => Icons.directions_car_rounded,
+    AlertCategory.personalSafety => Icons.shield_rounded,
+    AlertCategory.homeDomestic => Icons.home_rounded,
+    AlertCategory.workplace => Icons.engineering_rounded,
+    AlertCategory.waterMarine => Icons.water_rounded,
+    AlertCategory.travelOutdoor => Icons.terrain_rounded,
+    AlertCategory.environmentalChemical => Icons.science_rounded,
+    AlertCategory.digitalCyber => Icons.phone_android_rounded,
+    AlertCategory.childElder => Icons.child_care_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -77,11 +73,7 @@ class AlertCard extends StatelessWidget {
                   color: _priorityColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  _categoryIcon,
-                  color: _priorityColor,
-                  size: 22,
-                ),
+                child: Icon(_categoryIcon, color: _priorityColor, size: 22),
               ),
 
               const SizedBox(width: 12),

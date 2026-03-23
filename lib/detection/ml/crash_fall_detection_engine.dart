@@ -96,9 +96,9 @@ class CrashFallDetectionEngine {
     this.postImpactWindowMs = 2000,
     this.samplingRateHz = 50,
   }) : _signalProcessor = SignalProcessor(
-          smoothingFactor: 0.8,
-          windowSize: samplingRateHz * 2, // 2-second window
-        );
+         smoothingFactor: 0.8,
+         windowSize: samplingRateHz * 2, // 2-second window
+       );
 
   // ── Thresholds (from research) ────────────────────────────
 
@@ -290,8 +290,9 @@ class CrashFallDetectionEngine {
     double score = 0;
 
     // G-force score (40%): Normalized relative to detection threshold.
-    final threshold =
-        type == DetectionType.vehicleCrash ? crashThresholdG : fallThresholdG;
+    final threshold = type == DetectionType.vehicleCrash
+        ? crashThresholdG
+        : fallThresholdG;
     final gRatio = (peakG / threshold).clamp(0.0, 3.0) / 3.0;
     score += gRatio * 0.40;
 

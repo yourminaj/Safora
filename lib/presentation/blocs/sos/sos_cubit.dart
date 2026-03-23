@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/services/audio_service.dart';
+import '../../../core/services/sos_foreground_service.dart';
 import '../../../data/repositories/contacts_repository.dart';
 import '../../../domain/usecases/trigger_sos_usecase.dart';
 import 'sos_state.dart';
@@ -70,6 +71,9 @@ class SosCubit extends Cubit<SosState> {
     // Play siren (fire-and-forget — siren runs independently from SMS flow).
     unawaited(_audioService.playSiren());
 
+    // Start foreground service to keep SOS alive when app goes to background.
+    unawaited(SosForegroundService.instance.start());
+
     // Send SMS + notification via use case.
     final contacts = _contactsRepository.getAll();
     await _triggerSosUseCase.execute(contacts: contacts);
@@ -79,6 +83,7 @@ class SosCubit extends Cubit<SosState> {
   Future<void> deactivateSos() async {
     await _audioService.stopAll();
     await _triggerSosUseCase.cancel();
+    await SosForegroundService.instance.stop();
     _countdownTimer?.cancel();
     _countdownTimer = null;
     _secondsRemaining = countdownDuration;

@@ -52,8 +52,7 @@ class _DecoyCallScreenState extends State<DecoyCallScreen>
     // so the user can't swipe back to the ringing screen.
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) =>
-            InCallScreen(callerName: _decoyCallService.callerName),
+        builder: (_) => InCallScreen(callerName: _decoyCallService.callerName),
       ),
     );
   }
@@ -80,10 +79,7 @@ class _DecoyCallScreenState extends State<DecoyCallScreen>
               animation: _pulseController,
               builder: (context, child) {
                 final scale = 1.0 + _pulseController.value * 0.08;
-                return Transform.scale(
-                  scale: scale,
-                  child: child,
-                );
+                return Transform.scale(scale: scale, child: child);
               },
               child: Container(
                 width: 110,
@@ -91,10 +87,7 @@ class _DecoyCallScreenState extends State<DecoyCallScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
-                    colors: [
-                      AppColors.secondary,
-                      AppColors.secondaryDark,
-                    ],
+                    colors: [AppColors.secondary, AppColors.secondaryDark],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -108,9 +101,7 @@ class _DecoyCallScreenState extends State<DecoyCallScreen>
                 ),
                 child: Center(
                   child: Text(
-                    callerName.isNotEmpty
-                        ? callerName[0].toUpperCase()
-                        : '?',
+                    callerName.isNotEmpty ? callerName[0].toUpperCase() : '?',
                     style: AppTypography.headlineLarge.copyWith(
                       color: Colors.white,
                       fontSize: 44,
