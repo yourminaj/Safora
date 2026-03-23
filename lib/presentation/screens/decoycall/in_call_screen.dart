@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 
@@ -48,6 +49,7 @@ class _InCallScreenState extends State<InCallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A2E),
       body: SafeArea(
@@ -105,19 +107,19 @@ class _InCallScreenState extends State<InCallScreen> {
                 children: [
                   _ControlButton(
                     icon: _isMuted ? Icons.mic_off : Icons.mic,
-                    label: 'Mute',
+                    label: l.mute,
                     isActive: _isMuted,
                     onTap: () => setState(() => _isMuted = !_isMuted),
                   ),
                   _ControlButton(
                     icon: Icons.dialpad,
-                    label: 'Keypad',
+                    label: l.keypad,
                     onTap: () {},
                   ),
                   _ControlButton(
                     icon:
                         _isSpeaker ? Icons.volume_up : Icons.volume_up_outlined,
-                    label: 'Speaker',
+                    label: l.speaker,
                     isActive: _isSpeaker,
                     onTap: () => setState(() => _isSpeaker = !_isSpeaker),
                   ),
@@ -148,7 +150,7 @@ class _InCallScreenState extends State<InCallScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'End Call',
+              l.endCall,
               style: AppTypography.labelMedium.copyWith(
                 color: Colors.white.withValues(alpha: 0.7),
               ),

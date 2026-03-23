@@ -1,26 +1,37 @@
 import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'app.dart';
+import 'core/services/ad_service.dart';
+import 'core/services/app_logger.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/shake_detection_service.dart';
+import 'core/services/sos_foreground_service.dart';
 import 'core/theme/app_theme.dart';
 import 'injection.dart';
 import 'presentation/blocs/sos/sos_cubit.dart';
 
+/// FCM background message handler — must be a top-level function.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  // Background messages are handled by the system notification tray.
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ── Global Error Handling (Enterprise) ──────────────────
-  // Catch all Flutter framework errors (widget build, layout, painting).
-  FlutterError.onError = (FlutterErrorDetails details) {
-    // TODO: Replace with FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-    debugPrint('[FlutterError] ${details.exceptionAsString()}');
-    debugPrint(details.stack?.toString() ?? 'No stack trace');
-  };
+  // ── Global Error Handling ──────────────────────────────
+  // Uses centralized AppLogger. When adding Firebase Crashlytics,
+  // call AppLogger.configureCrashReporting() after Firebase.initializeApp().
+  FlutterError.onError = AppLogger.handleFlutterError;
 
   // Show a friendly error widget in production instead of the red error screen.
   ErrorWidget.builder = (FlutterErrorDetails details) {
@@ -39,11 +50,19 @@ void main() async {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  details.exceptionAsString(),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 14, color: Colors.grey),
-                ),
+                // Only show exception details in debug mode.
+                if (kDebugMode)
+                  Text(
+                    details.exceptionAsString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  )
+                else
+                  const Text(
+                    'Please restart the app. If the problem persists, contact support.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
               ],
             ),
           ),
@@ -69,11 +88,32 @@ void main() async {
   // Initialize Hive for local storage.
   await Hive.initFlutter();
 
+  // ── Firebase (must init before services that depend on FCM) ──
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Wire Crashlytics into AppLogger for production error tracking.
+  if (!kDebugMode) {
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    AppLogger.configureCrashReporting(
+      errorCallback: (msg, error, stack) =>
+          FirebaseCrashlytics.instance.recordError(error, stack, reason: msg),
+      flutterErrorCallback: (details) =>
+          FirebaseCrashlytics.instance.recordFlutterFatalError(details),
+    );
+  }
+
   // Initialize dependency injection (opens Hive boxes).
   await configureDependencies();
 
-  // Eagerly initialize notification channels (fix: don't wait until first SOS).
+  // Eagerly initialize notification channels + FCM.
   await getIt<NotificationService>().init();
+
+  // Initialize SOS foreground service config.
+  SosForegroundService.instance.init();
+
+  // Initialize Google Mobile Ads SDK.
+  await AdService.initialize();
 
   // Auto-start shake detection if user previously enabled it.
   final appSettings = getIt<Box>(instanceName: 'app_settings');
@@ -84,17 +124,10 @@ void main() async {
     );
   }
 
-  // Firebase initialization deferred to Phase 2 (analytics + crashlytics).
-  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   // Catch all uncaught async errors in the zone.
   runZonedGuarded(
     () => runApp(const SaforaApp()),
-    (error, stackTrace) {
-      // TODO: Replace with FirebaseCrashlytics.instance.recordError(error, stackTrace);
-      debugPrint('[UncaughtError] $error');
-      debugPrint(stackTrace.toString());
-    },
+    AppLogger.handleUncaughtError,
   );
 }
 

@@ -1,6 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
+import 'core/services/app_logger.dart';
+import 'core/services/auth_service.dart';
 import 'core/services/audio_service.dart';
 import 'core/services/battery_service.dart';
 import 'core/services/connectivity_service.dart';
@@ -9,18 +10,22 @@ import 'core/services/location_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/shake_detection_service.dart';
 import 'core/services/sms_service.dart';
+import 'detection/ml/crash_fall_detection_service.dart';
 import 'data/datasources/alerts_local_datasource.dart';
 import 'data/datasources/contacts_local_datasource.dart';
 import 'data/datasources/disaster_api_client.dart';
 import 'data/datasources/profile_local_datasource.dart';
+import 'data/datasources/reminders_local_datasource.dart';
 import 'data/repositories/alerts_repository.dart';
 import 'data/repositories/contacts_repository.dart';
 import 'data/repositories/profile_repository.dart';
+import 'data/repositories/reminders_repository.dart';
 import 'domain/usecases/trigger_sos_usecase.dart';
 import 'presentation/blocs/alerts/alerts_cubit.dart';
 import 'presentation/blocs/battery/battery_cubit.dart';
 import 'presentation/blocs/contacts/contacts_cubit.dart';
 import 'presentation/blocs/profile/profile_cubit.dart';
+import 'presentation/blocs/reminders/reminders_cubit.dart';
 import 'presentation/blocs/sos/sos_cubit.dart';
 
 /// Global service locator instance.
@@ -34,7 +39,7 @@ Future<Box> _openBoxSafe(String name) async {
   try {
     return await Hive.openBox(name);
   } catch (e) {
-    debugPrint('[Hive] Box "$name" is corrupt, deleting and recreating: $e');
+    AppLogger.warning('[Hive] Box "$name" is corrupt, deleting and recreating: $e');
     await Hive.deleteBoxFromDisk(name);
     return await Hive.openBox(name);
   }
@@ -45,6 +50,7 @@ Future<Box> _openBoxSafe(String name) async {
 /// Call this in main() after Hive is initialized.
 Future<void> configureDependencies() async {
   // ── Core Services ──────────────────────────────────────
+  getIt.registerLazySingleton<AuthService>(() => AuthService());
   getIt.registerLazySingleton<AudioService>(() => AudioService());
   getIt.registerLazySingleton<LocationService>(() => LocationService());
   getIt.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
@@ -58,6 +64,9 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<DecoyCallService>(
     () => DecoyCallService(audioService: getIt<AudioService>()),
+  );
+  getIt.registerLazySingleton<CrashFallDetectionService>(
+    () => CrashFallDetectionService(),
   );
 
   // ── Data Sources (with corruption recovery) ────────────
@@ -74,6 +83,11 @@ Future<void> configureDependencies() async {
   final profileBox = await _openBoxSafe(ProfileLocalDataSource.boxName);
   getIt.registerLazySingleton<ProfileLocalDataSource>(
     () => ProfileLocalDataSource(profileBox),
+  );
+
+  final remindersBox = await _openBoxSafe(RemindersLocalDataSource.boxName);
+  getIt.registerLazySingleton<RemindersLocalDataSource>(
+    () => RemindersLocalDataSource(remindersBox),
   );
 
   // Centralized app settings box (used by splash, onboarding, settings).
@@ -98,6 +112,9 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<ProfileRepository>(
     () => ProfileRepositoryImpl(getIt<ProfileLocalDataSource>()),
+  );
+  getIt.registerLazySingleton<RemindersRepository>(
+    () => RemindersRepositoryImpl(getIt<RemindersLocalDataSource>()),
   );
 
   // ── Use Cases ──────────────────────────────────────────
@@ -136,6 +153,12 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<ProfileCubit>(
     () => ProfileCubit(profileRepository: getIt<ProfileRepository>()),
+  );
+  getIt.registerFactory<RemindersCubit>(
+    () => RemindersCubit(
+      repository: getIt<RemindersRepository>(),
+      notificationService: getIt<NotificationService>(),
+    ),
   );
 }
 

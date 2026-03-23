@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/services/decoy_call_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
@@ -64,6 +65,7 @@ class _DecoyCallScreenState extends State<DecoyCallScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final callerName = _decoyCallService.callerName;
 
     return Scaffold(
@@ -88,7 +90,7 @@ class _DecoyCallScreenState extends State<DecoyCallScreen>
                 height: 110,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [
                       AppColors.secondary,
                       AppColors.secondaryDark,
@@ -131,7 +133,7 @@ class _DecoyCallScreenState extends State<DecoyCallScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Incoming call...',
+              l.incomingCall,
               style: AppTypography.bodyLarge.copyWith(
                 color: Colors.white.withValues(alpha: 0.6),
               ),
@@ -149,14 +151,14 @@ class _DecoyCallScreenState extends State<DecoyCallScreen>
                   _CallButton(
                     icon: Icons.call_end_rounded,
                     color: AppColors.danger,
-                    label: 'Decline',
+                    label: l.decline,
                     onTap: _declineCall,
                   ),
                   // Answer.
                   _CallButton(
                     icon: Icons.call_rounded,
                     color: AppColors.safe,
-                    label: 'Answer',
+                    label: l.answer,
                     onTap: _answerCall,
                   ),
                 ],

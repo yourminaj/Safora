@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import '../../core/constants/alert_types.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/typography.dart';
@@ -144,7 +145,7 @@ class AlertCard extends StatelessWidget {
                     Row(
                       children: [
                         if (alert.source != null) ...[
-                          Icon(
+                          const Icon(
                             Icons.source_rounded,
                             size: 12,
                             color: AppColors.textSecondary,
@@ -158,14 +159,14 @@ class AlertCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                         ],
-                        Icon(
+                        const Icon(
                           Icons.access_time_rounded,
                           size: 12,
                           color: AppColors.textSecondary,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          _formatTime(alert.timestamp),
+                          _formatTime(context, alert.timestamp),
                           style: AppTypography.labelSmall.copyWith(
                             color: AppColors.textSecondary,
                           ),
@@ -182,16 +183,17 @@ class AlertCard extends StatelessWidget {
     );
   }
 
-  String _formatTime(DateTime time) {
+  String _formatTime(BuildContext context, DateTime time) {
+    final l = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final diff = now.difference(time);
 
     if (diff.inMinutes < 60) {
-      return '${diff.inMinutes}m ago';
+      return l.mAgo(diff.inMinutes);
     } else if (diff.inHours < 24) {
-      return '${diff.inHours}h ago';
+      return l.hAgo(diff.inHours);
     } else if (diff.inDays < 7) {
-      return '${diff.inDays}d ago';
+      return l.dAgo(diff.inDays);
     }
     return DateFormat('MMM d').format(time);
   }

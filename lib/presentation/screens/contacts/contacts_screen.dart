@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
+import 'package:safora/l10n/app_localizations.dart';
+import '../../../core/services/ad_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../data/models/emergency_contact.dart';
 import '../../blocs/contacts/contacts_cubit.dart';
 import '../../blocs/contacts/contacts_state.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 /// Emergency contacts list screen with CRUD operations.
 class ContactsScreen extends StatefulWidget {
@@ -24,8 +28,10 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Emergency Contacts')),
+      bottomNavigationBar: AdBanner(adUnitId: AdService.bannerContacts),
+      appBar: AppBar(title: Text(l.emergencyContacts)),
       floatingActionButton: BlocBuilder<ContactsCubit, ContactsState>(
         builder: (context, state) {
           final isLimit = state is ContactsLoaded && state.isLimitReached;
@@ -34,7 +40,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                 ? () => _showLimitDialog(context)
                 : () => context.push('/contacts/add'),
             icon: const Icon(Icons.person_add_rounded),
-            label: const Text('Add Contact'),
+            label: Text(l.addContact),
             backgroundColor: isLimit ? AppColors.textDisabled : null,
           );
         },
@@ -56,8 +62,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
           }
 
           final contacts = switch (state) {
-            ContactsLoaded s => s.contacts,
-            ContactsLimitReached s => s.contacts,
+            final ContactsLoaded s => s.contacts,
+            final ContactsLimitReached s => s.contacts,
             _ => <EmergencyContact>[],
           };
 
@@ -88,29 +94,27 @@ class _ContactsScreenState extends State<ContactsScreen> {
   }
 
   void _showLimitDialog(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Contact Limit Reached'),
-        content: const Text(
-          'Free users can add up to 3 emergency contacts.\n\n'
-          'Upgrade to Premium to add unlimited contacts.',
+        title: Text(l.contactLimitReached),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l.contactLimitMessage),
+            const SizedBox(height: 12),
+            Text(
+              l.premiumRoadmap,
+              style: const TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Premium subscriptions coming soon!'),
-                ),
-              );
-            },
-            child: const Text('Upgrade'),
+            child: Text(l.ok),
           ),
         ],
       ),
@@ -118,18 +122,16 @@ class _ContactsScreenState extends State<ContactsScreen> {
   }
 
   void _confirmDelete(BuildContext context, EmergencyContact contact) {
+    final l = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove Contact?'),
-        content: Text(
-          'Are you sure you want to remove ${contact.name} '
-          'from your emergency contacts?',
-        ),
+        title: Text(l.removeContact),
+        content: Text(l.removeContactConfirm(contact.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -141,7 +143,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.danger,
             ),
-            child: const Text('Remove'),
+            child: Text(l.remove),
           ),
         ],
       ),
@@ -152,34 +154,30 @@ class _ContactsScreenState extends State<ContactsScreen> {
 class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.contacts_rounded,
-                size: 48,
-                color: AppColors.accent,
+            SizedBox(
+              width: 100,
+              height: 100,
+              child: Lottie.asset(
+                'assets/lottie/empty_state.json',
+                fit: BoxFit.contain,
               ),
             ),
             const SizedBox(height: 24),
             Text(
-              'No Emergency Contacts',
+              l.noEmergencyContacts,
               style: AppTypography.headlineSmall,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Add up to 3 trusted contacts who will be '
-              'alerted during emergencies with your GPS location.',
+              l.addContactsHint,
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -207,6 +205,7 @@ class _ContactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
@@ -242,7 +241,7 @@ class _ContactCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'PRIMARY',
+                  l.primary,
                   style: AppTypography.labelSmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w700,
@@ -277,24 +276,24 @@ class _ContactCard extends StatelessWidget {
             }
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'edit',
               child: Row(
                 children: [
-                  Icon(Icons.edit_rounded, size: 18),
-                  SizedBox(width: 8),
-                  Text('Edit'),
+                  const Icon(Icons.edit_rounded, size: 18),
+                  const SizedBox(width: 8),
+                  Text(l.edit),
                 ],
               ),
             ),
             if (!contact.isPrimary)
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'primary',
                 child: Row(
                   children: [
-                    Icon(Icons.star_rounded, size: 18),
-                    SizedBox(width: 8),
-                    Text('Set as Primary'),
+                    const Icon(Icons.star_rounded, size: 18),
+                    const SizedBox(width: 8),
+                    Text(l.setAsPrimary),
                   ],
                 ),
               ),
@@ -302,11 +301,11 @@ class _ContactCard extends StatelessWidget {
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(Icons.delete_rounded,
+                  const Icon(Icons.delete_rounded,
                       size: 18, color: AppColors.danger),
                   const SizedBox(width: 8),
-                  Text('Remove',
-                      style: TextStyle(color: AppColors.danger)),
+                  Text(l.remove,
+                      style: const TextStyle(color: AppColors.danger)),
                 ],
               ),
             ),

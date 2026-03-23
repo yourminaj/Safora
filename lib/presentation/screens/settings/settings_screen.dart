@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:safora/l10n/app_localizations.dart';
+import '../../../core/services/ad_service.dart';
 import '../../../core/services/shake_detection_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
@@ -9,6 +11,7 @@ import '../../../injection.dart';
 import '../../blocs/contacts/contacts_cubit.dart';
 import '../../blocs/contacts/contacts_state.dart';
 import '../../blocs/sos/sos_cubit.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 /// Functional settings screen with real navigation and state.
 ///
@@ -53,28 +56,83 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      bottomNavigationBar: AdBanner(adUnitId: AdService.bannerSettings),
+      appBar: AppBar(title: Text(l.settings)),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
           _SettingsSection(
-            title: 'Account',
+            title: l.account,
             children: [
               _SettingsTile(
                 icon: Icons.person_rounded,
-                title: 'Profile',
-                subtitle: 'Manage your medical profile',
+                title: l.profile,
+                subtitle: l.manageProfile,
                 onTap: () => context.push('/profile'),
               ),
               _SettingsTile(
                 icon: Icons.workspace_premium_rounded,
-                title: 'Premium',
-                subtitle: 'Unlock all 127 risk types',
+                title: l.premium,
+                subtitle: l.unlockAllRiskTypes,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Premium subscriptions coming soon!'),
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Row(
+                        children: [
+                          const Icon(Icons.workspace_premium_rounded,
+                              color: AppColors.accent),
+                          const SizedBox(width: 8),
+                          Text(l.saforaPremium),
+                        ],
+                      ),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l.currentFreePlan),
+                          const SizedBox(height: 8),
+                          Text(l.freeSos),
+                          Text(l.freeContacts),
+                          Text(l.freeAlerts),
+                          Text(l.freeDetection),
+                          Text(l.freeMedicalId),
+                          const SizedBox(height: 12),
+                          Text(
+                            l.premiumRoadmap,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        if (AdService.instance.isRewardedReady)
+                          TextButton.icon(
+                            onPressed: () async {
+                              Navigator.pop(ctx);
+                              final rewarded =
+                                  await AdService.instance.showRewarded();
+                              if (rewarded && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(l.premiumRoadmap),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.play_circle_outline),
+                            label: const Text('Watch Ad'),
+                          ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(l.ok),
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -88,7 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'PRO',
+                    l.pro,
                     style: AppTypography.labelSmall.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -99,7 +157,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           _SettingsSection(
-            title: 'Safety',
+            title: l.safety,
             children: [
               BlocBuilder<ContactsCubit, ContactsState>(
                 builder: (context, state) {
@@ -108,16 +166,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       : 0;
                   return _SettingsTile(
                     icon: Icons.contacts_rounded,
-                    title: 'Emergency Contacts',
-                    subtitle: '$count contact${count == 1 ? '' : 's'} added',
+                    title: l.emergencyContacts,
+                    subtitle: l.nContactsAdded(count),
                     onTap: () => context.push('/contacts'),
                   );
                 },
               ),
               _SettingsTile(
                 icon: Icons.vibration_rounded,
-                title: 'Shake-to-SOS',
-                subtitle: 'Shake phone 3 times to trigger SOS',
+                title: l.shakeToSos,
+                subtitle: l.shakeToSosDesc,
                 onTap: () => _toggleShake(!_shakeEnabled),
                 trailing: Switch(
                   value: _shakeEnabled,
@@ -127,12 +185,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _SettingsTile(
                 icon: Icons.volume_up_rounded,
-                title: 'Alert Sounds',
-                subtitle: 'Customize alert sounds',
+                title: l.alertSounds,
+                subtitle: l.configureAlertSounds,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Sound customization coming in Phase 2'),
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(l.alertSoundSettings),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l.alertSoundExplain),
+                          const SizedBox(height: 12),
+                          Text(l.criticalSiren,
+                              style: const TextStyle(fontWeight: FontWeight.w600)),
+                          Text(l.highMediumWarning),
+                          Text(l.lowNotification),
+                          const SizedBox(height: 12),
+                          Text(
+                            l.customSoundFuture,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(l.ok),
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -140,52 +225,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           _SettingsSection(
-            title: 'General',
+            title: l.general,
             children: [
               _SettingsTile(
                 icon: Icons.language_rounded,
-                title: 'Language',
-                subtitle: 'English',
+                title: l.language,
+                subtitle: l.english,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Language switching coming in Phase 2. '
-                        'Bengali is supported via device locale.',
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(l.languageSettings),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l.languageExplain),
+                          const SizedBox(height: 12),
+                          Text(
+                            l.toChangeLanguage,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(l.deviceSettingsLanguage),
+                          const SizedBox(height: 12),
+                          Text(
+                            l.inAppLanguageFuture,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
                       ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(l.ok),
+                        ),
+                      ],
                     ),
                   );
                 },
               ),
               _SettingsTile(
                 icon: Icons.dark_mode_rounded,
-                title: 'Dark Mode',
-                subtitle: 'System default',
+                title: l.darkMode,
+                subtitle: l.systemDefault,
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Theme follows system settings'),
+                    SnackBar(
+                      content: Text(l.themeFollowsSystem),
                     ),
                   );
                 },
               ),
               _SettingsTile(
                 icon: Icons.info_outline_rounded,
-                title: 'About',
-                subtitle: 'Safora v1.0.0',
+                title: l.about,
+                subtitle: l.saforaVersion,
                 onTap: () {
                   showAboutDialog(
                     context: context,
-                    applicationName: 'Safora',
+                    applicationName: l.appTitle,
                     applicationVersion: '0.1.0',
-                    applicationLegalese: '© 2026 Safora Technologies',
+                    applicationLegalese: l.saforaLegalese,
                     children: [
                       const SizedBox(height: 16),
-                      const Text(
-                        "Your Family's Safety Guardian — protecting "
-                        'you with real-time disaster alerts, SOS, and '
-                        'emergency notifications.',
-                      ),
+                      Text(l.saforaAbout),
                     ],
                   );
                 },

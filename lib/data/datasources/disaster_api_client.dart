@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../core/constants/alert_types.dart';
 import '../../core/constants/api_endpoints.dart';
+import '../../core/services/app_logger.dart';
 import '../models/alert_event.dart';
 
 /// HTTP client for fetching disaster data from external APIs.
@@ -34,12 +34,14 @@ class DisasterApiClient {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final features = json['features'] as List<dynamic>? ?? [];
 
-      return features.map((feature) {
+      return features.map((f) {
+        final feature = f as Map<String, dynamic>;
         final props = feature['properties'] as Map<String, dynamic>;
-        final coords = feature['geometry']['coordinates'] as List<dynamic>;
+        final geometry = feature['geometry'] as Map<String, dynamic>;
+        final coords = geometry['coordinates'] as List<dynamic>;
 
         return AlertEvent(
-          id: feature['id']?.toString(),
+          id: (feature['id'])?.toString(),
           type: AlertType.earthquake,
           title: props['title'] as String? ?? 'Earthquake',
           description: props['place'] as String?,
@@ -54,7 +56,7 @@ class DisasterApiClient {
       }).toList()
         ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
     } catch (e) {
-      debugPrint('[DisasterAPI] USGS earthquakes fetch failed: $e');
+      AppLogger.warning('[DisasterAPI] USGS earthquakes fetch failed: $e');
       return [];
     }
   }
@@ -71,12 +73,14 @@ class DisasterApiClient {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final features = json['features'] as List<dynamic>? ?? [];
 
-      return features.map((feature) {
+      return features.map((f) {
+        final feature = f as Map<String, dynamic>;
         final props = feature['properties'] as Map<String, dynamic>;
-        final coords = feature['geometry']['coordinates'] as List<dynamic>;
+        final geometry = feature['geometry'] as Map<String, dynamic>;
+        final coords = geometry['coordinates'] as List<dynamic>;
 
         return AlertEvent(
-          id: feature['id']?.toString(),
+          id: (feature['id'])?.toString(),
           type: AlertType.earthquake,
           title: props['title'] as String? ?? 'Significant Earthquake',
           description: props['place'] as String?,
@@ -91,7 +95,7 @@ class DisasterApiClient {
       }).toList()
         ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
     } catch (e) {
-      debugPrint('[DisasterAPI] USGS significant fetch failed: $e');
+      AppLogger.warning('[DisasterAPI] USGS significant fetch failed: $e');
       return [];
     }
   }
@@ -122,12 +126,14 @@ class DisasterApiClient {
 
       if (response.statusCode != 200) return [];
 
-      final json = jsonDecode(response.body);
-      final features = json['features'] as List<dynamic>? ?? [];
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final features = (json['features'] as List<dynamic>?) ?? [];
 
-      return features.map((feature) {
+      return features.map((f) {
+        final feature = f as Map<String, dynamic>;
         final props = feature['properties'] as Map<String, dynamic>;
-        final coords = feature['geometry']?['coordinates'] as List<dynamic>?;
+        final geometry = feature['geometry'] as Map<String, dynamic>?;
+        final coords = geometry?['coordinates'] as List<dynamic>?;
 
         final eventType = _gdacsEventTypeToAlertType(
           props['eventtype'] as String? ?? '',
@@ -152,7 +158,7 @@ class DisasterApiClient {
       }).toList()
         ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
     } catch (e) {
-      debugPrint('[DisasterAPI] GDACS events fetch failed: $e');
+      AppLogger.warning('[DisasterAPI] GDACS events fetch failed: $e');
       return [];
     }
   }
@@ -227,7 +233,7 @@ class DisasterApiClient {
 
       return alerts;
     } catch (e) {
-      debugPrint('[DisasterAPI] Open-Meteo flood risk fetch failed: $e');
+      AppLogger.warning('[DisasterAPI] Open-Meteo flood risk fetch failed: $e');
       return [];
     }
   }

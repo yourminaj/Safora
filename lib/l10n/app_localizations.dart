@@ -122,6 +122,18 @@ abstract class AppLocalizations {
   /// **'LIVE'**
   String get live;
 
+  /// No description provided for @tapToViewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to view details'**
+  String get tapToViewDetails;
+
+  /// No description provided for @activeAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Active Alert{count, plural, =1{} other{s}}'**
+  String activeAlerts(int count);
+
   /// No description provided for @sosButton.
   ///
   /// In en, this message translates to:
@@ -182,11 +194,11 @@ abstract class AppLocalizations {
   /// **'Alerts'**
   String get alerts;
 
-  /// No description provided for @liveMap.
+  /// No description provided for @alertMap.
   ///
   /// In en, this message translates to:
-  /// **'Live Map'**
-  String get liveMap;
+  /// **'Alert Map'**
+  String get alertMap;
 
   /// No description provided for @reminders.
   ///
@@ -374,6 +386,12 @@ abstract class AppLocalizations {
   /// **'Organ Donor'**
   String get organDonor;
 
+  /// No description provided for @shareWithFirstResponders.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with first responders'**
+  String get shareWithFirstResponders;
+
   /// No description provided for @separateWithCommas.
   ///
   /// In en, this message translates to:
@@ -422,11 +440,107 @@ abstract class AppLocalizations {
   /// **'Edit Contact'**
   String get editContact;
 
+  /// No description provided for @contactDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Details'**
+  String get contactDetails;
+
+  /// No description provided for @setAsPrimaryContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as Primary Contact'**
+  String get setAsPrimaryContact;
+
   /// No description provided for @maxContactsReached.
   ///
   /// In en, this message translates to:
   /// **'Maximum 3 contacts for free tier'**
   String get maxContactsReached;
+
+  /// No description provided for @contactLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Limit Reached'**
+  String get contactLimitReached;
+
+  /// No description provided for @contactLimitMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Free users can add up to 3 emergency contacts.'**
+  String get contactLimitMessage;
+
+  /// No description provided for @premiumRoadmap.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium features including unlimited contacts, all 127 risk types, and advanced detection will be available in an upcoming release.'**
+  String get premiumRoadmap;
+
+  /// No description provided for @removeContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Contact?'**
+  String get removeContact;
+
+  /// No description provided for @removeContactConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove {name} from your emergency contacts?'**
+  String removeContactConfirm(String name);
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @setAsPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as Primary'**
+  String get setAsPrimary;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @primary.
+  ///
+  /// In en, this message translates to:
+  /// **'PRIMARY'**
+  String get primary;
+
+  /// No description provided for @nContactsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} contact{count, plural, =1{} other{s}} added'**
+  String nContactsAdded(int count);
+
+  /// No description provided for @noEmergencyContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'No Emergency Contacts'**
+  String get noEmergencyContacts;
+
+  /// No description provided for @addContactsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add up to 3 trusted contacts who will be alerted during emergencies with your GPS location.'**
+  String get addContactsHint;
 
   /// No description provided for @incomingCall.
   ///
@@ -476,6 +590,90 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @manageProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your medical profile'**
+  String get manageProfile;
+
+  /// No description provided for @premium.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
+  String get premium;
+
+  /// No description provided for @unlockAllRiskTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock all 127 risk types'**
+  String get unlockAllRiskTypes;
+
+  /// No description provided for @saforaPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Safora Premium'**
+  String get saforaPremium;
+
+  /// No description provided for @currentFreePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Current free plan includes:'**
+  String get currentFreePlan;
+
+  /// No description provided for @freeSos.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ SOS with SMS alerts'**
+  String get freeSos;
+
+  /// No description provided for @freeContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ 3 emergency contacts'**
+  String get freeContacts;
+
+  /// No description provided for @freeAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Real-time disaster alerts'**
+  String get freeAlerts;
+
+  /// No description provided for @freeDetection.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Crash & fall detection'**
+  String get freeDetection;
+
+  /// No description provided for @freeMedicalId.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Medical ID profile'**
+  String get freeMedicalId;
+
+  /// No description provided for @pro.
+  ///
+  /// In en, this message translates to:
+  /// **'PRO'**
+  String get pro;
+
+  /// No description provided for @safety.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety'**
+  String get safety;
+
   /// No description provided for @shakeToSos.
   ///
   /// In en, this message translates to:
@@ -488,6 +686,168 @@ abstract class AppLocalizations {
   /// **'Shake your phone 3 times to trigger SOS'**
   String get shakeToSosDesc;
 
+  /// No description provided for @alertSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert Sounds'**
+  String get alertSounds;
+
+  /// No description provided for @configureAlertSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure alert sounds'**
+  String get configureAlertSounds;
+
+  /// No description provided for @alertSoundSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert Sound Settings'**
+  String get alertSoundSettings;
+
+  /// No description provided for @alertSoundExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert sounds are configured automatically based on alert priority:'**
+  String get alertSoundExplain;
+
+  /// No description provided for @criticalSiren.
+  ///
+  /// In en, this message translates to:
+  /// **'🔴 Critical — Emergency siren'**
+  String get criticalSiren;
+
+  /// No description provided for @highMediumWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'🟡 High / Medium — Warning tone'**
+  String get highMediumWarning;
+
+  /// No description provided for @lowNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'🟢 Low — Gentle notification'**
+  String get lowNotification;
+
+  /// No description provided for @customSoundFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom sound selection will be available in a future update.'**
+  String get customSoundFuture;
+
+  /// No description provided for @general.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get general;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @english.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// No description provided for @languageSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Language Settings'**
+  String get languageSettings;
+
+  /// No description provided for @languageExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'Safora supports English and Bengali (বাংলা). The app language follows your device language setting automatically.'**
+  String get languageExplain;
+
+  /// No description provided for @toChangeLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'To change the language, go to:'**
+  String get toChangeLanguage;
+
+  /// No description provided for @deviceSettingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'📱 Device Settings → Language & Region'**
+  String get deviceSettingsLanguage;
+
+  /// No description provided for @inAppLanguageFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'In-app language switching will be available in a future update.'**
+  String get inAppLanguageFuture;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get darkMode;
+
+  /// No description provided for @systemDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get systemDefault;
+
+  /// No description provided for @themeFollowsSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme follows system settings'**
+  String get themeFollowsSystem;
+
+  /// No description provided for @about.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// No description provided for @saforaVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Safora v0.1.0'**
+  String get saforaVersion;
+
+  /// No description provided for @saforaLegalese.
+  ///
+  /// In en, this message translates to:
+  /// **'© 2026 Safora Technologies'**
+  String get saforaLegalese;
+
+  /// No description provided for @saforaAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Family\'s Safety Guardian — protecting you with real-time disaster alerts, SOS, and emergency notifications.'**
+  String get saforaAbout;
+
+  /// No description provided for @medicineReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'💊 Medicine Reminders'**
+  String get medicineReminders;
+
+  /// No description provided for @nActive.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String nActive(int count);
+
+  /// No description provided for @noRemindersSet.
+  ///
+  /// In en, this message translates to:
+  /// **'No reminders set'**
+  String get noRemindersSet;
+
+  /// No description provided for @addRemindersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add medicine reminders to get\ntimely notifications'**
+  String get addRemindersHint;
+
   /// No description provided for @lowBatteryWarning.
   ///
   /// In en, this message translates to:
@@ -499,6 +859,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your battery is at {level}%.'**
   String batteryAt(int level);
+
+  /// No description provided for @pageNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Page Not Found'**
+  String get pageNotFound;
+
+  /// No description provided for @routeNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Route not found: {route}'**
+  String routeNotFound(String route);
+
+  /// No description provided for @goHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Home'**
+  String get goHome;
+
+  /// No description provided for @somethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get somethingWentWrong;
+
+  /// No description provided for @phoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get phoneNumber;
+
+  /// No description provided for @relationship.
+  ///
+  /// In en, this message translates to:
+  /// **'Relationship (optional)'**
+  String get relationship;
+
+  /// No description provided for @relationshipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Mother, Brother, Friend'**
+  String get relationshipHint;
+
+  /// No description provided for @enterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get enterName;
+
+  /// No description provided for @enterPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a phone number'**
+  String get enterPhone;
+
+  /// No description provided for @enterValidPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid phone number'**
+  String get enterValidPhone;
+
+  /// No description provided for @primaryContactNotify.
+  ///
+  /// In en, this message translates to:
+  /// **'This contact will be notified first during emergencies.'**
+  String get primaryContactNotify;
+
+  /// No description provided for @sosAlertActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'🚨 SOS Alert activated! Siren playing.'**
+  String get sosAlertActivated;
+
+  /// No description provided for @stop.
+  ///
+  /// In en, this message translates to:
+  /// **'STOP'**
+  String get stop;
+
+  /// No description provided for @tapForHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP FOR HELP'**
+  String get tapForHelp;
+
+  /// No description provided for @nAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} alert{count, plural, =1{} other{s}}'**
+  String nAlerts(int count);
+
+  /// No description provided for @addReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Reminder'**
+  String get addReminder;
+
+  /// No description provided for @medicineName.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine Name'**
+  String get medicineName;
+
+  /// No description provided for @dosage.
+  ///
+  /// In en, this message translates to:
+  /// **'Dosage'**
+  String get dosage;
+
+  /// No description provided for @dosageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 500mg, 2 tablets'**
+  String get dosageHint;
+
+  /// No description provided for @time.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get time;
+
+  /// No description provided for @frequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency'**
+  String get frequency;
+
+  /// No description provided for @notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get notes;
+
+  /// No description provided for @notesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Take with food'**
+  String get notesHint;
+
+  /// No description provided for @enterMedicineName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter medicine name'**
+  String get enterMedicineName;
+
+  /// No description provided for @enterDosage.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter dosage'**
+  String get enterDosage;
+
+  /// No description provided for @onceDailyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Once daily'**
+  String get onceDailyLabel;
+
+  /// No description provided for @twiceDailyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Twice daily'**
+  String get twiceDailyLabel;
+
+  /// No description provided for @weeklyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weeklyLabel;
+
+  /// No description provided for @asNeededLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'As needed'**
+  String get asNeededLabel;
+
+  /// No description provided for @sosAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🚨 SOS ALERT'**
+  String get sosAlertTitle;
+
+  /// No description provided for @emergencyAlertWillBeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency alert will be sent in'**
+  String get emergencyAlertWillBeSent;
+
+  /// No description provided for @seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'seconds'**
+  String get seconds;
+
+  /// No description provided for @sosContactsWillReceiveSms.
+  ///
+  /// In en, this message translates to:
+  /// **'Your emergency contacts will receive an SMS with your GPS location.'**
+  String get sosContactsWillReceiveSms;
+
+  /// No description provided for @onboardingTitle1.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay Protected 24/7'**
+  String get onboardingTitle1;
+
+  /// No description provided for @onboardingDesc1.
+  ///
+  /// In en, this message translates to:
+  /// **'Safora monitors for emergencies, disasters, and safety threats — alerting your family instantly with your GPS location.'**
+  String get onboardingDesc1;
+
+  /// No description provided for @onboardingTitle2.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Emergency Contacts'**
+  String get onboardingTitle2;
+
+  /// No description provided for @onboardingDesc2.
+  ///
+  /// In en, this message translates to:
+  /// **'Add up to 3 trusted contacts. When danger strikes, they\'ll get an instant SMS with your exact location and alert type.'**
+  String get onboardingDesc2;
+
+  /// No description provided for @onboardingTitle3.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Medical Profile'**
+  String get onboardingTitle3;
+
+  /// No description provided for @onboardingDesc3.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your blood type, allergies, and medical conditions. First responders can access this info during emergencies.'**
+  String get onboardingDesc3;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get getStarted;
+
+  /// No description provided for @locationNeededSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is needed for SOS. Enable in Settings.'**
+  String get locationNeededSnack;
+
+  /// No description provided for @notificationsNeededSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are needed for alerts. Enable in Settings.'**
+  String get notificationsNeededSnack;
+
+  /// No description provided for @appTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Family\'s Safety Guardian'**
+  String get appTagline;
+
+  /// No description provided for @mAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String mAgo(int count);
+
+  /// No description provided for @hAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String hAgo(int count);
+
+  /// No description provided for @dAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String dAgo(int count);
 }
 
 class _AppLocalizationsDelegate

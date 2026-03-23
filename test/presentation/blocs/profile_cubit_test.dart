@@ -11,12 +11,12 @@ void main() {
   late ProfileCubit cubit;
   late MockProfileRepository mockRepo;
 
-  final testProfile = UserProfile(
+  const testProfile = UserProfile(
     fullName: 'Minhaj Sadik',
     bloodType: 'O+',
-    allergies: const ['Peanuts'],
-    medicalConditions: const ['Asthma'],
-    medications: const ['Salbutamol'],
+    allergies: ['Peanuts'],
+    medicalConditions: ['Asthma'],
+    medications: ['Salbutamol'],
     emergencyNotes: 'Carries inhaler',
     weight: 75.0,
     height: 175.0,
@@ -29,7 +29,7 @@ void main() {
   });
 
   setUpAll(() {
-    registerFallbackValue(UserProfile(fullName: 'fallback'));
+    registerFallbackValue(const UserProfile(fullName: 'fallback'));
   });
 
   tearDown(() => cubit.close());

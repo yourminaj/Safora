@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import '../../../data/models/user_profile.dart';
 import '../../blocs/profile/profile_cubit.dart';
 
@@ -95,15 +96,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.existingProfile != null
-            ? 'Edit Medical Profile'
-            : 'Create Medical Profile'),
+            ? l.editMedicalProfile
+            : l.createMedicalProfile),
         actions: [
           TextButton(
             onPressed: _save,
-            child: const Text('Save'),
+            child: Text(l.save),
           ),
         ],
       ),
@@ -115,22 +117,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             // Full name.
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Full Name *',
-                prefixIcon: Icon(Icons.person_rounded),
+              decoration: InputDecoration(
+                labelText: '${l.fullName} *',
+                prefixIcon: const Icon(Icons.person_rounded),
               ),
               textCapitalization: TextCapitalization.words,
               validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Name required' : null,
+                  v == null || v.trim().isEmpty ? l.nameRequired : null,
             ),
             const SizedBox(height: 16),
 
             // Blood type dropdown.
             DropdownButtonFormField<String>(
               initialValue: _selectedBloodType,
-              decoration: const InputDecoration(
-                labelText: 'Blood Type',
-                prefixIcon: Icon(Icons.bloodtype_rounded),
+              decoration: InputDecoration(
+                labelText: l.bloodType,
+                prefixIcon: const Icon(Icons.bloodtype_rounded),
               ),
               items: _bloodTypes
                   .map((bt) => DropdownMenuItem(value: bt, child: Text(bt)))
@@ -145,9 +147,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _weightController,
-                    decoration: const InputDecoration(
-                      labelText: 'Weight (kg)',
-                      prefixIcon: Icon(Icons.monitor_weight_outlined),
+                    decoration: InputDecoration(
+                      labelText: l.weight,
+                      prefixIcon: const Icon(Icons.monitor_weight_outlined),
                     ),
                     keyboardType: TextInputType.number,
                   ),
@@ -156,9 +158,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _heightController,
-                    decoration: const InputDecoration(
-                      labelText: 'Height (cm)',
-                      prefixIcon: Icon(Icons.height_rounded),
+                    decoration: InputDecoration(
+                      labelText: l.height,
+                      prefixIcon: const Icon(Icons.height_rounded),
                     ),
                     keyboardType: TextInputType.number,
                   ),
@@ -170,10 +172,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             // Allergies.
             TextFormField(
               controller: _allergiesController,
-              decoration: const InputDecoration(
-                labelText: 'Allergies',
-                helperText: 'Separate with commas',
-                prefixIcon: Icon(Icons.warning_amber_rounded),
+              decoration: InputDecoration(
+                labelText: l.allergies,
+                helperText: l.separateWithCommas,
+                prefixIcon: const Icon(Icons.warning_amber_rounded),
               ),
               maxLines: 2,
             ),
@@ -182,10 +184,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             // Medical conditions.
             TextFormField(
               controller: _conditionsController,
-              decoration: const InputDecoration(
-                labelText: 'Medical Conditions',
-                helperText: 'Separate with commas',
-                prefixIcon: Icon(Icons.medical_services_rounded),
+              decoration: InputDecoration(
+                labelText: l.medicalConditions,
+                helperText: l.separateWithCommas,
+                prefixIcon: const Icon(Icons.medical_services_rounded),
               ),
               maxLines: 2,
             ),
@@ -194,10 +196,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             // Medications.
             TextFormField(
               controller: _medicationsController,
-              decoration: const InputDecoration(
-                labelText: 'Medications',
-                helperText: 'Separate with commas',
-                prefixIcon: Icon(Icons.medication_rounded),
+              decoration: InputDecoration(
+                labelText: l.medications,
+                helperText: l.separateWithCommas,
+                prefixIcon: const Icon(Icons.medication_rounded),
               ),
               maxLines: 2,
             ),
@@ -206,10 +208,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             // Emergency notes.
             TextFormField(
               controller: _notesController,
-              decoration: const InputDecoration(
-                labelText: 'Emergency Notes',
-                helperText: 'Any important info for first responders',
-                prefixIcon: Icon(Icons.note_rounded),
+              decoration: InputDecoration(
+                labelText: l.emergencyNotes,
+                prefixIcon: const Icon(Icons.note_rounded),
               ),
               maxLines: 3,
             ),
@@ -217,8 +218,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             // Organ donor toggle.
             SwitchListTile(
-              title: const Text('Organ Donor'),
-              subtitle: const Text('Share with first responders'),
+              title: Text(l.organDonor),
+              subtitle: Text(l.shareWithFirstResponders),
               value: _organDonor,
               onChanged: (v) => setState(() => _organDonor = v),
               secondary: const Icon(Icons.favorite_rounded),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../injection.dart';
@@ -21,32 +22,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_OnboardingPage> _pages = const [
-    _OnboardingPage(
-      icon: Icons.notifications_active_rounded,
-      title: 'Stay Protected 24/7',
-      description:
-          'Safora monitors for emergencies, disasters, and safety threats — alerting your family instantly with your GPS location.',
-      color: AppColors.primary,
-    ),
-    _OnboardingPage(
-      icon: Icons.contacts_rounded,
-      title: 'Add Emergency Contacts',
-      description:
-          'Add up to 3 trusted contacts. When danger strikes, they\'ll get an instant SMS with your exact location and alert type.',
-      color: AppColors.secondary,
-    ),
-    _OnboardingPage(
-      icon: Icons.medical_information_rounded,
-      title: 'Your Medical Profile',
-      description:
-          'Save your blood type, allergies, and medical conditions. First responders can access this info during emergencies.',
-      color: AppColors.success,
-    ),
-  ];
-
   Future<void> _nextPage() async {
-    if (_currentPage < _pages.length - 1) {
+    if (_currentPage < 2) {
       // Request permissions on specific pages.
       if (_currentPage == 0) {
         await _requestLocationPermission();
@@ -66,12 +43,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final status = await Permission.location.request();
     if (status.isPermanentlyDenied) {
       if (mounted) {
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Location is needed for SOS. Enable in Settings.',
-            ),
-          ),
+          SnackBar(content: Text(l.locationNeededSnack)),
         );
       }
     }
@@ -81,12 +55,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final status = await Permission.notification.request();
     if (status.isPermanentlyDenied) {
       if (mounted) {
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Notifications are needed for alerts. Enable in Settings.',
-            ),
-          ),
+          SnackBar(content: Text(l.notificationsNeededSnack)),
         );
       }
     }
@@ -112,6 +83,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
+    final pages = [
+      _OnboardingPage(
+        icon: Icons.notifications_active_rounded,
+        title: l.onboardingTitle1,
+        description: l.onboardingDesc1,
+        color: AppColors.primary,
+      ),
+      _OnboardingPage(
+        icon: Icons.contacts_rounded,
+        title: l.onboardingTitle2,
+        description: l.onboardingDesc2,
+        color: AppColors.secondary,
+      ),
+      _OnboardingPage(
+        icon: Icons.medical_information_rounded,
+        title: l.onboardingTitle3,
+        description: l.onboardingDesc3,
+        color: AppColors.success,
+      ),
+    ];
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -122,7 +116,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: TextButton(
                 onPressed: _skip,
                 child: Text(
-                  'Skip',
+                  l.skip,
                   style: AppTypography.labelLarge.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -135,9 +129,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 controller: _pageController,
                 onPageChanged: (index) =>
                     setState(() => _currentPage = index),
-                itemCount: _pages.length,
+                itemCount: pages.length,
                 itemBuilder: (context, index) {
-                  final page = _pages[index];
+                  final page = pages[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Column(
@@ -185,7 +179,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Dots
                   Row(
                     children: List.generate(
-                      _pages.length,
+                      pages.length,
                       (index) => Container(
                         width: index == _currentPage ? 24 : 8,
                         height: 8,
@@ -209,9 +203,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     child: Text(
-                      _currentPage == _pages.length - 1
-                          ? 'Get Started'
-                          : 'Next',
+                      _currentPage == pages.length - 1
+                          ? l.getStarted
+                          : l.next,
                     ),
                   ),
                 ],

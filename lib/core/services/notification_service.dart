@@ -1,4 +1,6 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'app_logger.dart';
 
 /// Service for displaying local notifications.
 ///
@@ -30,6 +32,36 @@ class NotificationService {
 
     await _plugin.initialize(settings: settings);
     _isInitialized = true;
+
+    // ── Firebase Cloud Messaging ─────────────────────────
+    await _initFcm();
+  }
+
+  /// Initialize Firebase Cloud Messaging for push notifications.
+  Future<void> _initFcm() async {
+    final messaging = FirebaseMessaging.instance;
+
+    // Request permission (iOS prompts, Android auto-grants).
+    await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    // Get FCM token for this device.
+    final token = await messaging.getToken();
+    AppLogger.info('[FCM] Token: ${token?.substring(0, 20)}...');
+
+    // Handle foreground messages.
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      final notification = message.notification;
+      if (notification != null) {
+        showDisasterAlert(
+          title: notification.title ?? 'Safora Alert',
+          body: notification.body ?? '',
+        );
+      }
+    });
   }
 
   /// Show an SOS active notification (persistent, high priority).
@@ -130,6 +162,11 @@ class NotificationService {
   /// Cancel the SOS notification.
   Future<void> cancelSosNotification() async {
     await _plugin.cancel(id: 1);
+  }
+
+  /// Cancel a specific notification by ID.
+  Future<void> cancelNotification(int notificationId) async {
+    await _plugin.cancel(id: notificationId);
   }
 
   /// Cancel all notifications.

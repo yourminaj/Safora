@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../core/theme/typography.dart';
 import '../../../blocs/sos/sos_cubit.dart';
@@ -64,17 +65,18 @@ class _SosButtonState extends State<SosButton>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return BlocListener<SosCubit, SosState>(
       listener: (context, state) {
         if (state is SosActive) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('🚨 SOS Alert activated! Siren playing.'),
+              content: Text(l.sosAlertActivated),
               backgroundColor: AppColors.danger,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 5),
               action: SnackBarAction(
-                label: 'STOP',
+                label: l.stop,
                 textColor: Colors.white,
                 onPressed: () {
                   context.read<SosCubit>().deactivateSos();
@@ -89,7 +91,7 @@ class _SosButtonState extends State<SosButton>
         if (state is SosCancelled) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('SOS cancelled.'),
+              content: Text(l.sosCancelled),
               backgroundColor: AppColors.safe,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 2),
@@ -142,7 +144,7 @@ class _SosButtonState extends State<SosButton>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'SOS',
+                    l.sosButton,
                     style: AppTypography.headlineLarge.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
@@ -150,7 +152,7 @@ class _SosButtonState extends State<SosButton>
                     ),
                   ),
                   Text(
-                    'TAP FOR HELP',
+                    l.tapForHelp,
                     style: AppTypography.labelSmall.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
                       letterSpacing: 2,

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/constants/alert_types.dart';
+import '../../../core/services/ad_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../blocs/alerts/alerts_cubit.dart';
 import '../../blocs/alerts/alerts_state.dart';
+import '../../widgets/ad_banner_widget.dart';
 import '../../widgets/alert_card.dart';
 
 /// Alert list screen with filtering by category and priority.
@@ -24,9 +27,10 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Disaster Alerts'),
+        title: Text(l.disasterAlerts),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -34,6 +38,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: AdBanner(adUnitId: AdService.bannerAlerts),
       body: BlocBuilder<AlertsCubit, AlertsState>(
         builder: (context, state) {
           if (state is AlertsLoading) {
@@ -41,20 +46,21 @@ class _AlertsScreenState extends State<AlertsScreen> {
           }
 
           if (state is AlertsError) {
-            return _buildError(state.message);
+            return _buildError(context, state.message);
           }
 
           if (state is AlertsLoaded) {
             return _buildLoaded(context, state);
           }
 
-          return _buildEmpty();
+          return _buildEmpty(context);
         },
       ),
     );
   }
 
   Widget _buildLoaded(BuildContext context, AlertsLoaded state) {
+    final l = AppLocalizations.of(context)!;
     final filtered = state.filtered;
 
     return Column(
@@ -66,14 +72,14 @@ class _AlertsScreenState extends State<AlertsScreen> {
           child: Row(
             children: [
               _FilterChip(
-                label: 'All',
+                label: l.filterAll,
                 isSelected: state.filterPriority == null &&
                     state.filterCategory == null,
                 onTap: () => context.read<AlertsCubit>().clearFilters(),
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: '🔴 Critical',
+                label: '🔴 ${l.filterCritical}',
                 isSelected: state.filterPriority == AlertPriority.critical,
                 color: AppColors.danger,
                 onTap: () => context
@@ -82,7 +88,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: '🌍 Disaster',
+                label: '🌍 ${l.filterDisaster}',
                 isSelected:
                     state.filterCategory == AlertCategory.naturalDisaster,
                 color: AppColors.warning,
@@ -92,7 +98,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: '⛈️ Weather',
+                label: '⛈️ ${l.filterWeather}',
                 isSelected:
                     state.filterCategory == AlertCategory.weatherEmergency,
                 color: AppColors.info,
@@ -102,7 +108,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: '🌊 Water',
+                label: '🌊 ${l.filterWater}',
                 isSelected:
                     state.filterCategory == AlertCategory.waterMarine,
                 color: const Color(0xFF42A5F5),
@@ -120,14 +126,14 @@ class _AlertsScreenState extends State<AlertsScreen> {
           child: Row(
             children: [
               Text(
-                '${filtered.length} alert${filtered.length == 1 ? '' : 's'}',
+                l.nAlerts(filtered.length),
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
               const Spacer(),
               Text(
-                'Auto-refreshes every 15 min',
+                l.autoRefreshNote,
                 style: AppTypography.labelSmall.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -141,7 +147,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
         // ─── Alert list ───────────────────────────────────
         Expanded(
           child: filtered.isEmpty
-              ? _buildEmpty()
+              ? _buildEmpty(context)
               : RefreshIndicator(
                   onRefresh: () =>
                       context.read<AlertsCubit>().refreshAlerts(),
@@ -161,7 +167,8 @@ class _AlertsScreenState extends State<AlertsScreen> {
     );
   }
 
-  Widget _buildEmpty() {
+  Widget _buildEmpty(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -182,14 +189,13 @@ class _AlertsScreenState extends State<AlertsScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'All Clear!',
+              l.allClear,
               style: AppTypography.headlineSmall,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'No active alerts in your area. '
-              'We monitor 127 risk types to keep you safe.',
+              l.noActiveAlerts,
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -201,7 +207,8 @@ class _AlertsScreenState extends State<AlertsScreen> {
     );
   }
 
-  Widget _buildError(String message) {
+  Widget _buildError(BuildContext context, String message) {
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -215,12 +222,12 @@ class _AlertsScreenState extends State<AlertsScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Unable to load alerts',
+              l.unableToLoadAlerts,
               style: AppTypography.titleMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'Check your internet connection and try again.',
+              l.checkConnection,
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -231,7 +238,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               onPressed: () =>
                   context.read<AlertsCubit>().loadAlerts(),
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(l.retry),
             ),
           ],
         ),

@@ -1,8 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../constants/alert_sounds.dart';
 import '../constants/alert_types.dart';
+import 'app_logger.dart';
 
 /// Service for playing emergency alert sounds.
 ///
@@ -37,13 +37,13 @@ class AudioService {
     try {
       // Try to play from asset file, fall back to system sound.
       await _sirenPlayer!.play(
-        AssetSource('sounds/siren.mp3'),
+        AssetSource(AlertSounds.sirenSos),
         volume: 1.0,
       );
       _isSirenPlaying = true;
     } catch (e) {
       // Asset not found — use vibration as fallback so user still gets feedback.
-      debugPrint('[AudioService] Siren playback failed: $e');
+      AppLogger.warning('[AudioService] Siren playback failed: $e');
       _isSirenPlaying = false;
       HapticFeedback.vibrate();
     }
@@ -60,12 +60,12 @@ class AudioService {
 
     try {
       await _ringtonePlayer!.play(
-        AssetSource('sounds/phone_ring.mp3'),
+        AssetSource(AlertSounds.phoneRing),
         volume: 1.0,
       );
       _isRingtonePlaying = true;
     } catch (e) {
-      debugPrint('[AudioService] Ringtone playback failed: $e');
+      AppLogger.warning('[AudioService] Ringtone playback failed: $e');
       _isRingtonePlaying = false;
       // Fallback: vibrate so user still gets tactile feedback.
       HapticFeedback.vibrate();
@@ -88,12 +88,12 @@ class AudioService {
     final soundPath = AlertSounds.forType(type);
     try {
       await _alertPlayer!.play(
-        AssetSource(soundPath.replaceFirst('assets/', '')),
+        AssetSource(soundPath),
         volume: 0.8,
       );
     } catch (e) {
       // No asset available for this alert type — log and continue.
-      debugPrint('[AudioService] Alert sound failed for ${type.name}: $e');
+      AppLogger.warning('[AudioService] Alert sound failed for ${type.name}: $e');
     }
   }
 

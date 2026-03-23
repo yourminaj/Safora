@@ -1,4 +1,4 @@
-package com.safora.safora_sos
+package com.digitaldrive.safora
 
 import io.flutter.embedding.android.FlutterActivity
 

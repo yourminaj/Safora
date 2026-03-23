@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:safora/l10n/app_localizations.dart';
+import '../../../core/services/ad_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../blocs/profile/profile_cubit.dart';
 import '../../blocs/profile/profile_state.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 /// Medical profile screen — shows blood type, allergies, conditions.
 ///
@@ -25,8 +28,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Medical Profile')),
+      bottomNavigationBar: AdBanner(adUnitId: AdService.bannerProfile),
+      appBar: AppBar(title: Text(l.medicalProfile)),
       body: BlocBuilder<ProfileCubit, ProfileState>(
         builder: (context, state) {
           if (state is ProfileLoaded && state.profile != null) {
@@ -67,25 +72,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 16),
                         _InfoRow(
-                          label: 'Blood Type',
-                          value: p.bloodType ?? 'Not set',
+                          label: l.bloodType,
+                          value: p.bloodType ?? l.notSet,
                         ),
                         _InfoRow(
-                          label: 'Allergies',
+                          label: l.allergies,
                           value: p.allergies.isEmpty
-                              ? 'None listed'
+                              ? l.noneListed
                               : p.allergies.join(', '),
                         ),
                         _InfoRow(
-                          label: 'Conditions',
+                          label: l.medicalConditions,
                           value: p.medicalConditions.isEmpty
-                              ? 'None listed'
+                              ? l.noneListed
                               : p.medicalConditions.join(', '),
                         ),
                         _InfoRow(
-                          label: 'Medications',
+                          label: l.medications,
                           value: p.medications.isEmpty
-                              ? 'None listed'
+                              ? l.noneListed
                               : p.medications.join(', '),
                         ),
                         if (p.weight != null || p.height != null)
@@ -98,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         if (p.organDonor)
                           _InfoRow(
-                            label: 'Organ Donor',
+                            label: l.organDonor,
                             value: '✅ Yes',
                           ),
                       ],
@@ -122,7 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '📋 Emergency Notes',
+                            '📋 ${l.emergencyNotes}',
                             style: AppTypography.titleSmall,
                           ),
                           const SizedBox(height: 4),
@@ -146,7 +151,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (mounted) cubit.loadProfile();
                     },
                     icon: const Icon(Icons.edit_rounded),
-                    label: const Text('Edit Medical Profile'),
+                    label: Text(l.editMedicalProfile),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 48),
                     ),
@@ -177,13 +182,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'No Medical Profile',
+                    l.noMedicalProfile,
                     style: AppTypography.headlineSmall,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Create your medical profile so first responders '
-                    'can access your vital information in emergencies.',
+                    l.createProfileHint,
                     style: AppTypography.bodyMedium.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -197,7 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (mounted) cubit.loadProfile();
                     },
                     icon: const Icon(Icons.add_rounded),
-                    label: const Text('Create Profile'),
+                    label: Text(l.createProfile),
                   ),
                 ],
               ),

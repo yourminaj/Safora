@@ -18,10 +18,18 @@
     <!-- CountdownOverlay + DecoyCallScreen: HapticFeedback vibration -->
     <uses-permission android:name="android.permission.VIBRATE"/>
 
+    <!-- SmsService: telephony plugin sends SMS directly without opening Messages -->
+    <uses-permission android:name="android.permission.SEND_SMS"/>
+
+    <!-- SOS Foreground Service: keeps SOS monitoring alive when app is in background -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+
     <application
         android:label="Safora"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -44,6 +52,10 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Google AdMob App ID (required by google_mobile_ads) -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3413399953381965~6491284202"/>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

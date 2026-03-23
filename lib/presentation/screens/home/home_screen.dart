@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
+import '../../../data/models/medicine_reminder.dart';
 import '../../blocs/alerts/alerts_cubit.dart';
 import '../../blocs/alerts/alerts_state.dart';
+import '../../blocs/reminders/reminders_cubit.dart';
+import '../../blocs/reminders/reminders_state.dart';
 import '../../widgets/alert_card.dart';
 import 'widgets/sos_button.dart';
 
@@ -27,8 +32,164 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _showRemindersSheet(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final remindersCubit = context.read<RemindersCubit>();
+    remindersCubit.loadReminders();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => BlocProvider.value(
+        value: remindersCubit,
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.3,
+          maxChildSize: 0.85,
+          expand: false,
+          builder: (context, scrollController) {
+            return BlocBuilder<RemindersCubit, RemindersState>(
+              builder: (context, state) {
+                return Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            l.medicineReminders,
+                            style: AppTypography.titleMedium,
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (state is RemindersLoaded)
+                                Text(
+                                  l.nActive(state.activeCount),
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.add_circle_rounded),
+                                color: AppColors.primary,
+                                tooltip: l.addReminder,
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) => BlocProvider.value(
+                                      value: remindersCubit,
+                                      child: const _AddReminderDialog(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (state is RemindersLoading)
+                        const Center(child: CircularProgressIndicator())
+                      else if (state is RemindersLoaded &&
+                          state.reminders.isEmpty)
+                        Expanded(
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.medication_outlined,
+                                  size: 48,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  l.noRemindersSet,
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  l.addRemindersHint,
+                                  textAlign: TextAlign.center,
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else if (state is RemindersLoaded)
+                        Expanded(
+                          child: ListView.builder(
+                            controller: scrollController,
+                            itemCount: state.reminders.length,
+                            itemBuilder: (context, index) {
+                              final r = state.reminders[index];
+                              return ListTile(
+                                leading: Icon(
+                                  r.isActive
+                                      ? Icons.check_circle_rounded
+                                      : Icons.circle_outlined,
+                                  color: r.isActive
+                                      ? AppColors.success
+                                      : Colors.grey,
+                                ),
+                                title: Text(r.name),
+                                subtitle: Text(
+                                  '${r.dosage} — ${r.timeOfDay} (${r.frequency.displayName})',
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete_outline),
+                                  onPressed: () {
+                                    if (r.id != null) {
+                                      remindersCubit.deleteReminder(r.id!);
+                                    }
+                                  },
+                                ),
+                                onTap: () {
+                                  if (r.id != null) {
+                                    remindersCubit.toggleReminder(r.id!);
+                                  }
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
@@ -43,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Icon(Icons.shield_rounded, color: Colors.white),
                   const SizedBox(width: 8),
                   Text(
-                    'Safora',
+                    l.appTitle,
                     style: AppTypography.titleLarge.copyWith(
                       color: Colors.white,
                     ),
@@ -96,13 +257,20 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(
-                            isSafe
-                                ? Icons.check_circle_rounded
-                                : Icons.warning_amber_rounded,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                          child: isSafe
+                              ? SizedBox(
+                                  width: 28,
+                                  height: 28,
+                                  child: Lottie.asset(
+                                    'assets/lottie/shield_pulse.json',
+                                    fit: BoxFit.contain,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -110,21 +278,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                isSafe
-                                    ? 'All Safe'
-                                    : '$alertCount Active Alert${alertCount == 1 ? '' : 's'}',
+                                isSafe ? l.allSafe : l.activeAlerts(alertCount),
                                 style: AppTypography.titleMedium.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
                               Text(
-                                isSafe
-                                    ? 'No active threats detected'
-                                    : 'Tap to view details',
+                                isSafe ? l.noActiveThreats : l.tapToViewDetails,
                                 style: AppTypography.bodySmall.copyWith(
-                                  color:
-                                      Colors.white.withValues(alpha: 0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
@@ -140,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            'LIVE',
+                            l.live,
                             style: AppTypography.labelSmall.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
@@ -170,8 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Quick Actions',
-                        style: AppTypography.titleMedium),
+                    Text(l.quickActions, style: AppTypography.titleMedium),
                     const SizedBox(height: 12),
                     GridView.count(
                       crossAxisCount: 3,
@@ -182,46 +344,40 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         _QuickAction(
                           icon: Icons.phone_in_talk_rounded,
-                          label: 'Decoy Call',
+                          label: l.decoyCall,
                           color: AppColors.secondary,
                           onTap: () => context.push('/decoy-call'),
                         ),
                         _QuickAction(
                           icon: Icons.contacts_rounded,
-                          label: 'Contacts',
+                          label: l.contacts,
                           color: AppColors.accent,
                           onTap: () => context.push('/contacts'),
                         ),
                         _QuickAction(
                           icon: Icons.medical_information_rounded,
-                          label: 'Medical ID',
+                          label: l.medicalId,
                           color: AppColors.success,
                           onTap: () => context.push('/profile'),
                         ),
                         _QuickAction(
                           icon: Icons.warning_amber_rounded,
-                          label: 'Alerts',
+                          label: l.alerts,
                           color: AppColors.warning,
                           onTap: () => context.push('/alerts'),
                         ),
                         _QuickAction(
                           icon: Icons.map_rounded,
-                          label: 'Live Map',
+                          label: l.alertMap,
                           color: AppColors.info,
                           onTap: () => context.push('/alerts'),
                         ),
                         _QuickAction(
                           icon: Icons.medication_rounded,
-                          label: 'Reminders',
+                          label: l.reminders,
                           color: AppColors.primary,
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Medicine reminders coming in Phase 2',
-                                ),
-                              ),
-                            );
+                            _showRemindersSheet(context);
                           },
                         ),
                       ],
@@ -242,27 +398,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Recent Alerts',
-                            style: AppTypography.titleMedium),
+                        Text(l.recentAlerts, style: AppTypography.titleMedium),
                         TextButton(
                           onPressed: () => context.push('/alerts'),
-                          child: const Text('See All'),
+                          child: Text(l.seeAll),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     BlocBuilder<AlertsCubit, AlertsState>(
                       builder: (context, state) {
-                        if (state is AlertsLoaded &&
-                            state.alerts.isNotEmpty) {
+                        if (state is AlertsLoaded && state.alerts.isNotEmpty) {
                           final recent = state.alerts.take(3).toList();
                           return Column(
                             children: recent
-                                .map((alert) => Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 10),
-                                      child: AlertCard(alert: alert),
-                                    ))
+                                .map(
+                                  (alert) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: AlertCard(alert: alert),
+                                  ),
+                                )
                                 .toList(),
                           );
                         }
@@ -270,9 +425,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         return Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Center(
@@ -281,14 +436,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Icon(
                                   Icons.shield_rounded,
                                   size: 48,
-                                  color:
-                                      AppColors.safe.withValues(alpha: 0.5),
+                                  color: AppColors.safe.withValues(alpha: 0.5),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'No recent alerts',
-                                  style:
-                                      AppTypography.bodyMedium.copyWith(
+                                  l.noRecentAlerts,
+                                  style: AppTypography.bodyMedium.copyWith(
                                     color: AppColors.textSecondary,
                                   ),
                                 ),
@@ -349,6 +502,147 @@ class _QuickAction extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Dialog to add a new medicine reminder with time picker and frequency.
+class _AddReminderDialog extends StatefulWidget {
+  const _AddReminderDialog();
+
+  @override
+  State<_AddReminderDialog> createState() => _AddReminderDialogState();
+}
+
+class _AddReminderDialogState extends State<_AddReminderDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtl = TextEditingController();
+  final _dosageCtl = TextEditingController();
+  final _notesCtl = TextEditingController();
+  TimeOfDay _time = TimeOfDay.now();
+  ReminderFrequency _freq = ReminderFrequency.daily;
+
+  @override
+  void dispose() {
+    _nameCtl.dispose();
+    _dosageCtl.dispose();
+    _notesCtl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(context: context, initialTime: _time);
+    if (picked != null) setState(() => _time = picked);
+  }
+
+  void _save() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final timeStr =
+        '${_time.hour.toString().padLeft(2, '0')}:${_time.minute.toString().padLeft(2, '0')}';
+
+    context.read<RemindersCubit>().addReminder(
+      name: _nameCtl.text.trim(),
+      dosage: _dosageCtl.text.trim(),
+      timeOfDay: timeStr,
+      frequency: _freq,
+      notes: _notesCtl.text.trim().isNotEmpty ? _notesCtl.text.trim() : null,
+    );
+
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l.addReminder),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nameCtl,
+                decoration: InputDecoration(
+                  labelText: l.medicineName,
+                  prefixIcon: const Icon(Icons.medication_rounded),
+                ),
+                textCapitalization: TextCapitalization.words,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? l.enterMedicineName
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _dosageCtl,
+                decoration: InputDecoration(
+                  labelText: l.dosage,
+                  hintText: l.dosageHint,
+                  prefixIcon: const Icon(Icons.science_rounded),
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? l.enterDosage : null,
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.schedule_rounded),
+                title: Text(l.time),
+                trailing: TextButton(
+                  onPressed: _pickTime,
+                  child: Text(_time.format(context)),
+                ),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<ReminderFrequency>(
+                initialValue: _freq,
+                decoration: InputDecoration(
+                  labelText: l.frequency,
+                  prefixIcon: const Icon(Icons.repeat_rounded),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: ReminderFrequency.daily,
+                    child: Text(l.onceDailyLabel),
+                  ),
+                  DropdownMenuItem(
+                    value: ReminderFrequency.twiceDaily,
+                    child: Text(l.twiceDailyLabel),
+                  ),
+                  DropdownMenuItem(
+                    value: ReminderFrequency.weekly,
+                    child: Text(l.weeklyLabel),
+                  ),
+                  DropdownMenuItem(
+                    value: ReminderFrequency.asNeeded,
+                    child: Text(l.asNeededLabel),
+                  ),
+                ],
+                onChanged: (v) => setState(() => _freq = v!),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _notesCtl,
+                decoration: InputDecoration(
+                  labelText: l.notes,
+                  hintText: l.notesHint,
+                  prefixIcon: const Icon(Icons.note_rounded),
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.cancel),
+        ),
+        FilledButton(onPressed: _save, child: Text(l.save)),
+      ],
     );
   }
 }

@@ -74,7 +74,7 @@ class UserProfile extends Equatable {
   factory UserProfile.fromMap(Map<String, dynamic> map, {String? id}) {
     return UserProfile(
       id: id,
-      fullName: map['fullName'] as String,
+      fullName: map['fullName'] as String? ?? '',
       bloodType: map['bloodType'] as String?,
       allergies: List<String>.from(map['allergies'] as List? ?? []),
       medicalConditions:

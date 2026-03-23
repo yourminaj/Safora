@@ -11,7 +11,7 @@ void main() {
   late ProfileRepositoryImpl repository;
   late MockProfileLocalDataSource mockDataSource;
 
-  final sampleProfile = UserProfile(
+  const sampleProfile = UserProfile(
     fullName: 'Minhaj Sadik',
     bloodType: 'O+',
     allergies: ['Peanuts', 'Dust'],
@@ -51,8 +51,7 @@ void main() {
     });
 
     test('save delegates to data source', () async {
-      when(() => mockDataSource.save(sampleProfile))
-          .thenAnswer((_) async {});
+      when(() => mockDataSource.save(sampleProfile)).thenAnswer((_) async {});
 
       await repository.save(sampleProfile);
 

@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:uuid/uuid.dart';
 import '../models/emergency_contact.dart';
 
 /// Local data source for emergency contacts using Hive.
@@ -39,7 +40,7 @@ class ContactsLocalDataSource {
         'Maximum $maxFreeContacts contacts allowed on the free tier.',
       );
     }
-    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    final id = const Uuid().v4();
     final data = contact.toMap();
     data['_id'] = id;
     await _box.put(id, data);

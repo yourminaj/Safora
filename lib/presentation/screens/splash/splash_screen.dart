@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:hive/hive.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../injection.dart';
@@ -44,6 +45,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -88,7 +90,7 @@ class _SplashScreenState extends State<SplashScreen> {
               duration: const Duration(milliseconds: 800),
               delay: const Duration(milliseconds: 600),
               child: Text(
-                "Your Family's Safety Guardian",
+                l.appTagline,
                 style: AppTypography.bodyMedium.copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
                 ),

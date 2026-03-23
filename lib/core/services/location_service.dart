@@ -17,7 +17,7 @@ class LocationService {
   ///
   /// Returns `true` if permission is granted.
   Future<bool> ensurePermission() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return false;
 
     LocationPermission permission = await Geolocator.checkPermission();

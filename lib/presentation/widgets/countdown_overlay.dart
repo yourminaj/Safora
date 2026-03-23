@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import '../../core/theme/typography.dart';
 import '../blocs/sos/sos_cubit.dart';
 import '../blocs/sos/sos_state.dart';
@@ -29,6 +30,7 @@ class CountdownOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return BlocConsumer<SosCubit, SosState>(
       listener: (context, state) {
         if (state is SosCancelled || state is SosActive || state is SosIdle) {
@@ -69,7 +71,7 @@ class CountdownOverlay extends StatelessWidget {
                   children: [
                     // ─── Warning text ───────────────
                     Text(
-                      '🚨 SOS ALERT',
+                      l.sosAlertTitle,
                       style: AppTypography.headlineMedium.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
@@ -78,7 +80,7 @@ class CountdownOverlay extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Emergency alert will be sent in',
+                      l.emergencyAlertWillBeSent,
                       style: AppTypography.bodyLarge.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -89,6 +91,7 @@ class CountdownOverlay extends StatelessWidget {
                     _CircularCountdown(
                       secondsRemaining: state.secondsRemaining,
                       progress: state.progress,
+                      secondsLabel: l.seconds,
                     ),
 
                     const SizedBox(height: 40),
@@ -97,7 +100,7 @@ class CountdownOverlay extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 32),
                       child: Text(
-                        'Your emergency contacts will receive an SMS with your GPS location.',
+                        l.sosContactsWillReceiveSms,
                         style: AppTypography.bodyMedium.copyWith(
                           color: Colors.white.withValues(alpha: 0.8),
                         ),
@@ -113,7 +116,7 @@ class CountdownOverlay extends StatelessWidget {
                       },
                       icon: const Icon(Icons.close_rounded, size: 24),
                       label: Text(
-                        'CANCEL',
+                        l.cancel.toUpperCase(),
                         style: AppTypography.titleMedium.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -148,10 +151,12 @@ class _CircularCountdown extends StatelessWidget {
   const _CircularCountdown({
     required this.secondsRemaining,
     required this.progress,
+    required this.secondsLabel,
   });
 
   final int secondsRemaining;
   final double progress;
+  final String secondsLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +182,7 @@ class _CircularCountdown extends StatelessWidget {
                 ),
               ),
               Text(
-                'seconds',
+                secondsLabel,
                 style: AppTypography.labelLarge.copyWith(
                   color: Colors.white.withValues(alpha: 0.7),
                 ),

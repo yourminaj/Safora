@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:safora/l10n/app_localizations.dart';
 import 'data/models/emergency_contact.dart';
 import 'data/models/user_profile.dart';
 import 'injection.dart';
@@ -8,6 +9,7 @@ import 'presentation/blocs/alerts/alerts_cubit.dart';
 import 'presentation/blocs/battery/battery_cubit.dart';
 import 'presentation/blocs/contacts/contacts_cubit.dart';
 import 'presentation/blocs/profile/profile_cubit.dart';
+import 'presentation/blocs/reminders/reminders_cubit.dart';
 import 'presentation/blocs/sos/sos_cubit.dart';
 import 'presentation/screens/splash/splash_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
@@ -40,24 +42,27 @@ abstract final class AppRoutes {
 GoRouter createRouter() => GoRouter(
       initialLocation: AppRoutes.splash,
       // Enterprise: friendly error page for unknown routes / deep links.
-      errorBuilder: (context, state) => Scaffold(
-        appBar: AppBar(title: const Text('Page Not Found')),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.explore_off_rounded, size: 64, color: Colors.grey),
-              const SizedBox(height: 16),
-              Text('Route not found: ${state.uri}'),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => context.go(AppRoutes.home),
-                child: const Text('Go Home'),
-              ),
-            ],
+      errorBuilder: (context, state) {
+        final l = AppLocalizations.of(context);
+        return Scaffold(
+          appBar: AppBar(title: Text(l?.pageNotFound ?? 'Page Not Found')),
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.explore_off_rounded, size: 64, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text(l?.routeNotFound(state.uri.toString()) ?? 'Route not found: ${state.uri}'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.go(AppRoutes.home),
+                  child: Text(l?.goHome ?? 'Go Home'),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
       routes: [
         GoRoute(
           path: AppRoutes.splash,
@@ -135,6 +140,9 @@ Widget wrapWithProviders(Widget child) {
       ),
       BlocProvider<ProfileCubit>(
         create: (_) => getIt<ProfileCubit>(),
+      ),
+      BlocProvider<RemindersCubit>(
+        create: (_) => getIt<RemindersCubit>(),
       ),
     ],
     child: child,

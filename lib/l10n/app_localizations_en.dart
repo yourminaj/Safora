@@ -21,6 +21,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get live => 'LIVE';
 
   @override
+  String get tapToViewDetails => 'Tap to view details';
+
+  @override
+  String activeAlerts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count Active Alert$_temp0';
+  }
+
+  @override
   String get sosButton => 'SOS';
 
   @override
@@ -53,7 +67,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alerts => 'Alerts';
 
   @override
-  String get liveMap => 'Live Map';
+  String get alertMap => 'Alert Map';
 
   @override
   String get reminders => 'Reminders';
@@ -151,6 +165,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get organDonor => 'Organ Donor';
 
   @override
+  String get shareWithFirstResponders => 'Share with first responders';
+
+  @override
   String get separateWithCommas => 'Separate with commas';
 
   @override
@@ -175,7 +192,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editContact => 'Edit Contact';
 
   @override
+  String get contactDetails => 'Contact Details';
+
+  @override
+  String get setAsPrimaryContact => 'Set as Primary Contact';
+
+  @override
   String get maxContactsReached => 'Maximum 3 contacts for free tier';
+
+  @override
+  String get contactLimitReached => 'Contact Limit Reached';
+
+  @override
+  String get contactLimitMessage =>
+      'Free users can add up to 3 emergency contacts.';
+
+  @override
+  String get premiumRoadmap =>
+      'Premium features including unlimited contacts, all 127 risk types, and advanced detection will be available in an upcoming release.';
+
+  @override
+  String get removeContact => 'Remove Contact?';
+
+  @override
+  String removeContactConfirm(String name) {
+    return 'Are you sure you want to remove $name from your emergency contacts?';
+  }
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get setAsPrimary => 'Set as Primary';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get primary => 'PRIMARY';
+
+  @override
+  String nContactsAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count contact$_temp0 added';
+  }
+
+  @override
+  String get noEmergencyContacts => 'No Emergency Contacts';
+
+  @override
+  String get addContactsHint =>
+      'Add up to 3 trusted contacts who will be alerted during emergencies with your GPS location.';
 
   @override
   String get incomingCall => 'Incoming call...';
@@ -202,10 +280,141 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get account => 'Account';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get manageProfile => 'Manage your medical profile';
+
+  @override
+  String get premium => 'Premium';
+
+  @override
+  String get unlockAllRiskTypes => 'Unlock all 127 risk types';
+
+  @override
+  String get saforaPremium => 'Safora Premium';
+
+  @override
+  String get currentFreePlan => 'Current free plan includes:';
+
+  @override
+  String get freeSos => '✅ SOS with SMS alerts';
+
+  @override
+  String get freeContacts => '✅ 3 emergency contacts';
+
+  @override
+  String get freeAlerts => '✅ Real-time disaster alerts';
+
+  @override
+  String get freeDetection => '✅ Crash & fall detection';
+
+  @override
+  String get freeMedicalId => '✅ Medical ID profile';
+
+  @override
+  String get pro => 'PRO';
+
+  @override
+  String get safety => 'Safety';
+
+  @override
   String get shakeToSos => 'Shake to SOS';
 
   @override
   String get shakeToSosDesc => 'Shake your phone 3 times to trigger SOS';
+
+  @override
+  String get alertSounds => 'Alert Sounds';
+
+  @override
+  String get configureAlertSounds => 'Configure alert sounds';
+
+  @override
+  String get alertSoundSettings => 'Alert Sound Settings';
+
+  @override
+  String get alertSoundExplain =>
+      'Alert sounds are configured automatically based on alert priority:';
+
+  @override
+  String get criticalSiren => '🔴 Critical — Emergency siren';
+
+  @override
+  String get highMediumWarning => '🟡 High / Medium — Warning tone';
+
+  @override
+  String get lowNotification => '🟢 Low — Gentle notification';
+
+  @override
+  String get customSoundFuture =>
+      'Custom sound selection will be available in a future update.';
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get languageSettings => 'Language Settings';
+
+  @override
+  String get languageExplain =>
+      'Safora supports English and Bengali (বাংলা). The app language follows your device language setting automatically.';
+
+  @override
+  String get toChangeLanguage => 'To change the language, go to:';
+
+  @override
+  String get deviceSettingsLanguage => '📱 Device Settings → Language & Region';
+
+  @override
+  String get inAppLanguageFuture =>
+      'In-app language switching will be available in a future update.';
+
+  @override
+  String get darkMode => 'Dark Mode';
+
+  @override
+  String get systemDefault => 'System default';
+
+  @override
+  String get themeFollowsSystem => 'Theme follows system settings';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get saforaVersion => 'Safora v0.1.0';
+
+  @override
+  String get saforaLegalese => '© 2026 Safora Technologies';
+
+  @override
+  String get saforaAbout =>
+      'Your Family\'s Safety Guardian — protecting you with real-time disaster alerts, SOS, and emergency notifications.';
+
+  @override
+  String get medicineReminders => '💊 Medicine Reminders';
+
+  @override
+  String nActive(int count) {
+    return '$count active';
+  }
+
+  @override
+  String get noRemindersSet => 'No reminders set';
+
+  @override
+  String get addRemindersHint =>
+      'Add medicine reminders to get\ntimely notifications';
 
   @override
   String get lowBatteryWarning => 'Low Battery Warning';
@@ -213,5 +422,172 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String batteryAt(int level) {
     return 'Your battery is at $level%.';
+  }
+
+  @override
+  String get pageNotFound => 'Page Not Found';
+
+  @override
+  String routeNotFound(String route) {
+    return 'Route not found: $route';
+  }
+
+  @override
+  String get goHome => 'Go Home';
+
+  @override
+  String get somethingWentWrong => 'Something went wrong';
+
+  @override
+  String get phoneNumber => 'Phone Number';
+
+  @override
+  String get relationship => 'Relationship (optional)';
+
+  @override
+  String get relationshipHint => 'e.g. Mother, Brother, Friend';
+
+  @override
+  String get enterName => 'Enter a name';
+
+  @override
+  String get enterPhone => 'Enter a phone number';
+
+  @override
+  String get enterValidPhone => 'Enter a valid phone number';
+
+  @override
+  String get primaryContactNotify =>
+      'This contact will be notified first during emergencies.';
+
+  @override
+  String get sosAlertActivated => '🚨 SOS Alert activated! Siren playing.';
+
+  @override
+  String get stop => 'STOP';
+
+  @override
+  String get tapForHelp => 'TAP FOR HELP';
+
+  @override
+  String nAlerts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count alert$_temp0';
+  }
+
+  @override
+  String get addReminder => 'Add Reminder';
+
+  @override
+  String get medicineName => 'Medicine Name';
+
+  @override
+  String get dosage => 'Dosage';
+
+  @override
+  String get dosageHint => 'e.g. 500mg, 2 tablets';
+
+  @override
+  String get time => 'Time';
+
+  @override
+  String get frequency => 'Frequency';
+
+  @override
+  String get notes => 'Notes (optional)';
+
+  @override
+  String get notesHint => 'e.g. Take with food';
+
+  @override
+  String get enterMedicineName => 'Enter medicine name';
+
+  @override
+  String get enterDosage => 'Enter dosage';
+
+  @override
+  String get onceDailyLabel => 'Once daily';
+
+  @override
+  String get twiceDailyLabel => 'Twice daily';
+
+  @override
+  String get weeklyLabel => 'Weekly';
+
+  @override
+  String get asNeededLabel => 'As needed';
+
+  @override
+  String get sosAlertTitle => '🚨 SOS ALERT';
+
+  @override
+  String get emergencyAlertWillBeSent => 'Emergency alert will be sent in';
+
+  @override
+  String get seconds => 'seconds';
+
+  @override
+  String get sosContactsWillReceiveSms =>
+      'Your emergency contacts will receive an SMS with your GPS location.';
+
+  @override
+  String get onboardingTitle1 => 'Stay Protected 24/7';
+
+  @override
+  String get onboardingDesc1 =>
+      'Safora monitors for emergencies, disasters, and safety threats — alerting your family instantly with your GPS location.';
+
+  @override
+  String get onboardingTitle2 => 'Add Emergency Contacts';
+
+  @override
+  String get onboardingDesc2 =>
+      'Add up to 3 trusted contacts. When danger strikes, they\'ll get an instant SMS with your exact location and alert type.';
+
+  @override
+  String get onboardingTitle3 => 'Your Medical Profile';
+
+  @override
+  String get onboardingDesc3 =>
+      'Save your blood type, allergies, and medical conditions. First responders can access this info during emergencies.';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get getStarted => 'Get Started';
+
+  @override
+  String get locationNeededSnack =>
+      'Location is needed for SOS. Enable in Settings.';
+
+  @override
+  String get notificationsNeededSnack =>
+      'Notifications are needed for alerts. Enable in Settings.';
+
+  @override
+  String get appTagline => 'Your Family\'s Safety Guardian';
+
+  @override
+  String mAgo(int count) {
+    return '${count}m ago';
+  }
+
+  @override
+  String hAgo(int count) {
+    return '${count}h ago';
+  }
+
+  @override
+  String dAgo(int count) {
+    return '${count}d ago';
   }
 }
