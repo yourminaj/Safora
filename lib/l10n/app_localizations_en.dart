@@ -183,6 +183,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noneListed => 'None listed';
 
   @override
+  String get bodyInfo => 'Body';
+
+  @override
   String get emergencyContacts => 'Emergency Contacts';
 
   @override
@@ -590,4 +593,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String dAgo(int count) {
     return '${count}d ago';
   }
+
+  @override
+  String get appLock => 'App Lock';
+
+  @override
+  String get appLockDesc => 'Require PIN or biometrics to open Safora';
+
+  @override
+  String get enterPin => 'Enter PIN';
+
+  @override
+  String get enterPinToUnlock => 'Enter your 4-digit PIN to unlock';
+
+  @override
+  String get wrongPin => 'Wrong PIN. Try again.';
+
+  @override
+  String get useBiometric => 'Use Biometrics';
+
+  @override
+  String get setPinTitle => 'Set a 4-digit PIN';
+
+  @override
+  String get confirmPin => 'Confirm your PIN';
+
+  @override
+  String get pinMismatch => 'PINs do not match. Try again.';
+
+  @override
+  String get pinSet => 'PIN set successfully';
+
+  @override
+  String get changePinTitle => 'Change PIN';
+
+  @override
+  String get biometricAuth => 'Use biometrics (fingerprint/face)';
+
+  @override
+  String get lockEnabled => 'App lock enabled';
+
+  @override
+  String get lockDisabled => 'App lock disabled';
 }

@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
+import 'core/services/app_lock_service.dart';
 import 'core/services/app_logger.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/audio_service.dart';
@@ -17,6 +18,7 @@ import 'data/datasources/contacts_local_datasource.dart';
 import 'data/datasources/disaster_api_client.dart';
 import 'data/datasources/profile_local_datasource.dart';
 import 'data/datasources/reminders_local_datasource.dart';
+import 'data/datasources/sos_history_datasource.dart';
 import 'data/repositories/alerts_repository.dart';
 import 'data/repositories/contacts_repository.dart';
 import 'data/repositories/profile_repository.dart';
@@ -91,9 +93,19 @@ Future<void> configureDependencies() async {
     () => RemindersLocalDataSource(remindersBox),
   );
 
+  final sosHistoryBox = await _openBoxSafe(SosHistoryDatasource.boxName);
+  getIt.registerLazySingleton<SosHistoryDatasource>(
+    () => SosHistoryDatasource(sosHistoryBox),
+  );
+
   // Centralized app settings box (used by splash, onboarding, settings).
   final appSettingsBox = await _openBoxSafe('app_settings');
   getIt.registerSingleton<Box>(appSettingsBox, instanceName: 'app_settings');
+
+  // App lock service (uses app_settings box for PIN storage).
+  getIt.registerLazySingleton<AppLockService>(
+    () => AppLockService(settingsBox: appSettingsBox),
+  );
 
   getIt.registerLazySingleton<DisasterApiClient>(
     () => DisasterApiClient(),
@@ -140,6 +152,8 @@ Future<void> configureDependencies() async {
       audioService: getIt<AudioService>(),
       triggerSosUseCase: getIt<TriggerSosUseCase>(),
       contactsRepository: getIt<ContactsRepository>(),
+      sosHistoryDatasource: getIt<SosHistoryDatasource>(),
+      locationService: getIt<LocationService>(),
     ),
   );
   getIt.registerFactory<BatteryCubit>(

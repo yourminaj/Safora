@@ -178,6 +178,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get noneListed => 'কিছু তালিকাভুক্ত নেই';
 
   @override
+  String get bodyInfo => 'শরীর';
+
+  @override
   String get emergencyContacts => 'জরুরি যোগাযোগ';
 
   @override
@@ -425,7 +428,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get goHome => 'হোমে যান';
 
   @override
-  String get somethingWentWrong => 'কিছু ভুল হয়েছে';
+  String get somethingWentWrong => 'কিছু একটা সমস্যা হয়েছে';
 
   @override
   String get phoneNumber => 'ফোন নম্বর';
@@ -573,4 +576,46 @@ class AppLocalizationsBn extends AppLocalizations {
   String dAgo(int count) {
     return '$count দিন আগে';
   }
+
+  @override
+  String get appLock => 'অ্যাপ লক';
+
+  @override
+  String get appLockDesc => 'সাফোরা খুলতে পিন বা বায়োমেট্রিক্স প্রয়োজন';
+
+  @override
+  String get enterPin => 'পিন দিন';
+
+  @override
+  String get enterPinToUnlock => 'আনলক করতে আপনার ৪-সংখ্যার পিন দিন';
+
+  @override
+  String get wrongPin => 'ভুল পিন। আবার চেষ্টা করুন।';
+
+  @override
+  String get useBiometric => 'বায়োমেট্রিক্স ব্যবহার করুন';
+
+  @override
+  String get setPinTitle => 'একটি ৪-সংখ্যার পিন সেট করুন';
+
+  @override
+  String get confirmPin => 'আপনার পিন নিশ্চিত করুন';
+
+  @override
+  String get pinMismatch => 'পিন মিলছে না। আবার চেষ্টা করুন।';
+
+  @override
+  String get pinSet => 'পিন সফলভাবে সেট হয়েছে';
+
+  @override
+  String get changePinTitle => 'পিন পরিবর্তন করুন';
+
+  @override
+  String get biometricAuth => 'বায়োমেট্রিক্স ব্যবহার করুন (আঙুলের ছাপ/মুখ)';
+
+  @override
+  String get lockEnabled => 'অ্যাপ লক সক্রিয়';
+
+  @override
+  String get lockDisabled => 'অ্যাপ লক নিষ্ক্রিয়';
 }

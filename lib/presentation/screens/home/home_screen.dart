@@ -370,7 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icons.map_rounded,
                           label: l.alertMap,
                           color: AppColors.info,
-                          onTap: () => context.push('/alerts'),
+                          onTap: () => context.push('/alert-map'),
                         ),
                         _QuickAction(
                           icon: Icons.medication_rounded,

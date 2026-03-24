@@ -6,10 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'app.dart';
 import 'core/services/ad_service.dart';
+import 'core/services/app_lock_service.dart';
 import 'core/services/app_logger.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/shake_detection_service.dart';
@@ -132,8 +134,48 @@ void main() async {
 }
 
 /// Root widget of the Safora application.
-class SaforaApp extends StatelessWidget {
+class SaforaApp extends StatefulWidget {
   const SaforaApp({super.key});
+
+  @override
+  State<SaforaApp> createState() => _SaforaAppState();
+}
+
+class _SaforaAppState extends State<SaforaApp> {
+  late final GoRouter _router;
+  late final AppLifecycleListener _lifecycleListener;
+  bool _lockScreenShowing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = createRouter();
+    _lifecycleListener = AppLifecycleListener(
+      onResume: _onAppResumed,
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycleListener.dispose();
+    super.dispose();
+  }
+
+  void _onAppResumed() {
+    // Show lock screen if lock is enabled and not already showing.
+    if (_lockScreenShowing) return;
+    try {
+      final lockService = getIt<AppLockService>();
+      if (lockService.isLockEnabled) {
+        _lockScreenShowing = true;
+        _router.push(AppRoutes.lock).then((_) {
+          _lockScreenShowing = false;
+        });
+      }
+    } catch (_) {
+      // AppLockService not registered yet during startup — ignore.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +186,7 @@ class SaforaApp extends StatelessWidget {
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: ThemeMode.system,
-        routerConfig: createRouter(),
+        routerConfig: _router,
 
         // ── Localization ────────────────────────────────
         localizationsDelegates: const [

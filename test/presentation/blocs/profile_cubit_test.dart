@@ -14,9 +14,9 @@ void main() {
   const testProfile = UserProfile(
     fullName: 'Minhaj Sadik',
     bloodType: 'O+',
-    allergies: const ['Peanuts'],
-    medicalConditions: const ['Asthma'],
-    medications: const ['Salbutamol'],
+    allergies: ['Peanuts'],
+    medicalConditions: ['Asthma'],
+    medications: ['Salbutamol'],
     emergencyNotes: 'Carries inhaler',
     weight: 75.0,
     height: 175.0,

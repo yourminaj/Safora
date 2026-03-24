@@ -22,8 +22,10 @@ import 'presentation/screens/contacts/edit_contact_screen.dart';
 import 'presentation/screens/profile/profile_screen.dart';
 import 'presentation/screens/profile/edit_profile_screen.dart';
 import 'presentation/screens/alerts/alerts_screen.dart';
+import 'presentation/screens/alerts/alert_map_screen.dart';
 import 'presentation/screens/settings/settings_screen.dart';
 import 'presentation/screens/decoycall/decoy_call_screen.dart';
+import 'presentation/screens/lock/lock_screen.dart';
 
 /// Named route paths.
 abstract final class AppRoutes {
@@ -40,6 +42,8 @@ abstract final class AppRoutes {
   static const String alerts = '/alerts';
   static const String settings = '/settings';
   static const String decoyCall = '/decoy-call';
+  static const String alertMap = '/alert-map';
+  static const String lock = '/lock';
 }
 
 /// GoRouter configuration.
@@ -124,12 +128,20 @@ GoRouter createRouter() => GoRouter(
           builder: (context, state) => const AlertsScreen(),
         ),
         GoRoute(
+          path: AppRoutes.alertMap,
+          builder: (context, state) => const AlertMapScreen(),
+        ),
+        GoRoute(
           path: AppRoutes.settings,
           builder: (context, state) => const SettingsScreen(),
         ),
         GoRoute(
           path: AppRoutes.decoyCall,
           builder: (context, state) => const DecoyCallScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.lock,
+          builder: (context, state) => const LockScreen(),
         ),
       ],
     );

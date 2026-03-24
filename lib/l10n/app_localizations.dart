@@ -422,6 +422,12 @@ abstract class AppLocalizations {
   /// **'None listed'**
   String get noneListed;
 
+  /// No description provided for @bodyInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Body'**
+  String get bodyInfo;
+
   /// No description provided for @emergencyContacts.
   ///
   /// In en, this message translates to:
@@ -1147,6 +1153,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count}d ago'**
   String dAgo(int count);
+
+  /// No description provided for @appLock.
+  ///
+  /// In en, this message translates to:
+  /// **'App Lock'**
+  String get appLock;
+
+  /// No description provided for @appLockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Require PIN or biometrics to open Safora'**
+  String get appLockDesc;
+
+  /// No description provided for @enterPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter PIN'**
+  String get enterPin;
+
+  /// No description provided for @enterPinToUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your 4-digit PIN to unlock'**
+  String get enterPinToUnlock;
+
+  /// No description provided for @wrongPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong PIN. Try again.'**
+  String get wrongPin;
+
+  /// No description provided for @useBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Biometrics'**
+  String get useBiometric;
+
+  /// No description provided for @setPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a 4-digit PIN'**
+  String get setPinTitle;
+
+  /// No description provided for @confirmPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your PIN'**
+  String get confirmPin;
+
+  /// No description provided for @pinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'PINs do not match. Try again.'**
+  String get pinMismatch;
+
+  /// No description provided for @pinSet.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN set successfully'**
+  String get pinSet;
+
+  /// No description provided for @changePinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change PIN'**
+  String get changePinTitle;
+
+  /// No description provided for @biometricAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Use biometrics (fingerprint/face)'**
+  String get biometricAuth;
+
+  /// No description provided for @lockEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock enabled'**
+  String get lockEnabled;
+
+  /// No description provided for @lockDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock disabled'**
+  String get lockDisabled;
 }
 
 class _AppLocalizationsDelegate

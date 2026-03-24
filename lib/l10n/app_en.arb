@@ -64,6 +64,7 @@
   "save": "Save",
   "notSet": "Not set",
   "noneListed": "None listed",
+  "bodyInfo": "Body",
 
   "emergencyContacts": "Emergency Contacts",
   "addContact": "Add Contact",
@@ -217,9 +218,18 @@
   "dAgo": "{count}d ago",
   "@dAgo": { "placeholders": { "count": { "type": "int" } } },
 
-  "pageNotFound": "Page Not Found",
-  "routeNotFound": "Route not found: {route}",
-  "@routeNotFound": { "placeholders": { "route": { "type": "String" } } },
-  "goHome": "Go Home",
-  "somethingWentWrong": "Something went wrong"
+  "appLock": "App Lock",
+  "appLockDesc": "Require PIN or biometrics to open Safora",
+  "enterPin": "Enter PIN",
+  "enterPinToUnlock": "Enter your 4-digit PIN to unlock",
+  "wrongPin": "Wrong PIN. Try again.",
+  "useBiometric": "Use Biometrics",
+  "setPinTitle": "Set a 4-digit PIN",
+  "confirmPin": "Confirm your PIN",
+  "pinMismatch": "PINs do not match. Try again.",
+  "pinSet": "PIN set successfully",
+  "changePinTitle": "Change PIN",
+  "biometricAuth": "Use biometrics (fingerprint/face)",
+  "lockEnabled": "App lock enabled",
+  "lockDisabled": "App lock disabled"
 }

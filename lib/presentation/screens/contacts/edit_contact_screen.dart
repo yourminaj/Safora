@@ -116,7 +116,13 @@ class _EditContactScreenState extends State<EditContactScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return l.enterPhone;
                   }
-                  if (value.trim().length < 7) {
+                  // Strip spaces, dashes, and parens for validation.
+                  final cleaned = value.trim().replaceAll(RegExp(r'[\s\-\(\)]'), '');
+                  if (cleaned.length < 7 || cleaned.length > 15) {
+                    return l.enterValidPhone;
+                  }
+                  // Must start with + or digit, contain only digits after optional +.
+                  if (!RegExp(r'^\+?\d{7,15}$').hasMatch(cleaned)) {
                     return l.enterValidPhone;
                   }
                   return null;

@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/audio_service.dart';
+import 'package:safora/core/services/location_service.dart';
+import 'package:safora/data/datasources/sos_history_datasource.dart';
+import 'package:safora/data/models/sos_history_entry.dart';
 import 'package:safora/data/repositories/contacts_repository.dart';
 import 'package:safora/domain/usecases/trigger_sos_usecase.dart';
 import 'package:safora/presentation/blocs/sos/sos_cubit.dart';
@@ -12,21 +15,39 @@ class MockTriggerSosUseCase extends Mock implements TriggerSosUseCase {}
 
 class MockContactsRepository extends Mock implements ContactsRepository {}
 
+class MockSosHistoryDatasource extends Mock implements SosHistoryDatasource {}
+
+class MockLocationService extends Mock implements LocationService {}
+
 void main() {
+  setUpAll(() {
+    registerFallbackValue(SosHistoryEntry(
+      timestamp: DateTime(2020),
+      contactsNotified: 0,
+      smsSentCount: 0,
+      wasCancelled: false,
+    ));
+  });
   late SosCubit cubit;
   late MockAudioService mockAudio;
   late MockTriggerSosUseCase mockUseCase;
   late MockContactsRepository mockContacts;
+  late MockSosHistoryDatasource mockHistory;
+  late MockLocationService mockLocation;
 
   setUp(() {
     mockAudio = MockAudioService();
     mockUseCase = MockTriggerSosUseCase();
     mockContacts = MockContactsRepository();
+    mockHistory = MockSosHistoryDatasource();
+    mockLocation = MockLocationService();
 
     when(() => mockAudio.playSiren()).thenAnswer((_) async {});
     when(() => mockAudio.stopAll()).thenAnswer((_) async {});
     when(() => mockUseCase.cancel()).thenAnswer((_) async {});
     when(() => mockContacts.getAll()).thenReturn([]);
+    when(() => mockHistory.add(any())).thenAnswer((_) async {});
+    when(() => mockLocation.lastPosition).thenReturn(null);
     when(
       () => mockUseCase.execute(
         contacts: any(named: 'contacts'),
@@ -44,6 +65,8 @@ void main() {
       audioService: mockAudio,
       triggerSosUseCase: mockUseCase,
       contactsRepository: mockContacts,
+      sosHistoryDatasource: mockHistory,
+      locationService: mockLocation,
     );
   });
 

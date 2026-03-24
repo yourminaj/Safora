@@ -5,8 +5,11 @@ import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/auth_service.dart';
 import 'package:safora/core/services/audio_service.dart';
+import 'package:safora/core/services/location_service.dart';
 import 'package:safora/core/services/notification_service.dart';
 import 'package:safora/data/datasources/contacts_cloud_sync.dart';
+import 'package:safora/data/datasources/sos_history_datasource.dart';
+import 'package:safora/data/models/sos_history_entry.dart';
 import 'package:safora/data/repositories/alerts_repository.dart';
 import 'package:safora/data/repositories/contacts_repository.dart';
 import 'package:safora/data/repositories/profile_repository.dart';
@@ -38,6 +41,10 @@ class MockAuthService extends Mock implements AuthService {}
 
 class MockContactsCloudSync extends Mock implements ContactsCloudSync {}
 
+class MockSosHistoryDatasource extends Mock implements SosHistoryDatasource {}
+
+class MockLocationService extends Mock implements LocationService {}
+
 // ─── Test Wrapper ─────────────────────────────────────────────
 /// Wraps a widget under test with all required providers and
 /// MaterialApp shell so localization and BLoC access work in tests.
@@ -49,6 +56,13 @@ Widget buildTestableWidget({
   ProfileCubit? profileCubit,
   RemindersCubit? remindersCubit,
 }) {
+  // Register fallback values for mocktail.
+  registerFallbackValue(SosHistoryEntry(
+    timestamp: DateTime(2020),
+    contactsNotified: 0,
+    smsSentCount: 0,
+    wasCancelled: false,
+  ));
   final mockAudio = MockAudioService();
   final mockUseCase = MockTriggerSosUseCase();
   final mockContacts = MockContactsRepository();
@@ -56,6 +70,8 @@ Widget buildTestableWidget({
   final mockProfileRepo = MockProfileRepository();
   final mockRemindersRepo = MockRemindersRepository();
   final mockNotificationSvc = MockNotificationService();
+  final mockHistory = MockSosHistoryDatasource();
+  final mockLocation = MockLocationService();
 
   // Register GetIt mocks for screens that use getIt<> directly.
   final getIt = GetIt.instance;
@@ -91,6 +107,8 @@ Widget buildTestableWidget({
       hasLocation: false,
     ),
   );
+  when(() => mockHistory.add(any())).thenAnswer((_) async {});
+  when(() => mockLocation.lastPosition).thenReturn(null);
 
   return MultiBlocProvider(
     providers: [
@@ -101,6 +119,8 @@ Widget buildTestableWidget({
               audioService: mockAudio,
               triggerSosUseCase: mockUseCase,
               contactsRepository: mockContacts,
+              sosHistoryDatasource: mockHistory,
+              locationService: mockLocation,
             ),
       ),
       BlocProvider<AlertsCubit>(

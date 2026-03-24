@@ -95,7 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         if (p.weight != null || p.height != null)
                           _InfoRow(
-                            label: 'Body',
+                            label: l.bodyInfo,
                             value: [
                               if (p.weight != null) '${p.weight} kg',
                               if (p.height != null) '${p.height} cm',

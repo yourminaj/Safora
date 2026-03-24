@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/services/ad_service.dart';
+import '../../../core/services/app_lock_service.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/shake_detection_service.dart';
 import '../../../core/theme/colors.dart';
@@ -27,16 +28,20 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _shakeEnabled = false;
+  bool _lockEnabled = false;
   late final ShakeDetectionService _shakeService;
+  late final AppLockService _lockService;
   late final Box _appSettings;
 
   @override
   void initState() {
     super.initState();
     _shakeService = getIt<ShakeDetectionService>();
+    _lockService = getIt<AppLockService>();
     _appSettings = getIt<Box>(instanceName: 'app_settings');
     // Restore persisted state.
     _shakeEnabled = _appSettings.get('shake_enabled', defaultValue: false) as bool;
+    _lockEnabled = _lockService.isLockEnabled;
   }
 
   void _toggleShake(bool enabled) {
@@ -53,6 +58,164 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } else {
       _shakeService.stopListening();
     }
+  }
+
+  void _toggleLock(bool enabled) async {
+    final l = AppLocalizations.of(context)!;
+    if (enabled) {
+      // Show PIN setup dialog.
+      final pin = await _showPinSetupDialog(l);
+      if (pin != null && mounted) {
+        await _lockService.setPin(pin);
+        await _lockService.enableLock();
+        setState(() => _lockEnabled = true);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l.lockEnabled)),
+          );
+        }
+      }
+    } else {
+      // Verify current PIN before disabling.
+      final verified = await _showPinVerifyDialog(l);
+      if (verified && mounted) {
+        await _lockService.disableLock();
+        setState(() => _lockEnabled = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l.lockDisabled)),
+          );
+        }
+      }
+    }
+  }
+
+  Future<String?> _showPinSetupDialog(AppLocalizations l) async {
+    String? firstPin;
+    final pinController = TextEditingController();
+
+    // Step 1: Enter PIN
+    firstPin = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.setPinTitle),
+        content: TextField(
+          controller: pinController,
+          keyboardType: TextInputType.number,
+          maxLength: 4,
+          obscureText: true,
+          decoration: const InputDecoration(
+            hintText: '• • • •',
+            counterText: '',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              if (pinController.text.length == 4) {
+                Navigator.pop(ctx, pinController.text);
+              }
+            },
+            child: Text(l.next),
+          ),
+        ],
+      ),
+    );
+
+    if (firstPin == null || !mounted) return null;
+
+    // Step 2: Confirm PIN
+    pinController.clear();
+    final confirm = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.confirmPin),
+        content: TextField(
+          controller: pinController,
+          keyboardType: TextInputType.number,
+          maxLength: 4,
+          obscureText: true,
+          decoration: const InputDecoration(
+            hintText: '• • • •',
+            counterText: '',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              if (pinController.text.length == 4) {
+                Navigator.pop(ctx, pinController.text);
+              }
+            },
+            child: Text(l.ok),
+          ),
+        ],
+      ),
+    );
+
+    pinController.dispose();
+
+    if (confirm == null) return null;
+    if (firstPin != confirm) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.pinMismatch)),
+        );
+      }
+      return null;
+    }
+    return firstPin;
+  }
+
+  Future<bool> _showPinVerifyDialog(AppLocalizations l) async {
+    final pinController = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.enterPin),
+        content: TextField(
+          controller: pinController,
+          keyboardType: TextInputType.number,
+          maxLength: 4,
+          obscureText: true,
+          decoration: const InputDecoration(
+            hintText: '• • • •',
+            counterText: '',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              final ok = _lockService.verifyPin(pinController.text);
+              Navigator.pop(ctx, ok);
+              if (!ok) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l.wrongPin)),
+                );
+              }
+            },
+            child: Text(l.ok),
+          ),
+        ],
+      ),
+    );
+    pinController.dispose();
+    return result ?? false;
   }
 
   @override
@@ -181,6 +344,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 trailing: Switch(
                   value: _shakeEnabled,
                   onChanged: _toggleShake,
+                  activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.lock_rounded,
+                title: l.appLock,
+                subtitle: l.appLockDesc,
+                onTap: () => _toggleLock(!_lockEnabled),
+                trailing: Switch(
+                  value: _lockEnabled,
+                  onChanged: _toggleLock,
                   activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
                 ),
               ),

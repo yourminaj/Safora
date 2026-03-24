@@ -61,6 +61,7 @@
   "save": "সংরক্ষণ",
   "notSet": "সেট করা হয়নি",
   "noneListed": "কিছু তালিকাভুক্ত নেই",
+  "bodyInfo": "শরীর",
 
   "emergencyContacts": "জরুরি যোগাযোগ",
   "addContact": "যোগাযোগ যোগ করুন",
@@ -205,8 +206,18 @@
   "hAgo": "{count} ঘণ্টা আগে",
   "dAgo": "{count} দিন আগে",
 
-  "pageNotFound": "পৃষ্ঠা পাওয়া যায়নি",
-  "routeNotFound": "রুট পাওয়া যায়নি: {route}",
-  "goHome": "হোমে যান",
-  "somethingWentWrong": "কিছু ভুল হয়েছে"
+  "appLock": "অ্যাপ লক",
+  "appLockDesc": "সাফোরা খুলতে পিন বা বায়োমেট্রিক্স প্রয়োজন",
+  "enterPin": "পিন দিন",
+  "enterPinToUnlock": "আনলক করতে আপনার ৪-সংখ্যার পিন দিন",
+  "wrongPin": "ভুল পিন। আবার চেষ্টা করুন।",
+  "useBiometric": "বায়োমেট্রিক্স ব্যবহার করুন",
+  "setPinTitle": "একটি ৪-সংখ্যার পিন সেট করুন",
+  "confirmPin": "আপনার পিন নিশ্চিত করুন",
+  "pinMismatch": "পিন মিলছে না। আবার চেষ্টা করুন।",
+  "pinSet": "পিন সফলভাবে সেট হয়েছে",
+  "changePinTitle": "পিন পরিবর্তন করুন",
+  "biometricAuth": "বায়োমেট্রিক্স ব্যবহার করুন (আঙুলের ছাপ/মুখ)",
+  "lockEnabled": "অ্যাপ লক সক্রিয়",
+  "lockDisabled": "অ্যাপ লক নিষ্ক্রিয়"
 }

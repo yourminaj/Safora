@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'app_logger.dart';
 
@@ -48,9 +51,18 @@ class NotificationService {
       sound: true,
     );
 
-    // Get FCM token for this device.
+    // Get FCM token for this device and persist to Firestore.
     final token = await messaging.getToken();
-    AppLogger.info('[FCM] Token: ${token?.substring(0, 20)}...');
+    if (token != null) {
+      AppLogger.info('[FCM] Token: ${token.substring(0, 20)}...');
+      await _persistFcmToken(token);
+    }
+
+    // Listen for token refreshes (happens periodically or on reinstall).
+    messaging.onTokenRefresh.listen((newToken) {
+      AppLogger.info('[FCM] Token refreshed');
+      _persistFcmToken(newToken);
+    });
 
     // Handle foreground messages.
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -62,6 +74,27 @@ class NotificationService {
         );
       }
     });
+  }
+
+  /// Save FCM token to Firestore for targeted push notifications.
+  Future<void> _persistFcmToken(String token) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('fcm_tokens')
+          .doc(token)
+          .set({
+        'token': token,
+        'platform': defaultTargetPlatform.name,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      AppLogger.warning('[FCM] Token persistence failed: $e');
+    }
   }
 
   /// Show an SOS active notification (persistent, high priority).

@@ -33,6 +33,10 @@
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Safora needs background location access to send accurate GPS coordinates during emergencies, even when the app is in the background.</string>
 
+	<!-- Face ID: used for app lock biometric authentication -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>Safora uses Face ID to unlock the app securely.</string>
+
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

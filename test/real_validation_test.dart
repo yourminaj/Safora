@@ -479,7 +479,7 @@ void main() {
       // Freefall: 0.20
       // Total: ~0.63 → above 0.5 → real detection
       const gScore = ((4.0 / 3.0) / 3.0) * 0.40;
-      final total = gScore + 0.25 + 0.20;
+      const total = gScore + 0.25 + 0.20;
 
       expect(
         total,
@@ -496,7 +496,7 @@ void main() {
       // Stillness: 0.25
       // Total: ~0.52 without freefall — still detectable
       const gScore = ((8.0 / 4.0) / 3.0) * 0.40;
-      final total = gScore + 0.25; // Stillness only
+      const total = gScore + 0.25; // Stillness only
 
       expect(
         total,

@@ -1,6 +1,7 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../constants/api_endpoints.dart';
+import 'app_logger.dart';
 
 /// Service for GPS location tracking and geocoding.
 ///
@@ -27,6 +28,16 @@ class LocationService {
     }
 
     if (permission == LocationPermission.deniedForever) return false;
+
+    // On Android 10+, request background location for SOS when app is minimized.
+    if (permission == LocationPermission.whileInUse) {
+      final bgPermission = await Geolocator.requestPermission();
+      // Even if background is denied, foreground still works — just can't
+      // get location when app is fully backgrounded.
+      if (bgPermission == LocationPermission.always) {
+        AppLogger.info('[Location] Background location granted');
+      }
+    }
 
     return true;
   }
