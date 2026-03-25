@@ -1,5 +1,6 @@
 import '../models/alert_event.dart';
 import '../datasources/disaster_api_client.dart';
+import '../datasources/military_alert_client.dart';
 import '../datasources/alerts_local_datasource.dart';
 import '../../core/services/location_service.dart';
 
@@ -11,17 +12,20 @@ abstract class AlertsRepository {
   Future<void> clearHistory();
 }
 
-/// Implementation that merges USGS + GDACS + Open-Meteo + local history.
+/// Implementation that merges USGS + GDACS + Open-Meteo + NASA + Military + local history.
 class AlertsRepositoryImpl implements AlertsRepository {
   AlertsRepositoryImpl({
     required DisasterApiClient apiClient,
+    required MilitaryAlertClient militaryAlertClient,
     required AlertsLocalDataSource localDataSource,
     required LocationService locationService,
   })  : _apiClient = apiClient,
+        _militaryClient = militaryAlertClient,
         _localDataSource = localDataSource,
         _locationService = locationService;
 
   final DisasterApiClient _apiClient;
+  final MilitaryAlertClient _militaryClient;
   final AlertsLocalDataSource _localDataSource;
   final LocationService _locationService;
 
@@ -34,6 +38,11 @@ class AlertsRepositoryImpl implements AlertsRepository {
       _apiClient.fetchUsgsEarthquakes(),
       _apiClient.fetchGdacsEvents(),
       _fetchFloodRisk(),
+      _fetchWeatherAlerts(),
+      _fetchAirQualityAlerts(),
+      _fetchWildfireHotspots(),
+      _apiClient.fetchNasaEonetEvents(),
+      _fetchMilitaryAlerts(),
     ]);
 
     for (final list in results) {
@@ -64,6 +73,46 @@ class AlertsRepositoryImpl implements AlertsRepository {
     if (position == null) return [];
 
     return _apiClient.fetchFloodRisk(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
+  }
+
+  Future<List<AlertEvent>> _fetchWeatherAlerts() async {
+    final position = await _locationService.getCurrentPosition();
+    if (position == null) return [];
+
+    return _apiClient.fetchWeatherAlerts(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
+  }
+
+  Future<List<AlertEvent>> _fetchAirQualityAlerts() async {
+    final position = await _locationService.getCurrentPosition();
+    if (position == null) return [];
+
+    return _apiClient.fetchAirQualityAlerts(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
+  }
+
+  Future<List<AlertEvent>> _fetchWildfireHotspots() async {
+    final position = await _locationService.getCurrentPosition();
+    if (position == null) return [];
+
+    return _apiClient.fetchWildfireHotspots(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
+  }
+
+  Future<List<AlertEvent>> _fetchMilitaryAlerts() async {
+    final position = await _locationService.getCurrentPosition();
+    if (position == null) return [];
+
+    return _militaryClient.fetchMilitaryAlerts(
       latitude: position.latitude,
       longitude: position.longitude,
     );

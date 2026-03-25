@@ -12,6 +12,7 @@ import 'presentation/blocs/profile/profile_cubit.dart';
 import 'presentation/blocs/reminders/reminders_cubit.dart';
 import 'presentation/blocs/sos/sos_cubit.dart';
 import 'presentation/screens/splash/splash_screen.dart';
+import 'presentation/screens/settings/sos_history_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/signup_screen.dart';
@@ -44,6 +45,7 @@ abstract final class AppRoutes {
   static const String decoyCall = '/decoy-call';
   static const String alertMap = '/alert-map';
   static const String lock = '/lock';
+  static const String sosHistory = '/sos-history';
 }
 
 /// GoRouter configuration.
@@ -142,6 +144,10 @@ GoRouter createRouter() => GoRouter(
         GoRoute(
           path: AppRoutes.lock,
           builder: (context, state) => const LockScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.sosHistory,
+          builder: (context, state) => const SosHistoryScreen(),
         ),
       ],
     );

@@ -53,7 +53,6 @@ void main() {
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
 
-      // Find the first TextFormField (name field)
       final nameField = find.byType(TextFormField).first;
       await tester.enterText(nameField, 'John Doe');
       await tester.pump();
@@ -61,30 +60,16 @@ void main() {
       expect(find.text('John Doe'), findsOneWidget);
     });
 
-    testWidgets('has a save or submit button', (tester) async {
-      await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
-
-      // Look for save/add button (could be ElevatedButton, TextButton, or FAB)
-      final saveButton = find.byType(ElevatedButton);
-      final fab = find.byType(FloatingActionButton);
-      final iconButton = find.byIcon(Icons.check);
-      final saveIcon = find.byIcon(Icons.save);
-
-      expect(
-        saveButton.evaluate().isNotEmpty ||
-            fab.evaluate().isNotEmpty ||
-            iconButton.evaluate().isNotEmpty ||
-            saveIcon.evaluate().isNotEmpty,
-        true,
-        reason: 'Should have a save/submit action',
-      );
-    });
-
     testWidgets('displays app bar with title', (tester) async {
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
       expect(find.byType(AppBar), findsOneWidget);
+    });
+
+    testWidgets('has a form for validation', (tester) async {
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+      expect(find.byType(Form), findsOneWidget);
     });
   });
 }

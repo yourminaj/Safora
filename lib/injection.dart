@@ -6,16 +6,22 @@ import 'core/services/auth_service.dart';
 import 'core/services/audio_service.dart';
 import 'core/services/battery_service.dart';
 import 'core/services/connectivity_service.dart';
+import 'core/services/context_alert_service.dart';
 import 'core/services/decoy_call_service.dart';
+import 'core/services/geofence_service.dart';
 import 'core/services/location_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/shake_detection_service.dart';
+import 'core/services/snatch_detection_service.dart';
 import 'core/services/sms_service.dart';
+import 'core/services/speed_alert_service.dart';
 import 'detection/ml/crash_fall_detection_service.dart';
+import 'presentation/blocs/theme/theme_cubit.dart';
 import 'data/datasources/alerts_local_datasource.dart';
 import 'data/datasources/contacts_cloud_sync.dart';
 import 'data/datasources/contacts_local_datasource.dart';
 import 'data/datasources/disaster_api_client.dart';
+import 'data/datasources/military_alert_client.dart';
 import 'data/datasources/profile_local_datasource.dart';
 import 'data/datasources/reminders_local_datasource.dart';
 import 'data/datasources/sos_history_datasource.dart';
@@ -68,10 +74,22 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<DecoyCallService>(
     () => DecoyCallService(audioService: getIt<AudioService>()),
   );
-  getIt.registerLazySingleton<CrashFallDetectionService>(
-    () => CrashFallDetectionService(),
+  getIt.registerLazySingleton<SpeedAlertService>(
+    () => SpeedAlertService(),
+    dispose: (s) => s.dispose(),
   );
-
+  getIt.registerLazySingleton<GeofenceService>(
+    () => GeofenceService(),
+    dispose: (s) => s.dispose(),
+  );
+  getIt.registerLazySingleton<SnatchDetectionService>(
+    () => SnatchDetectionService(),
+    dispose: (s) => s.dispose(),
+  );
+  getIt.registerLazySingleton<ContextAlertService>(
+    () => ContextAlertService(),
+    dispose: (s) => s.dispose(),
+  );
   // ── Data Sources (with corruption recovery) ────────────
   final contactsBox = await _openBoxSafe(ContactsLocalDataSource.boxName);
   getIt.registerLazySingleton<ContactsLocalDataSource>(
@@ -107,8 +125,24 @@ Future<void> configureDependencies() async {
     () => AppLockService(settingsBox: appSettingsBox),
   );
 
+  // Theme cubit (uses app_settings box for persistence).
+  getIt.registerLazySingleton<ThemeCubit>(
+    () => ThemeCubit(settingsBox: appSettingsBox),
+  );
+
+  // Crash/Fall detection service.
+  getIt.registerLazySingleton<CrashFallDetectionService>(
+    () => CrashFallDetectionService(),
+    dispose: (s) => s.dispose(),
+  );
+
   getIt.registerLazySingleton<DisasterApiClient>(
     () => DisasterApiClient(),
+    dispose: (client) => client.dispose(),
+  );
+
+  getIt.registerLazySingleton<MilitaryAlertClient>(
+    () => MilitaryAlertClient(),
     dispose: (client) => client.dispose(),
   );
 
@@ -123,6 +157,7 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<AlertsRepository>(
     () => AlertsRepositoryImpl(
       apiClient: getIt<DisasterApiClient>(),
+      militaryAlertClient: getIt<MilitaryAlertClient>(),
       localDataSource: getIt<AlertsLocalDataSource>(),
       locationService: getIt<LocationService>(),
     ),

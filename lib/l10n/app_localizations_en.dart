@@ -635,4 +635,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lockDisabled => 'App lock disabled';
+
+  @override
+  String get changePinDesc => 'Update your security PIN';
+
+  @override
+  String get changePinSuccess => 'PIN changed successfully';
+
+  @override
+  String get sosHistory => 'SOS History';
+
+  @override
+  String get sosHistoryDesc => 'View past SOS activations';
+
+  @override
+  String get noSosHistory => 'No SOS history yet';
+
+  @override
+  String get clearHistory => 'Clear History';
+
+  @override
+  String get historyClearConfirm =>
+      'Are you sure you want to clear all SOS history?';
+
+  @override
+  String get historyCleared => 'SOS history cleared';
+
+  @override
+  String get triggerManual => 'Manual';
+
+  @override
+  String get triggerShake => 'Shake';
+
+  @override
+  String get triggerCrash => 'Crash Detection';
+
+  @override
+  String get triggerBackground => 'Background';
+
+  @override
+  String get contactsNotifiedLabel => 'Contacts notified';
+
+  @override
+  String get smsSentLabel => 'SMS sent';
+
+  @override
+  String get cancelledLabel => 'Cancelled';
+
+  @override
+  String get completedLabel => 'Completed';
+
+  @override
+  String get crashFallDetection => 'Crash/Fall Detection';
+
+  @override
+  String get crashFallDetectionDesc => 'Auto-detect crashes and falls';
+
+  @override
+  String get crashFallEnabled => 'Crash/Fall detection enabled';
+
+  @override
+  String get crashFallDisabled => 'Crash/Fall detection disabled';
+
+  @override
+  String get themeSystem => 'System Default';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get chooseTheme => 'Choose Theme';
+
+  @override
+  String get geofenceTitle => 'Safe Zone Geofence';
+
+  @override
+  String get geofenceDesc => 'Alert when you leave all defined safe zones';
+
+  @override
+  String get snatchTitle => 'Snatch Detection';
+
+  @override
+  String get snatchDesc => 'Detect phone grab attempts using motion sensors';
+
+  @override
+  String get speedAlertTitle => 'Speed Alert';
+
+  @override
+  String get speedAlertDesc => 'Alert when traveling above 120 km/h';
+
+  @override
+  String get contextAlertTitle => 'Smart Context Alerts';
+
+  @override
+  String get contextAlertDesc =>
+      'AI-powered alerts for heat, drowsy driving, and more';
 }

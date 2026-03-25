@@ -8,6 +8,13 @@ import 'crash_fall_detection_engine.dart';
 ///
 /// Maps detection events to [AlertType] values and provides a
 /// simplified API for the presentation layer.
+///
+/// When [currentSpeedKmh] is set (e.g., by [SpeedAlertService]),
+/// vehicle crash detections are refined into specific types:
+/// - Walking (<7 km/h) → pedestrian hit
+/// - Cycling (15–40 km/h) → bicycle crash
+/// - Motorcycle (40–120 km/h) → motorcycle crash
+/// - Car (>120 km/h or no speed data) → car accident
 class CrashFallDetectionService {
   CrashFallDetectionService({
     CrashFallDetectionEngine? engine,
@@ -24,6 +31,12 @@ class CrashFallDetectionService {
 
   /// Whether the detection engine is currently running.
   bool get isRunning => _engine.isRunning;
+
+  /// Current GPS speed in km/h (set externally by SpeedAlertService).
+  ///
+  /// Used to refine vehicle crash classification.
+  /// If null, defaults to car accident classification.
+  double? currentSpeedKmh;
 
   /// Start crash/fall monitoring.
   void start() {
@@ -50,8 +63,8 @@ class CrashFallDetectionService {
       confidence: event.confidence,
       peakGForce: event.peakGForce,
       timestamp: event.timestamp,
-      title: _generateTitle(event),
-      message: _generateMessage(event),
+      title: _generateTitle(event, alertType),
+      message: _generateMessage(event, alertType),
     );
 
     _alertController.add(alert);
@@ -60,9 +73,20 @@ class CrashFallDetectionService {
   AlertType _mapToAlertType(DetectionType type) {
     return switch (type) {
       DetectionType.fall => AlertType.elderlyFall,
-      DetectionType.vehicleCrash => AlertType.carAccident,
+      DetectionType.vehicleCrash => _classifyVehicleCrash(),
       DetectionType.hardImpact => AlertType.fainting,
     };
+  }
+
+  /// Classify vehicle crash type based on GPS speed at time of impact.
+  AlertType _classifyVehicleCrash() {
+    final speed = currentSpeedKmh;
+    if (speed == null) return AlertType.carAccident;
+
+    if (speed < 7) return AlertType.pedestrianHit;
+    if (speed < 40) return AlertType.bicycleCrash;
+    if (speed < 120) return AlertType.motorcycleCrash;
+    return AlertType.carAccident;
   }
 
   AlertPriority _mapToSeverity(double confidence) {
@@ -72,18 +96,24 @@ class CrashFallDetectionService {
     return AlertPriority.low;
   }
 
-  String _generateTitle(DetectionEvent event) {
-    return switch (event.type) {
-      DetectionType.fall =>
-        '⚠️ Fall Detected (${(event.confidence * 100).toInt()}% confidence)',
-      DetectionType.vehicleCrash =>
-        '🚨 Crash Detected (${(event.confidence * 100).toInt()}% confidence)',
-      DetectionType.hardImpact =>
-        '💥 Hard Impact (${(event.confidence * 100).toInt()}% confidence)',
+  String _generateTitle(DetectionEvent event, AlertType alertType) {
+    final conf = '${(event.confidence * 100).toInt()}%';
+    return switch (alertType) {
+      AlertType.elderlyFall => '⚠️ Fall Detected ($conf confidence)',
+      AlertType.carAccident => '🚨 Car Crash Detected ($conf confidence)',
+      AlertType.motorcycleCrash =>
+        '🏍️ Motorcycle Crash Detected ($conf confidence)',
+      AlertType.bicycleCrash =>
+        '🚲 Bicycle Crash Detected ($conf confidence)',
+      AlertType.pedestrianHit =>
+        '🚶 Pedestrian Impact Detected ($conf confidence)',
+      AlertType.fainting => '💥 Hard Impact ($conf confidence)',
+      _ =>
+        '🚨 Impact Detected ($conf confidence)',
     };
   }
 
-  String _generateMessage(DetectionEvent event) {
+  String _generateMessage(DetectionEvent event, AlertType alertType) {
     final details = <String>[];
     details.add('Peak: ${event.peakGForce.toStringAsFixed(1)}G');
 
@@ -93,17 +123,29 @@ class CrashFallDetectionService {
     if (event.postImpactStillness) {
       details.add('No movement after impact');
     }
+    if (currentSpeedKmh != null) {
+      details.add('Speed: ${currentSpeedKmh!.toStringAsFixed(0)} km/h');
+    }
 
-    return switch (event.type) {
-      DetectionType.fall =>
+    return switch (alertType) {
+      AlertType.elderlyFall =>
         'A possible fall has been detected. ${details.join('. ')}. '
             'SOS will trigger if not cancelled.',
-      DetectionType.vehicleCrash =>
-        'A possible vehicle crash has been detected. ${details.join('. ')}. '
+      AlertType.carAccident ||
+      AlertType.motorcycleCrash ||
+      AlertType.bicycleCrash =>
+        'A possible ${alertType.label.toLowerCase()} has been detected. '
+            '${details.join('. ')}. '
             'Emergency contacts will be notified.',
-      DetectionType.hardImpact =>
+      AlertType.pedestrianHit =>
+        'A possible pedestrian impact has been detected. '
+            '${details.join('. ')}. '
+            'Are you okay? SOS will trigger if not cancelled.',
+      AlertType.fainting =>
         'A hard impact has been detected. ${details.join('. ')}. '
             'Are you okay?',
+      _ =>
+        'An impact has been detected. ${details.join('. ')}.',
     };
   }
 
@@ -113,6 +155,7 @@ class CrashFallDetectionService {
     _alertController.close();
   }
 }
+
 
 /// Alert emitted by the detection service for the presentation layer.
 class DetectionAlert {

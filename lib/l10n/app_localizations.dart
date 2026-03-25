@@ -1237,6 +1237,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'App lock disabled'**
   String get lockDisabled;
+
+  /// No description provided for @changePinDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your security PIN'**
+  String get changePinDesc;
+
+  /// No description provided for @changePinSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN changed successfully'**
+  String get changePinSuccess;
+
+  /// No description provided for @sosHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS History'**
+  String get sosHistory;
+
+  /// No description provided for @sosHistoryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'View past SOS activations'**
+  String get sosHistoryDesc;
+
+  /// No description provided for @noSosHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No SOS history yet'**
+  String get noSosHistory;
+
+  /// No description provided for @clearHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear History'**
+  String get clearHistory;
+
+  /// No description provided for @historyClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear all SOS history?'**
+  String get historyClearConfirm;
+
+  /// No description provided for @historyCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS history cleared'**
+  String get historyCleared;
+
+  /// No description provided for @triggerManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get triggerManual;
+
+  /// No description provided for @triggerShake.
+  ///
+  /// In en, this message translates to:
+  /// **'Shake'**
+  String get triggerShake;
+
+  /// No description provided for @triggerCrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash Detection'**
+  String get triggerCrash;
+
+  /// No description provided for @triggerBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get triggerBackground;
+
+  /// No description provided for @contactsNotifiedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts notified'**
+  String get contactsNotifiedLabel;
+
+  /// No description provided for @smsSentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS sent'**
+  String get smsSentLabel;
+
+  /// No description provided for @cancelledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get cancelledLabel;
+
+  /// No description provided for @completedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completedLabel;
+
+  /// No description provided for @crashFallDetection.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash/Fall Detection'**
+  String get crashFallDetection;
+
+  /// No description provided for @crashFallDetectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-detect crashes and falls'**
+  String get crashFallDetectionDesc;
+
+  /// No description provided for @crashFallEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash/Fall detection enabled'**
+  String get crashFallEnabled;
+
+  /// No description provided for @crashFallDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash/Fall detection disabled'**
+  String get crashFallDisabled;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System Default'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @chooseTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Theme'**
+  String get chooseTheme;
+
+  /// No description provided for @geofenceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe Zone Geofence'**
+  String get geofenceTitle;
+
+  /// No description provided for @geofenceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert when you leave all defined safe zones'**
+  String get geofenceDesc;
+
+  /// No description provided for @snatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Snatch Detection'**
+  String get snatchTitle;
+
+  /// No description provided for @snatchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Detect phone grab attempts using motion sensors'**
+  String get snatchDesc;
+
+  /// No description provided for @speedAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed Alert'**
+  String get speedAlertTitle;
+
+  /// No description provided for @speedAlertDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert when traveling above 120 km/h'**
+  String get speedAlertDesc;
+
+  /// No description provided for @contextAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Context Alerts'**
+  String get contextAlertTitle;
+
+  /// No description provided for @contextAlertDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AI-powered alerts for heat, drowsy driving, and more'**
+  String get contextAlertDesc;
 }
 
 class _AppLocalizationsDelegate

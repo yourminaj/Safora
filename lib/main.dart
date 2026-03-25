@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:safora/l10n/app_localizations.dart';
@@ -12,6 +13,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'app.dart';
 import 'core/services/ad_service.dart';
 import 'core/services/app_lock_service.dart';
+import 'presentation/blocs/theme/theme_cubit.dart';
 import 'core/services/app_logger.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/shake_detection_service.dart';
@@ -179,26 +181,30 @@ class _SaforaAppState extends State<SaforaApp> {
 
   @override
   Widget build(BuildContext context) {
+    final themeCubit = getIt<ThemeCubit>();
     return wrapWithProviders(
-      MaterialApp.router(
-        title: 'Safora',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.system,
-        routerConfig: _router,
+      BlocBuilder<ThemeCubit, ThemeMode>(
+        bloc: themeCubit,
+        builder: (context, themeMode) => MaterialApp.router(
+          title: 'Safora',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: themeMode,
+          routerConfig: _router,
 
-        // ── Localization ────────────────────────────────
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('en'), // English
-          Locale('bn'), // Bengali
-        ],
+          // ── Localization ────────────────────────────────
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en'), // English
+            Locale('bn'), // Bengali
+          ],
+        ),
       ),
     );
   }

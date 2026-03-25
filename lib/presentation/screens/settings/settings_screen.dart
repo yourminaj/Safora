@@ -3,16 +3,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:safora/l10n/app_localizations.dart';
+import '../../../app.dart';
 import '../../../core/services/ad_service.dart';
 import '../../../core/services/app_lock_service.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/context_alert_service.dart';
+import '../../../core/services/geofence_service.dart';
 import '../../../core/services/shake_detection_service.dart';
+import '../../../core/services/snatch_detection_service.dart';
+import '../../../core/services/speed_alert_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
+import '../../../detection/ml/crash_fall_detection_service.dart';
 import '../../../injection.dart';
 import '../../blocs/contacts/contacts_cubit.dart';
 import '../../blocs/contacts/contacts_state.dart';
 import '../../blocs/sos/sos_cubit.dart';
+import '../../blocs/theme/theme_cubit.dart';
 import '../../widgets/ad_banner_widget.dart';
 
 /// Functional settings screen with real navigation and state.
@@ -29,6 +36,11 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _shakeEnabled = false;
   bool _lockEnabled = false;
+  bool _crashFallEnabled = false;
+  bool _geofenceEnabled = false;
+  bool _snatchEnabled = false;
+  bool _speedAlertEnabled = false;
+  bool _contextAlertEnabled = false;
   late final ShakeDetectionService _shakeService;
   late final AppLockService _lockService;
   late final Box _appSettings;
@@ -42,6 +54,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Restore persisted state.
     _shakeEnabled = _appSettings.get('shake_enabled', defaultValue: false) as bool;
     _lockEnabled = _lockService.isLockEnabled;
+    _crashFallEnabled = _appSettings.get('crash_fall_enabled', defaultValue: false) as bool;
+    _geofenceEnabled = _appSettings.get('geofence_enabled', defaultValue: false) as bool;
+    _snatchEnabled = _appSettings.get('snatch_enabled', defaultValue: false) as bool;
+    _speedAlertEnabled = _appSettings.get('speed_alert_enabled', defaultValue: false) as bool;
+    _contextAlertEnabled = _appSettings.get('context_alert_enabled', defaultValue: false) as bool;
   }
 
   void _toggleShake(bool enabled) {
@@ -87,6 +104,88 @@ class _SettingsScreenState extends State<SettingsScreen> {
           );
         }
       }
+    }
+  }
+
+  /// Change PIN flow: verify old PIN, then set a new one.
+  void _changePin() async {
+    final l = AppLocalizations.of(context)!;
+    // Step 1: Verify current PIN.
+    final verified = await _showPinVerifyDialog(l);
+    if (!verified || !mounted) return;
+    // Step 2: Set new PIN.
+    final newPin = await _showPinSetupDialog(l);
+    if (newPin != null && mounted) {
+      await _lockService.setPin(newPin);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.changePinSuccess)),
+        );
+      }
+    }
+  }
+
+  void _toggleCrashFall(bool enabled) {
+    setState(() => _crashFallEnabled = enabled);
+    _appSettings.put('crash_fall_enabled', enabled);
+    final service = getIt<CrashFallDetectionService>();
+    if (enabled) {
+      service.start();
+    } else {
+      service.stop();
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          enabled
+              ? AppLocalizations.of(context)!.crashFallEnabled
+              : AppLocalizations.of(context)!.crashFallDisabled,
+        ),
+      ),
+    );
+  }
+
+  void _toggleGeofence(bool enabled) {
+    setState(() => _geofenceEnabled = enabled);
+    _appSettings.put('geofence_enabled', enabled);
+    final service = getIt<GeofenceService>();
+    if (enabled) {
+      service.start(onExitAllZones: (_) {});
+    } else {
+      service.stop();
+    }
+  }
+
+  void _toggleSnatch(bool enabled) {
+    setState(() => _snatchEnabled = enabled);
+    _appSettings.put('snatch_enabled', enabled);
+    final service = getIt<SnatchDetectionService>();
+    if (enabled) {
+      service.start(onSnatchDetected: (_) {});
+    } else {
+      service.stop();
+    }
+  }
+
+  void _toggleSpeedAlert(bool enabled) {
+    setState(() => _speedAlertEnabled = enabled);
+    _appSettings.put('speed_alert_enabled', enabled);
+    final service = getIt<SpeedAlertService>();
+    if (enabled) {
+      service.start(onSpeedExceeded: (_) {});
+    } else {
+      service.stop();
+    }
+  }
+
+  void _toggleContextAlert(bool enabled) {
+    setState(() => _contextAlertEnabled = enabled);
+    _appSettings.put('context_alert_enabled', enabled);
+    final service = getIt<ContextAlertService>();
+    if (enabled) {
+      service.start(onContextAlert: (_) {});
+    } else {
+      service.stop();
     }
   }
 
@@ -358,6 +457,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
                 ),
               ),
+              if (_lockEnabled)
+                _SettingsTile(
+                  icon: Icons.pin_rounded,
+                  title: l.changePinTitle,
+                  subtitle: l.changePinDesc,
+                  onTap: _changePin,
+                ),
+              _SettingsTile(
+                icon: Icons.car_crash_rounded,
+                title: l.crashFallDetection,
+                subtitle: l.crashFallDetectionDesc,
+                onTap: () => _toggleCrashFall(!_crashFallEnabled),
+                trailing: Switch(
+                  value: _crashFallEnabled,
+                  onChanged: _toggleCrashFall,
+                  activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.my_location_rounded,
+                title: l.geofenceTitle,
+                subtitle: l.geofenceDesc,
+                onTap: () => _toggleGeofence(!_geofenceEnabled),
+                trailing: Switch(
+                  value: _geofenceEnabled,
+                  onChanged: _toggleGeofence,
+                  activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.pan_tool_rounded,
+                title: l.snatchTitle,
+                subtitle: l.snatchDesc,
+                onTap: () => _toggleSnatch(!_snatchEnabled),
+                trailing: Switch(
+                  value: _snatchEnabled,
+                  onChanged: _toggleSnatch,
+                  activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.speed_rounded,
+                title: l.speedAlertTitle,
+                subtitle: l.speedAlertDesc,
+                onTap: () => _toggleSpeedAlert(!_speedAlertEnabled),
+                trailing: Switch(
+                  value: _speedAlertEnabled,
+                  onChanged: _toggleSpeedAlert,
+                  activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.psychology_rounded,
+                title: l.contextAlertTitle,
+                subtitle: l.contextAlertDesc,
+                onTap: () => _toggleContextAlert(!_contextAlertEnabled),
+                trailing: Switch(
+                  value: _contextAlertEnabled,
+                  onChanged: _toggleContextAlert,
+                  activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.history_rounded,
+                title: l.sosHistory,
+                subtitle: l.sosHistoryDesc,
+                onTap: () => context.push(AppRoutes.sosHistory),
+              ),
               _SettingsTile(
                 icon: Icons.volume_up_rounded,
                 title: l.alertSounds,
@@ -448,9 +615,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: l.darkMode,
                 subtitle: l.systemDefault,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l.themeFollowsSystem),
+                  final themeCubit = getIt<ThemeCubit>();
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(l.chooseTheme),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RadioListTile<ThemeMode>(
+                            title: Text(l.themeSystem),
+                            value: ThemeMode.system,
+                            groupValue: themeCubit.state,
+                            onChanged: (v) {
+                              themeCubit.setTheme(v!);
+                              Navigator.pop(ctx);
+                            },
+                          ),
+                          RadioListTile<ThemeMode>(
+                            title: Text(l.themeLight),
+                            value: ThemeMode.light,
+                            groupValue: themeCubit.state,
+                            onChanged: (v) {
+                              themeCubit.setTheme(v!);
+                              Navigator.pop(ctx);
+                            },
+                          ),
+                          RadioListTile<ThemeMode>(
+                            title: Text(l.themeDark),
+                            value: ThemeMode.dark,
+                            groupValue: themeCubit.state,
+                            onChanged: (v) {
+                              themeCubit.setTheme(v!);
+                              Navigator.pop(ctx);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },

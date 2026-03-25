@@ -618,4 +618,102 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get lockDisabled => 'অ্যাপ লক নিষ্ক্রিয়';
+
+  @override
+  String get changePinDesc => 'আপনার সুরক্ষা পিন আপডেট করুন';
+
+  @override
+  String get changePinSuccess => 'পিন সফলভাবে পরিবর্তিত হয়েছে';
+
+  @override
+  String get sosHistory => 'SOS ইতিহাস';
+
+  @override
+  String get sosHistoryDesc => 'আগের SOS সক্রিয়করণ দেখুন';
+
+  @override
+  String get noSosHistory => 'এখনো কোনো SOS ইতিহাস নেই';
+
+  @override
+  String get clearHistory => 'ইতিহাস মুছুন';
+
+  @override
+  String get historyClearConfirm => 'আপনি কি সমস্ত SOS ইতিহাস মুছতে চান?';
+
+  @override
+  String get historyCleared => 'SOS ইতিহাস মোছা হয়েছে';
+
+  @override
+  String get triggerManual => 'ম্যানুয়াল';
+
+  @override
+  String get triggerShake => 'শেক';
+
+  @override
+  String get triggerCrash => 'ক্র্যাশ সনাক্তকরণ';
+
+  @override
+  String get triggerBackground => 'ব্যাকগ্রাউন্ড';
+
+  @override
+  String get contactsNotifiedLabel => 'যোগাযোগকৃত ব্যক্তি';
+
+  @override
+  String get smsSentLabel => 'SMS পাঠানো হয়েছে';
+
+  @override
+  String get cancelledLabel => 'বাতিলকৃত';
+
+  @override
+  String get completedLabel => 'সম্পন্ন';
+
+  @override
+  String get crashFallDetection => 'ক্র্যাশ/পতন সনাক্তকরণ';
+
+  @override
+  String get crashFallDetectionDesc =>
+      'ক্র্যাশ এবং পতন স্বয়ংক্রিয়ভাবে সনাক্ত করুন';
+
+  @override
+  String get crashFallEnabled => 'ক্র্যাশ/পতন সনাক্তকরণ সক্রিয়';
+
+  @override
+  String get crashFallDisabled => 'ক্র্যাশ/পতন সনাক্তকরণ নিষ্ক্রিয়';
+
+  @override
+  String get themeSystem => 'সিস্টেম ডিফল্ট';
+
+  @override
+  String get themeLight => 'হালকা';
+
+  @override
+  String get themeDark => 'গাঢ়';
+
+  @override
+  String get chooseTheme => 'থিম বেছে নিন';
+
+  @override
+  String get geofenceTitle => 'নিরাপদ অঞ্চল জিওফেন্স';
+
+  @override
+  String get geofenceDesc => 'নিরাপদ অঞ্চল ত্যাগ করলে সতর্ক করুন';
+
+  @override
+  String get snatchTitle => 'ছিনতাই সনাক্তকরণ';
+
+  @override
+  String get snatchDesc => 'মোশন সেন্সর ব্যবহার করে ফোন ছিনতাই সনাক্ত করুন';
+
+  @override
+  String get speedAlertTitle => 'গতি সতর্কতা';
+
+  @override
+  String get speedAlertDesc => '১২০ কিমি/ঘণ্টার বেশি গতিতে সতর্ক করুন';
+
+  @override
+  String get contextAlertTitle => 'স্মার্ট প্রসঙ্গ সতর্কতা';
+
+  @override
+  String get contextAlertDesc =>
+      'তাপ, তন্দ্রাচ্ছন্ন ড্রাইভিং এবং আরও অনেক কিছুর জন্য AI-চালিত সতর্কতা';
 }

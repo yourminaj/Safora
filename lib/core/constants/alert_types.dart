@@ -817,6 +817,26 @@ enum AlertType {
     isFree: true,
   ),
 
+  // ── Group 13: Military & Conflict (Regional) ──────────
+  airRaid(
+    label: 'Air Raid',
+    category: AlertCategory.personalSafety,
+    priority: AlertPriority.critical,
+    isFree: true,
+  ),
+  missileStrike(
+    label: 'Missile Strike',
+    category: AlertCategory.personalSafety,
+    priority: AlertPriority.critical,
+    isFree: true,
+  ),
+  droneAttack(
+    label: 'Drone Attack',
+    category: AlertCategory.personalSafety,
+    priority: AlertPriority.critical,
+    isFree: true,
+  ),
+
   // ── SOS (Core) ────────────────────────────────────────
   manualSos(
     label: 'Manual SOS',

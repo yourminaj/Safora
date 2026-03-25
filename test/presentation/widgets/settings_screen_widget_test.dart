@@ -5,9 +5,15 @@ import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/app_lock_service.dart';
 import 'package:safora/core/services/auth_service.dart';
+import 'package:safora/core/services/context_alert_service.dart';
+import 'package:safora/core/services/geofence_service.dart';
 import 'package:safora/core/services/shake_detection_service.dart';
+import 'package:safora/core/services/snatch_detection_service.dart';
+import 'package:safora/core/services/speed_alert_service.dart';
 import 'package:safora/data/repositories/contacts_repository.dart';
+import 'package:safora/detection/ml/crash_fall_detection_service.dart';
 import 'package:safora/presentation/blocs/contacts/contacts_cubit.dart';
+import 'package:safora/presentation/blocs/theme/theme_cubit.dart';
 import 'package:safora/presentation/screens/settings/settings_screen.dart';
 import '../../helpers/widget_test_helpers.dart';
 
@@ -16,6 +22,12 @@ class MockAppLockService extends Mock implements AppLockService {}
 class MockBox extends Mock implements Box {}
 class MockAuthService extends Mock implements AuthService {}
 class MockContactsRepository extends Mock implements ContactsRepository {}
+class MockCrashFallDetectionService extends Mock implements CrashFallDetectionService {}
+class MockGeofenceService extends Mock implements GeofenceService {}
+class MockSnatchDetectionService extends Mock implements SnatchDetectionService {}
+class MockSpeedAlertService extends Mock implements SpeedAlertService {}
+class MockContextAlertService extends Mock implements ContextAlertService {}
+class MockThemeCubit extends Mock implements ThemeCubit {}
 
 void main() {
   final getIt = GetIt.instance;
@@ -39,6 +51,11 @@ void main() {
     // Stub required methods
     when(() => mockLock.isLockEnabled).thenReturn(false);
     when(() => mockBox.get('shake_enabled', defaultValue: false)).thenReturn(false);
+    when(() => mockBox.get('crash_fall_enabled', defaultValue: false)).thenReturn(false);
+    when(() => mockBox.get('geofence_enabled', defaultValue: false)).thenReturn(false);
+    when(() => mockBox.get('snatch_enabled', defaultValue: false)).thenReturn(false);
+    when(() => mockBox.get('speed_alert_enabled', defaultValue: false)).thenReturn(false);
+    when(() => mockBox.get('context_alert_enabled', defaultValue: false)).thenReturn(false);
     when(() => mockAuth.isSignedIn).thenReturn(false);
     when(() => mockAuth.currentUser).thenReturn(null);
     when(() => mockContacts.getAll()).thenReturn([]);
@@ -50,6 +67,12 @@ void main() {
     getIt.registerSingleton<AppLockService>(mockLock);
     getIt.registerSingleton<Box>(mockBox, instanceName: 'app_settings');
     getIt.registerSingleton<AuthService>(mockAuth);
+    getIt.registerSingleton<CrashFallDetectionService>(MockCrashFallDetectionService());
+    getIt.registerSingleton<GeofenceService>(MockGeofenceService());
+    getIt.registerSingleton<SnatchDetectionService>(MockSnatchDetectionService());
+    getIt.registerSingleton<SpeedAlertService>(MockSpeedAlertService());
+    getIt.registerSingleton<ContextAlertService>(MockContextAlertService());
+    getIt.registerSingleton<ThemeCubit>(MockThemeCubit());
 
     contactsCubit = ContactsCubit(mockContacts);
   });
@@ -119,17 +142,24 @@ void main() {
     testWidgets('shows language settings tile', (tester) async {
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
+      // Scroll down to reveal General section
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
       expect(find.byIcon(Icons.language_rounded), findsOneWidget);
     });
 
     testWidgets('shows dark mode tile', (tester) async {
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
       expect(find.byIcon(Icons.dark_mode_rounded), findsOneWidget);
     });
 
     testWidgets('shows about tile', (tester) async {
       await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.info_outline_rounded), findsOneWidget);
     });
@@ -138,7 +168,7 @@ void main() {
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
       // Scroll to bottom to reveal Sign In tile
-      await tester.drag(find.byType(ListView), const Offset(0, -500));
+      await tester.drag(find.byType(ListView), const Offset(0, -800));
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.login_rounded), findsOneWidget);
     });

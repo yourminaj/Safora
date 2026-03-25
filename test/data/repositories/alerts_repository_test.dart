@@ -5,10 +5,13 @@ import 'package:safora/core/constants/alert_types.dart';
 import 'package:safora/core/services/location_service.dart';
 import 'package:safora/data/datasources/alerts_local_datasource.dart';
 import 'package:safora/data/datasources/disaster_api_client.dart';
+import 'package:safora/data/datasources/military_alert_client.dart';
 import 'package:safora/data/models/alert_event.dart';
 import 'package:safora/data/repositories/alerts_repository.dart';
 
 class MockDisasterApiClient extends Mock implements DisasterApiClient {}
+
+class MockMilitaryAlertClient extends Mock implements MilitaryAlertClient {}
 
 class MockAlertsLocalDataSource extends Mock
     implements AlertsLocalDataSource {}
@@ -18,6 +21,7 @@ class MockLocationService extends Mock implements LocationService {}
 void main() {
   late AlertsRepositoryImpl repo;
   late MockDisasterApiClient mockApi;
+  late MockMilitaryAlertClient mockMilitary;
   late MockAlertsLocalDataSource mockLocal;
   late MockLocationService mockLocation;
 
@@ -66,11 +70,13 @@ void main() {
 
   setUp(() {
     mockApi = MockDisasterApiClient();
+    mockMilitary = MockMilitaryAlertClient();
     mockLocal = MockAlertsLocalDataSource();
     mockLocation = MockLocationService();
 
     repo = AlertsRepositoryImpl(
       apiClient: mockApi,
+      militaryAlertClient: mockMilitary,
       localDataSource: mockLocal,
       locationService: mockLocation,
     );
@@ -86,6 +92,24 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
         )).thenAnswer((_) async => [floodAlert]);
+    when(() => mockApi.fetchWeatherAlerts(
+          latitude: any(named: 'latitude'),
+          longitude: any(named: 'longitude'),
+        )).thenAnswer((_) async => []);
+    when(() => mockApi.fetchAirQualityAlerts(
+          latitude: any(named: 'latitude'),
+          longitude: any(named: 'longitude'),
+        )).thenAnswer((_) async => []);
+    when(() => mockApi.fetchWildfireHotspots(
+          latitude: any(named: 'latitude'),
+          longitude: any(named: 'longitude'),
+        )).thenAnswer((_) async => []);
+    when(() => mockApi.fetchNasaEonetEvents())
+        .thenAnswer((_) async => []);
+    when(() => mockMilitary.fetchMilitaryAlerts(
+          latitude: any(named: 'latitude'),
+          longitude: any(named: 'longitude'),
+        )).thenAnswer((_) async => []);
     when(() => mockLocal.saveAll(any())).thenAnswer((_) async {});
     when(() => mockLocal.getRecent(limit: any(named: 'limit')))
         .thenReturn([]);
