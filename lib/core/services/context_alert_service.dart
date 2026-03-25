@@ -80,7 +80,7 @@ class ContextAlertService {
           onAlert,
           ContextAlert(
             type: ContextAlertType.heatStroke,
-            title: '🌡️ Heat Stroke Risk',
+            title: 'Heat Stroke Risk',
             message:
                 'Temperature is ${currentTemperatureCelsius!.toStringAsFixed(0)}°C '
                 'and you are active outdoors. '
@@ -106,7 +106,7 @@ class ContextAlertService {
           onAlert,
           ContextAlert(
             type: ContextAlertType.hypothermia,
-            title: '❄️ Hypothermia Risk',
+            title: 'Hypothermia Risk',
             message:
                 'Temperature: ${currentTemperatureCelsius!.toStringAsFixed(0)}°C, '
                 'Wind chill: ${windChill.toStringAsFixed(0)}°C. '
@@ -127,7 +127,7 @@ class ContextAlertService {
           onAlert,
           ContextAlert(
             type: ContextAlertType.drowsyDriving,
-            title: '😴 Drowsy Driving Alert',
+            title: 'Drowsy Driving Alert',
             message:
                 'It\'s ${now.hour}:${now.minute.toString().padLeft(2, "0")} '
                 'and you\'re traveling at '
@@ -148,7 +148,7 @@ class ContextAlertService {
           onAlert,
           const ContextAlert(
             type: ContextAlertType.loneNightWalk,
-            title: '🌙 Late Night Walking',
+            title: 'Late Night Walking',
             message:
                 'You are walking alone late at night. '
                 'Share your live location with a trusted contact. '
@@ -173,7 +173,7 @@ class ContextAlertService {
               onAlert,
               ContextAlert(
                 type: ContextAlertType.altitudeSickness,
-                title: '🏔️ Rapid Altitude Change',
+                title: 'Rapid Altitude Change',
                 message:
                     'You\'ve gained ${altChange.toStringAsFixed(0)}m in '
                     '$timeDiff minutes. Watch for symptoms: '
@@ -198,7 +198,7 @@ class ContextAlertService {
           onAlert,
           ContextAlert(
             type: ContextAlertType.flashFloodRisk,
-            title: '🌊 Flash Flood Risk',
+            title: 'Flash Flood Risk',
             message:
                 'Heavy rainfall (${currentPrecipitationMm!.toStringAsFixed(0)}mm) '
                 'forecast and you\'re at low elevation '

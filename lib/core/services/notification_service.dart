@@ -125,7 +125,7 @@ class NotificationService {
 
     await _plugin.show(
       id: 1, // SOS notification ID
-      title: '🚨 SOS Alert Active',
+      title: 'SOS Alert Active',
       body: 'Emergency alert has been sent to your contacts.',
       notificationDetails: details,
     );
@@ -152,7 +152,7 @@ class NotificationService {
 
     await _plugin.show(
       id: 2, // Battery notification ID
-      title: '🔋 Low Battery Warning',
+      title: 'Low Battery Warning',
       body:
           'Your battery is at $level%. Your emergency contacts will be notified.',
       notificationDetails: details,

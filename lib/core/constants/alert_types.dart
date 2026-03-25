@@ -8,23 +8,22 @@ enum AlertPriority {
 
 /// Alert categories grouping the 127 risk types.
 enum AlertCategory {
-  healthMedical('Health & Medical', '🫀'),
-  vehicleTransport('Vehicle & Transport', '🚗'),
-  naturalDisaster('Natural Disasters', '🌍'),
-  weatherEmergency('Weather Emergencies', '⛈️'),
-  personalSafety('Personal Safety & Crime', '🛡️'),
-  homeDomestic('Home & Domestic', '🏠'),
-  workplace('Workplace Hazards', '👷'),
-  waterMarine('Water & Marine', '🌊'),
-  travelOutdoor('Travel & Outdoor', '🏔️'),
-  environmentalChemical('Environmental & Chemical', '☢️'),
-  digitalCyber('Digital & Cyber', '📱'),
-  childElder('Child & Elder Safety', '👶');
+  healthMedical('Health & Medical'),
+  vehicleTransport('Vehicle & Transport'),
+  naturalDisaster('Natural Disasters'),
+  weatherEmergency('Weather Emergencies'),
+  personalSafety('Personal Safety & Crime'),
+  homeDomestic('Home & Domestic'),
+  workplace('Workplace Hazards'),
+  waterMarine('Water & Marine'),
+  travelOutdoor('Travel & Outdoor'),
+  environmentalChemical('Environmental & Chemical'),
+  digitalCyber('Digital & Cyber'),
+  childElder('Child & Elder Safety');
 
-  const AlertCategory(this.label, this.emoji);
+  const AlertCategory(this.label);
 
   final String label;
-  final String emoji;
 }
 
 /// All 127 risk types the app can detect and alert for.

@@ -162,7 +162,7 @@
   "enterValidPhone": "Enter a valid phone number",
   "primaryContactNotify": "This contact will be notified first during emergencies.",
 
-  "sosAlertActivated": "🚨 SOS Alert activated! Siren playing.",
+  "sosAlertActivated": "SOS Alert activated! Siren playing.",
   "stop": "STOP",
   "tapForHelp": "TAP FOR HELP",
 
@@ -184,7 +184,7 @@
   "weeklyLabel": "Weekly",
   "asNeededLabel": "As needed",
 
-  "sosAlertTitle": "🚨 SOS ALERT",
+  "sosAlertTitle": "SOS ALERT",
   "emergencyAlertWillBeSent": "Emergency alert will be sent in",
   "seconds": "seconds",
   "sosContactsWillReceiveSms": "Your emergency contacts will receive an SMS with your GPS location.",

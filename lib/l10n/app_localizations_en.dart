@@ -464,7 +464,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'This contact will be notified first during emergencies.';
 
   @override
-  String get sosAlertActivated => '🚨 SOS Alert activated! Siren playing.';
+  String get sosAlertActivated => 'SOS Alert activated! Siren playing.';
 
   @override
   String get stop => 'STOP';
@@ -526,7 +526,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get asNeededLabel => 'As needed';
 
   @override
-  String get sosAlertTitle => '🚨 SOS ALERT';
+  String get sosAlertTitle => 'SOS ALERT';
 
   @override
   String get emergencyAlertWillBeSent => 'Emergency alert will be sent in';

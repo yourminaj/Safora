@@ -453,7 +453,7 @@ class AppLocalizationsBn extends AppLocalizations {
       'জরুরি সময় এই ব্যক্তিকে প্রথমে জানানো হবে।';
 
   @override
-  String get sosAlertActivated => '🚨 SOS সতর্কতা সক্রিয়! সাইরেন বাজছে।';
+  String get sosAlertActivated => 'SOS সতর্কতা সক্রিয়! সাইরেন বাজছে।';
 
   @override
   String get stop => 'বন্ধ করুন';
@@ -509,7 +509,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get asNeededLabel => 'প্রয়োজন অনুযায়ী';
 
   @override
-  String get sosAlertTitle => '🚨 এসওএস সতর্কতা';
+  String get sosAlertTitle => 'এসওএস সতর্কতা';
 
   @override
   String get emergencyAlertWillBeSent => 'জরুরি সতর্কতা পাঠানো হবে';

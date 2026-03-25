@@ -595,12 +595,12 @@ void main() {
       expect(names.contains('fainting'), true);
     });
 
-    test('AlertCategory has emoji for every category', () {
+    test('AlertCategory has label for every category', () {
       for (final cat in AlertCategory.values) {
         expect(
-          cat.emoji.isNotEmpty,
+          cat.label.isNotEmpty,
           true,
-          reason: '${cat.name} should have an emoji',
+          reason: '${cat.name} should have a label',
         );
       }
     });

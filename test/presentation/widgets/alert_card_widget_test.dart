@@ -19,7 +19,8 @@ void main() {
       await tester.pumpWidget(
         buildTestableWidget(child: AlertCard(alert: testAlert)),
       );
-      await tester.pumpAndSettle();
+      // Use pump with duration instead of pumpAndSettle for animated widgets.
+      await tester.pump(const Duration(seconds: 2));
       expect(find.byType(AlertCard), findsOneWidget);
     });
 
@@ -27,7 +28,7 @@ void main() {
       await tester.pumpWidget(
         buildTestableWidget(child: AlertCard(alert: testAlert)),
       );
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
       expect(find.text('5.2 Earthquake'), findsOneWidget);
     });
 
@@ -41,7 +42,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
 
       await tester.tap(find.byType(AlertCard));
       expect(tapped, true);

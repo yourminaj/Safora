@@ -121,7 +121,7 @@ class MilitaryAlertClient {
         alerts.add(AlertEvent(
           id: 'ua_alert_${stateMap['id']}',
           type: alertType,
-          title: '🚨 ${alertType.label} — $stateName',
+          title: '${alertType.label} — $stateName',
           description:
               'Active ${alertType.label.toLowerCase()} alert in $stateName. '
               'Seek shelter immediately.',
@@ -198,7 +198,7 @@ class MilitaryAlertClient {
         alerts.add(AlertEvent(
           id: 'il_alert_${eventMap['rid'] ?? alertDate.millisecondsSinceEpoch}',
           type: alertType,
-          title: '🚨 ${alertType.label} — $area',
+          title: '${alertType.label} — $area',
           description:
               'Active alert: ${eventMap['title'] ?? alertType.label} '
               'in $area. Take cover immediately.',
@@ -282,7 +282,7 @@ class MilitaryAlertClient {
         alerts.add(AlertEvent(
           id: props['id'] as String?,
           type: alertType,
-          title: '🚨 $event',
+          title: event,
           description: props['headline'] as String? ??
               props['description'] as String? ??
               event,

@@ -154,7 +154,7 @@
   "enterValidPhone": "একটি সঠিক ফোন নম্বর দিন",
   "primaryContactNotify": "জরুরি সময় এই ব্যক্তিকে প্রথমে জানানো হবে।",
 
-  "sosAlertActivated": "🚨 SOS সতর্কতা সক্রিয়! সাইরেন বাজছে।",
+  "sosAlertActivated": "SOS সতর্কতা সক্রিয়! সাইরেন বাজছে।",
   "stop": "বন্ধ করুন",
   "tapForHelp": "সাহায্যের জন্য ট্যাপ করুন",
 
@@ -175,7 +175,7 @@
   "weeklyLabel": "সাপ্তাহিক",
   "asNeededLabel": "প্রয়োজন অনুযায়ী",
 
-  "sosAlertTitle": "🚨 এসওএস সতর্কতা",
+  "sosAlertTitle": "এসওএস সতর্কতা",
   "emergencyAlertWillBeSent": "জরুরি সতর্কতা পাঠানো হবে",
   "seconds": "সেকেন্ড",
   "sosContactsWillReceiveSms": "আপনার জরুরি যোগাযোগকারীরা আপনার জিপিএস অবস্থান সহ একটি এসএমএস পাবেন।",

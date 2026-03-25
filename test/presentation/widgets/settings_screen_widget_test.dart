@@ -7,6 +7,7 @@ import 'package:safora/core/services/app_lock_service.dart';
 import 'package:safora/core/services/auth_service.dart';
 import 'package:safora/core/services/context_alert_service.dart';
 import 'package:safora/core/services/geofence_service.dart';
+import 'package:safora/core/services/location_service.dart';
 import 'package:safora/core/services/shake_detection_service.dart';
 import 'package:safora/core/services/snatch_detection_service.dart';
 import 'package:safora/core/services/speed_alert_service.dart';
@@ -27,6 +28,7 @@ class MockGeofenceService extends Mock implements GeofenceService {}
 class MockSnatchDetectionService extends Mock implements SnatchDetectionService {}
 class MockSpeedAlertService extends Mock implements SpeedAlertService {}
 class MockContextAlertService extends Mock implements ContextAlertService {}
+class MockLocationService extends Mock implements LocationService {}
 class MockThemeCubit extends Mock implements ThemeCubit {}
 
 void main() {
@@ -62,7 +64,12 @@ void main() {
     when(() => mockContacts.count).thenReturn(0);
     when(() => mockContacts.isLimitReached).thenReturn(false);
 
+    // LocationService mock with real coordinates
+    final mockLocation = MockLocationService();
+    when(() => mockLocation.lastPosition).thenReturn(null);
+
     // Register in GetIt
+    getIt.registerSingleton<LocationService>(mockLocation);
     getIt.registerSingleton<ShakeDetectionService>(mockShake);
     getIt.registerSingleton<AppLockService>(mockLock);
     getIt.registerSingleton<Box>(mockBox, instanceName: 'app_settings');

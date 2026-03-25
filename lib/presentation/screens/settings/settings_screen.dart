@@ -1,14 +1,18 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../app.dart';
+import '../../../core/constants/alert_types.dart';
+import '../../../data/models/alert_event.dart';
 import '../../../core/services/ad_service.dart';
 import '../../../core/services/app_lock_service.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/context_alert_service.dart';
 import '../../../core/services/geofence_service.dart';
+import '../../../core/services/location_service.dart';
 import '../../../core/services/shake_detection_service.dart';
 import '../../../core/services/snatch_detection_service.dart';
 import '../../../core/services/speed_alert_service.dart';
@@ -18,6 +22,7 @@ import '../../../detection/ml/crash_fall_detection_service.dart';
 import '../../../injection.dart';
 import '../../blocs/contacts/contacts_cubit.dart';
 import '../../blocs/contacts/contacts_state.dart';
+import '../../blocs/alerts/alerts_cubit.dart';
 import '../../blocs/sos/sos_cubit.dart';
 import '../../blocs/theme/theme_cubit.dart';
 import '../../widgets/ad_banner_widget.dart';
@@ -34,6 +39,11 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  /// Current GPS coordinates from the cached LocationService position.
+  /// Falls back to 0.0 only when no position has ever been acquired.
+  double get _lastLat => getIt<LocationService>().lastPosition?.latitude ?? 0.0;
+  double get _lastLon => getIt<LocationService>().lastPosition?.longitude ?? 0.0;
+
   bool _shakeEnabled = false;
   bool _lockEnabled = false;
   bool _crashFallEnabled = false;
@@ -125,14 +135,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  StreamSubscription<DetectionAlert>? _crashSubscription;
+
   void _toggleCrashFall(bool enabled) {
     setState(() => _crashFallEnabled = enabled);
     _appSettings.put('crash_fall_enabled', enabled);
     final service = getIt<CrashFallDetectionService>();
     if (enabled) {
       service.start();
+      // Listen to crash/fall detection stream.
+      _crashSubscription?.cancel();
+      _crashSubscription = service.alerts.listen((detectionAlert) {
+        // Create AlertEvent from DetectionAlert.
+        final alertEvent = AlertEvent(
+          id: 'crash_${DateTime.now().millisecondsSinceEpoch}',
+          type: detectionAlert.alertType,
+          title: detectionAlert.title,
+          description: detectionAlert.message,
+          latitude: _lastLat,
+          longitude: _lastLon,
+          timestamp: detectionAlert.timestamp,
+          source: 'On-Device Accelerometer',
+          magnitude: detectionAlert.peakGForce,
+        );
+
+        if (mounted) {
+          context.read<AlertsCubit>().addLocalAlert(alertEvent);
+
+          // Auto-trigger SOS for vehicle crashes and hard impacts.
+          if (detectionAlert.alertType == AlertType.carAccident ||
+              detectionAlert.alertType == AlertType.motorcycleCrash ||
+              detectionAlert.alertType == AlertType.pedestrianHit) {
+            context.read<SosCubit>().startCountdown();
+          }
+        }
+      });
     } else {
       service.stop();
+      _crashSubscription?.cancel();
+      _crashSubscription = null;
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -150,7 +191,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _appSettings.put('geofence_enabled', enabled);
     final service = getIt<GeofenceService>();
     if (enabled) {
-      service.start(onExitAllZones: (_) {});
+      service.start(onExitAllZones: (zoneName) {
+        // Inject into main alert pipeline.
+        final alertEvent = AlertEvent(
+          id: 'geofence_exit_${DateTime.now().millisecondsSinceEpoch}',
+          type: AlertType.geofenceExit,
+          title: 'Left Safe Zone: $zoneName',
+          description:
+              'You have left the designated safe zone "$zoneName". '
+              'Your emergency contacts have been notified.',
+          latitude: _lastLat,
+          longitude: _lastLon,
+          timestamp: DateTime.now(),
+          source: 'On-Device GPS',
+        );
+        if (mounted) {
+          context.read<AlertsCubit>().addLocalAlert(alertEvent);
+        }
+      });
     } else {
       service.stop();
     }
@@ -161,7 +219,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _appSettings.put('snatch_enabled', enabled);
     final service = getIt<SnatchDetectionService>();
     if (enabled) {
-      service.start(onSnatchDetected: (_) {});
+      service.start(onSnatchDetected: (confidence) {
+        // Snatch is critical — auto-trigger SOS countdown.
+        if (mounted) {
+          context.read<SosCubit>().startCountdown();
+        }
+        // Also inject into alert pipeline.
+        final alertEvent = AlertEvent(
+          id: 'snatch_${DateTime.now().millisecondsSinceEpoch}',
+          type: AlertType.phoneSnatching,
+          title: 'Phone Snatch Detected',
+          description:
+              'A sudden directional grab was detected '
+              '(confidence: ${(confidence * 100).toStringAsFixed(0)}%). '
+              'SOS countdown started.',
+          latitude: _lastLat,
+          longitude: _lastLon,
+          timestamp: DateTime.now(),
+          source: 'On-Device Accelerometer',
+          magnitude: confidence,
+        );
+        if (mounted) {
+          context.read<AlertsCubit>().addLocalAlert(alertEvent);
+        }
+      });
     } else {
       service.stop();
     }
@@ -172,7 +253,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _appSettings.put('speed_alert_enabled', enabled);
     final service = getIt<SpeedAlertService>();
     if (enabled) {
-      service.start(onSpeedExceeded: (_) {});
+      service.start(onSpeedExceeded: (speedKmh) {
+        final alertEvent = AlertEvent(
+          id: 'speed_${DateTime.now().millisecondsSinceEpoch}',
+          type: AlertType.speedWarning,
+          title: 'Overspeeding: ${speedKmh.toStringAsFixed(0)} km/h',
+          description:
+              'Your speed exceeded the safe limit '
+              '(${speedKmh.toStringAsFixed(0)} km/h). Slow down.',
+          latitude: _lastLat,
+          longitude: _lastLon,
+          timestamp: DateTime.now(),
+          source: 'On-Device GPS',
+          magnitude: speedKmh,
+        );
+        if (mounted) {
+          context.read<AlertsCubit>().addLocalAlert(alertEvent);
+        }
+      });
     } else {
       service.stop();
     }
@@ -183,10 +281,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _appSettings.put('context_alert_enabled', enabled);
     final service = getIt<ContextAlertService>();
     if (enabled) {
-      service.start(onContextAlert: (_) {});
+      service.start(onContextAlert: (ctxAlert) {
+        // Map ContextAlertType to AlertType.
+        final alertType = _mapContextAlertType(ctxAlert.type);
+        final alertEvent = AlertEvent(
+          id: 'ctx_${ctxAlert.type.name}_${DateTime.now().millisecondsSinceEpoch}',
+          type: alertType,
+          title: ctxAlert.title,
+          description: ctxAlert.message,
+          latitude: _lastLat,
+          longitude: _lastLon,
+          timestamp: DateTime.now(),
+          source: 'On-Device Context',
+        );
+        if (mounted) {
+          context.read<AlertsCubit>().addLocalAlert(alertEvent);
+        }
+      });
     } else {
       service.stop();
     }
+  }
+
+  /// Map ContextAlertType → AlertType for pipeline integration.
+  AlertType _mapContextAlertType(ContextAlertType type) {
+    return switch (type) {
+      ContextAlertType.heatStroke => AlertType.heatStroke,
+      ContextAlertType.hypothermia => AlertType.hypothermia,
+      ContextAlertType.drowsyDriving => AlertType.drowsyDriving,
+      ContextAlertType.loneNightWalk => AlertType.suspiciousActivity,
+      ContextAlertType.altitudeSickness => AlertType.avalanche,
+      ContextAlertType.flashFloodRisk => AlertType.flood,
+    };
   }
 
   Future<String?> _showPinSetupDialog(AppLocalizations l) async {
@@ -620,37 +746,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     context: context,
                     builder: (ctx) => AlertDialog(
                       title: Text(l.chooseTheme),
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          RadioListTile<ThemeMode>(
-                            title: Text(l.themeSystem),
-                            value: ThemeMode.system,
-                            groupValue: themeCubit.state,
-                            onChanged: (v) {
-                              themeCubit.setTheme(v!);
-                              Navigator.pop(ctx);
-                            },
-                          ),
-                          RadioListTile<ThemeMode>(
-                            title: Text(l.themeLight),
-                            value: ThemeMode.light,
-                            groupValue: themeCubit.state,
-                            onChanged: (v) {
-                              themeCubit.setTheme(v!);
-                              Navigator.pop(ctx);
-                            },
-                          ),
-                          RadioListTile<ThemeMode>(
-                            title: Text(l.themeDark),
-                            value: ThemeMode.dark,
-                            groupValue: themeCubit.state,
-                            onChanged: (v) {
-                              themeCubit.setTheme(v!);
-                              Navigator.pop(ctx);
-                            },
-                          ),
-                        ],
+                      content: RadioGroup<ThemeMode>(
+                        groupValue: themeCubit.state,
+                        onChanged: (v) {
+                          if (v == null) return;
+                          themeCubit.setTheme(v);
+                          Navigator.pop(ctx);
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            RadioListTile<ThemeMode>(
+                              title: Text(l.themeSystem),
+                              value: ThemeMode.system,
+                            ),
+                            RadioListTile<ThemeMode>(
+                              title: Text(l.themeLight),
+                              value: ThemeMode.light,
+                            ),
+                            RadioListTile<ThemeMode>(
+                              title: Text(l.themeDark),
+                              value: ThemeMode.dark,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );

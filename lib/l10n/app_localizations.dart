@@ -935,7 +935,7 @@ abstract class AppLocalizations {
   /// No description provided for @sosAlertActivated.
   ///
   /// In en, this message translates to:
-  /// **'🚨 SOS Alert activated! Siren playing.'**
+  /// **'SOS Alert activated! Siren playing.'**
   String get sosAlertActivated;
 
   /// No description provided for @stop.
@@ -1043,7 +1043,7 @@ abstract class AppLocalizations {
   /// No description provided for @sosAlertTitle.
   ///
   /// In en, this message translates to:
-  /// **'🚨 SOS ALERT'**
+  /// **'SOS ALERT'**
   String get sosAlertTitle;
 
   /// No description provided for @emergencyAlertWillBeSent.

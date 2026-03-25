@@ -26,7 +26,7 @@ class SmsService {
 
     final locationMsg = await _locationService.buildLocationMessage();
     final name = userName ?? 'Someone';
-    final message = '🚨 EMERGENCY SOS!\n\n'
+    final message = 'EMERGENCY SOS!\n\n'
         '$name needs immediate help!\n\n'
         '$locationMsg\n\n'
         'Sent via Safora';
@@ -48,7 +48,7 @@ class SmsService {
     final locationMsg = await _locationService.buildLocationMessage();
     final name = userName ?? 'Someone';
 
-    final message = '🔋 LOW BATTERY ALERT\n\n'
+    final message = 'LOW BATTERY ALERT\n\n'
         '$name\'s phone is at $batteryLevel% battery.\n\n'
         'Last known $locationMsg\n\n'
         'Sent via Safora';

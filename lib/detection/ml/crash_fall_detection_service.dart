@@ -99,17 +99,17 @@ class CrashFallDetectionService {
   String _generateTitle(DetectionEvent event, AlertType alertType) {
     final conf = '${(event.confidence * 100).toInt()}%';
     return switch (alertType) {
-      AlertType.elderlyFall => '⚠️ Fall Detected ($conf confidence)',
-      AlertType.carAccident => '🚨 Car Crash Detected ($conf confidence)',
+      AlertType.elderlyFall => 'Fall Detected ($conf confidence)',
+      AlertType.carAccident => 'Car Crash Detected ($conf confidence)',
       AlertType.motorcycleCrash =>
-        '🏍️ Motorcycle Crash Detected ($conf confidence)',
+        'Motorcycle Crash Detected ($conf confidence)',
       AlertType.bicycleCrash =>
-        '🚲 Bicycle Crash Detected ($conf confidence)',
+        'Bicycle Crash Detected ($conf confidence)',
       AlertType.pedestrianHit =>
-        '🚶 Pedestrian Impact Detected ($conf confidence)',
-      AlertType.fainting => '💥 Hard Impact ($conf confidence)',
+        'Pedestrian Impact Detected ($conf confidence)',
+      AlertType.fainting => 'Hard Impact ($conf confidence)',
       _ =>
-        '🚨 Impact Detected ($conf confidence)',
+        'Impact Detected ($conf confidence)',
     };
   }
 

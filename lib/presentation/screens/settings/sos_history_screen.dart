@@ -117,7 +117,7 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: _entries.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final entry = _entries[index];
                 final dateStr = DateFormat('MMM d, yyyy – h:mm a')

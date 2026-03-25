@@ -101,7 +101,7 @@ void main() {
     });
 
     test('wind chill is lower than raw temp at high wind', () {
-      final raw = -10.0;
+      const raw = -10.0;
       final result = ContextAlertService.calculateWindChillForTest(raw, 30);
       // Wind chill should make it feel colder.
       expect(result, lessThan(raw));

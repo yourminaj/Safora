@@ -5,6 +5,7 @@ import '../../core/constants/alert_types.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/typography.dart';
 import '../../data/models/alert_event.dart';
+import 'alert_icon_widget.dart';
 
 /// A card widget displaying a single disaster alert event.
 ///
@@ -24,21 +25,6 @@ class AlertCard extends StatelessWidget {
     AlertPriority.high => AppColors.warning,
     AlertPriority.medium => const Color(0xFFFFD54F),
     AlertPriority.low => AppColors.safe,
-  };
-
-  IconData get _categoryIcon => switch (alert.type.category) {
-    AlertCategory.naturalDisaster => Icons.public_rounded,
-    AlertCategory.weatherEmergency => Icons.thunderstorm_rounded,
-    AlertCategory.healthMedical => Icons.medical_services_rounded,
-    AlertCategory.vehicleTransport => Icons.directions_car_rounded,
-    AlertCategory.personalSafety => Icons.shield_rounded,
-    AlertCategory.homeDomestic => Icons.home_rounded,
-    AlertCategory.workplace => Icons.engineering_rounded,
-    AlertCategory.waterMarine => Icons.water_rounded,
-    AlertCategory.travelOutdoor => Icons.terrain_rounded,
-    AlertCategory.environmentalChemical => Icons.science_rounded,
-    AlertCategory.digitalCyber => Icons.phone_android_rounded,
-    AlertCategory.childElder => Icons.child_care_rounded,
   };
 
   @override
@@ -65,15 +51,11 @@ class AlertCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Priority indicator + icon.
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: _priorityColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(_categoryIcon, color: _priorityColor, size: 22),
+              // Priority indicator + animated icon.
+              AlertIconWidget(
+                category: alert.type.category,
+                priority: alert.type.priority,
+                size: 42,
               ),
 
               const SizedBox(width: 12),

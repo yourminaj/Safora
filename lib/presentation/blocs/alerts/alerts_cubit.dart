@@ -54,6 +54,42 @@ class AlertsCubit extends Cubit<AlertsState> {
     }
   }
 
+  /// Inject a locally-detected alert (from on-device services) into
+  /// the cubit state and trigger notification if critical.
+  void addLocalAlert(AlertEvent alert) {
+    final currentState = state;
+    final List<AlertEvent> current;
+
+    if (currentState is AlertsLoaded) {
+      current = List.of(currentState.alerts);
+    } else {
+      current = <AlertEvent>[];
+    }
+
+    // Add to front (newest first) and deduplicate.
+    current.insert(0, alert);
+    final seen = <String>{};
+    final unique = <AlertEvent>[];
+    for (final a in current) {
+      final key = a.id ?? '${a.title}_${a.timestamp}';
+      if (seen.add(key)) unique.add(a);
+    }
+
+    // Persist to history.
+    _alertsRepository.saveAlerts(unique);
+
+    emit(AlertsLoaded(alerts: unique));
+
+    // Notify if critical.
+    if (alert.type.priority == AlertPriority.critical) {
+      _notificationService.showDisasterAlert(
+        title: '${alert.type.category.label}: ${alert.title}',
+        body: alert.description ??
+            'Critical alert from ${alert.source ?? "on-device detection"}',
+      );
+    }
+  }
+
   /// Force refresh alerts from all APIs.
   Future<void> refreshAlerts() async {
     final currentState = state;
@@ -103,6 +139,9 @@ class AlertsCubit extends Cubit<AlertsState> {
     }
   }
 
+  /// Max notifications per refresh to avoid flooding.
+  static const int _maxNotificationsPerRefresh = 3;
+
   void _notifyNewCritical(
     List<AlertEvent> fresh,
     List<AlertEvent> cached,
@@ -111,16 +150,19 @@ class AlertsCubit extends Cubit<AlertsState> {
         .map((a) => a.id ?? '${a.title}_${a.timestamp}')
         .toSet();
 
+    int notificationCount = 0;
     for (final alert in fresh) {
+      if (notificationCount >= _maxNotificationsPerRefresh) break;
+
       final id = alert.id ?? '${alert.title}_${alert.timestamp}';
       if (!cachedIds.contains(id) &&
           alert.type.priority == AlertPriority.critical) {
         _notificationService.showDisasterAlert(
-          title: '🚨 ${alert.type.category.emoji} ${alert.title}',
+          title: '${alert.type.category.label}: ${alert.title}',
           body: alert.description ??
               'Critical alert from ${alert.source ?? "unknown source"}',
         );
-        break; // Limit to 1 notification per refresh.
+        notificationCount++;
       }
     }
   }

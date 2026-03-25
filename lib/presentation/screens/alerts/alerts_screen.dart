@@ -79,7 +79,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: '🔴 ${l.filterCritical}',
+                label: l.filterCritical,
                 isSelected: state.filterPriority == AlertPriority.critical,
                 color: AppColors.danger,
                 onTap: () => context
@@ -88,7 +88,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: '🌍 ${l.filterDisaster}',
+                label: l.filterDisaster,
                 isSelected:
                     state.filterCategory == AlertCategory.naturalDisaster,
                 color: AppColors.warning,
@@ -98,7 +98,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: '⛈️ ${l.filterWeather}',
+                label: l.filterWeather,
                 isSelected:
                     state.filterCategory == AlertCategory.weatherEmergency,
                 color: AppColors.info,
@@ -108,13 +108,53 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: '🌊 ${l.filterWater}',
+                label: l.filterWater,
                 isSelected:
                     state.filterCategory == AlertCategory.waterMarine,
                 color: const Color(0xFF42A5F5),
                 onTap: () => context
                     .read<AlertsCubit>()
                     .filterByCategory(AlertCategory.waterMarine),
+              ),
+              const SizedBox(width: 8),
+              _FilterChip(
+                label: 'Safety',
+                isSelected:
+                    state.filterCategory == AlertCategory.personalSafety,
+                color: const Color(0xFF7E57C2),
+                onTap: () => context
+                    .read<AlertsCubit>()
+                    .filterByCategory(AlertCategory.personalSafety),
+              ),
+              const SizedBox(width: 8),
+              _FilterChip(
+                label: 'Health',
+                isSelected:
+                    state.filterCategory == AlertCategory.healthMedical,
+                color: const Color(0xFFEF5350),
+                onTap: () => context
+                    .read<AlertsCubit>()
+                    .filterByCategory(AlertCategory.healthMedical),
+              ),
+              const SizedBox(width: 8),
+              _FilterChip(
+                label: 'Vehicle',
+                isSelected:
+                    state.filterCategory == AlertCategory.vehicleTransport,
+                color: const Color(0xFF78909C),
+                onTap: () => context
+                    .read<AlertsCubit>()
+                    .filterByCategory(AlertCategory.vehicleTransport),
+              ),
+              const SizedBox(width: 8),
+              _FilterChip(
+                label: 'Environmental',
+                isSelected:
+                    state.filterCategory == AlertCategory.environmentalChemical,
+                color: const Color(0xFFFF8F00),
+                onTap: () => context
+                    .read<AlertsCubit>()
+                    .filterByCategory(AlertCategory.environmentalChemical),
               ),
             ],
           ),
