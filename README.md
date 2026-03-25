@@ -72,7 +72,7 @@ flutter run
 ## Testing
 
 ```bash
-# Run all tests (366+ tests)
+# Run all tests (626+ tests)
 flutter test
 
 # Analyze for errors

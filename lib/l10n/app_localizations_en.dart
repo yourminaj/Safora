@@ -698,6 +698,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get crashFallDisabled => 'Crash/Fall detection disabled';
 
   @override
+  String get sensitivitySettings => 'Detection Sensitivity';
+
+  @override
+  String get fallThreshold => 'Fall Threshold (G-force)';
+
+  @override
+  String get crashThreshold => 'Crash Threshold (G-force)';
+
+  @override
+  String get minConfidence => 'Min Confidence (%)';
+
+  @override
+  String get sensitivitySaved => 'Sensitivity settings saved';
+
+  @override
+  String get resetDefaults => 'Reset Defaults';
+
+  @override
   String get themeSystem => 'System Default';
 
   @override

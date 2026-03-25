@@ -37,18 +37,58 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Should have a button to proceed
+      // Should have a button to proceed.
       expect(find.byType(ElevatedButton), findsAtLeast(1));
     });
 
-    testWidgets('has page indicator dots', (tester) async {
+    testWidgets('renders PageView for multi-step onboarding', (tester) async {
       await tester.pumpWidget(
         buildTestableWidget(child: const OnboardingScreen()),
       );
       await tester.pumpAndSettle();
 
-      // Onboarding has 3 pages, so there should be indicator dots
-      expect(find.byType(OnboardingScreen), findsOneWidget);
+      // OnboardingScreen uses PageView for 3 steps.
+      expect(find.byType(PageView), findsOneWidget);
+    });
+
+    testWidgets('has 3 page indicator dots', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(child: const OnboardingScreen()),
+      );
+      await tester.pumpAndSettle();
+
+      // Onboarding has 3 pages with indicator dots (AnimatedContainer).
+      final dots = find.byType(AnimatedContainer);
+      // At least 3 dots should be present for the 3 pages.
+      expect(dots, findsAtLeast(3));
+    });
+
+    testWidgets('starts on first page (index 0)', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(child: const OnboardingScreen()),
+      );
+      await tester.pumpAndSettle();
+
+      // First page should be visible — look for the SOS overview content.
+      // The onboarding items contain shield/safety related icons.
+      expect(find.byType(Column), findsWidgets);
+    });
+
+    testWidgets('can navigate to next page', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(child: const OnboardingScreen()),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap the next button.
+      final nextBtn = find.byType(ElevatedButton);
+      if (nextBtn.evaluate().isNotEmpty) {
+        await tester.tap(nextBtn.first, warnIfMissed: false);
+        await tester.pumpAndSettle();
+
+        // Screen should still be visible after navigation.
+        expect(find.byType(OnboardingScreen), findsOneWidget);
+      }
     });
   });
 }

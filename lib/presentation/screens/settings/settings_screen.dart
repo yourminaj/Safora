@@ -19,6 +19,7 @@ import '../../../core/services/speed_alert_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../detection/ml/crash_fall_detection_service.dart';
+import '../../../detection/ml/crash_fall_detection_engine.dart';
 import '../../../injection.dart';
 import '../../blocs/contacts/contacts_cubit.dart';
 import '../../blocs/contacts/contacts_state.dart';
@@ -183,6 +184,169 @@ class _SettingsScreenState extends State<SettingsScreen> {
               : AppLocalizations.of(context)!.crashFallDisabled,
         ),
       ),
+    );
+  }
+
+  /// Show crash/fall sensitivity settings bottom sheet.
+  void _showSensitivitySettings() {
+    final l = AppLocalizations.of(context)!;
+    double fallG = _appSettings.get('fall_threshold_g', defaultValue: 3.0) as double;
+    double crashG = _appSettings.get('crash_threshold_g', defaultValue: 4.0) as double;
+    double minConf = _appSettings.get('min_confidence', defaultValue: 0.5) as double;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                24, 20, 24, MediaQuery.of(ctx).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    children: [
+                      const Icon(Icons.tune_rounded, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Text(l.sensitivitySettings,
+                          style: AppTypography.titleMedium),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Fall threshold slider
+                  Text(l.fallThreshold, style: AppTypography.labelMedium),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Slider(
+                          value: fallG,
+                          min: 1.5,
+                          max: 6.0,
+                          divisions: 9,
+                          label: '${fallG.toStringAsFixed(1)}G',
+                          onChanged: (v) => setSheetState(() => fallG = v),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 48,
+                        child: Text('${fallG.toStringAsFixed(1)}G',
+                            style: AppTypography.bodySmall),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Crash threshold slider
+                  Text(l.crashThreshold, style: AppTypography.labelMedium),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Slider(
+                          value: crashG,
+                          min: 2.0,
+                          max: 10.0,
+                          divisions: 16,
+                          label: '${crashG.toStringAsFixed(1)}G',
+                          onChanged: (v) => setSheetState(() => crashG = v),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 48,
+                        child: Text('${crashG.toStringAsFixed(1)}G',
+                            style: AppTypography.bodySmall),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Min confidence slider
+                  Text(l.minConfidence, style: AppTypography.labelMedium),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Slider(
+                          value: minConf,
+                          min: 0.1,
+                          max: 1.0,
+                          divisions: 9,
+                          label: '${(minConf * 100).toInt()}%',
+                          onChanged: (v) => setSheetState(() => minConf = v),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 48,
+                        child: Text('${(minConf * 100).toInt()}%',
+                            style: AppTypography.bodySmall),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () {
+                          setSheetState(() {
+                            fallG = 3.0;
+                            crashG = 4.0;
+                            minConf = 0.5;
+                          });
+                        },
+                        icon: const Icon(Icons.restore_rounded, size: 18),
+                        label: Text(l.resetDefaults),
+                      ),
+                      FilledButton(
+                        onPressed: () {
+                          _appSettings.put('fall_threshold_g', fallG);
+                          _appSettings.put('crash_threshold_g', crashG);
+                          _appSettings.put('min_confidence', minConf);
+
+                          // If service is running, restart with new config.
+                          if (_crashFallEnabled) {
+                            final service = getIt<CrashFallDetectionService>();
+                            service.stop();
+                            // Re-register with new thresholds.
+                            if (getIt.isRegistered<CrashFallDetectionService>()) {
+                              getIt.unregister<CrashFallDetectionService>();
+                            }
+                            getIt.registerLazySingleton<CrashFallDetectionService>(
+                              () => CrashFallDetectionService(
+                                engine: CrashFallDetectionEngine(
+                                  fallThresholdG: fallG,
+                                  crashThresholdG: crashG,
+                                  minConfidence: minConf,
+                                ),
+                              ),
+                            );
+                            _toggleCrashFall(true);
+                          }
+
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l.sensitivitySaved)),
+                          );
+                        },
+                        child: Text(l.save),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -595,10 +759,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: l.crashFallDetection,
                 subtitle: l.crashFallDetectionDesc,
                 onTap: () => _toggleCrashFall(!_crashFallEnabled),
-                trailing: Switch(
-                  value: _crashFallEnabled,
-                  onChanged: _toggleCrashFall,
-                  activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.tune_rounded, size: 20),
+                      onPressed: _showSensitivitySettings,
+                      tooltip: l.sensitivitySettings,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                    ),
+                    Switch(
+                      value: _crashFallEnabled,
+                      onChanged: _toggleCrashFall,
+                      activeTrackColor:
+                          AppColors.primary.withValues(alpha: 0.4),
+                    ),
+                  ],
                 ),
               ),
               _SettingsTile(

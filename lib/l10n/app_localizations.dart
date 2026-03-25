@@ -1358,6 +1358,42 @@ abstract class AppLocalizations {
   /// **'Crash/Fall detection disabled'**
   String get crashFallDisabled;
 
+  /// No description provided for @sensitivitySettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Detection Sensitivity'**
+  String get sensitivitySettings;
+
+  /// No description provided for @fallThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Fall Threshold (G-force)'**
+  String get fallThreshold;
+
+  /// No description provided for @crashThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash Threshold (G-force)'**
+  String get crashThreshold;
+
+  /// No description provided for @minConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Min Confidence (%)'**
+  String get minConfidence;
+
+  /// No description provided for @sensitivitySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitivity settings saved'**
+  String get sensitivitySaved;
+
+  /// No description provided for @resetDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Defaults'**
+  String get resetDefaults;
+
   /// No description provided for @themeSystem.
   ///
   /// In en, this message translates to:

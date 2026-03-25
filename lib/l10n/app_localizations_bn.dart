@@ -681,6 +681,24 @@ class AppLocalizationsBn extends AppLocalizations {
   String get crashFallDisabled => 'ক্র্যাশ/পতন সনাক্তকরণ নিষ্ক্রিয়';
 
   @override
+  String get sensitivitySettings => 'সনাক্তকরণ সংবেদনশীলতা';
+
+  @override
+  String get fallThreshold => 'পতন থ্রেশহোল্ড (জি-ফোর্স)';
+
+  @override
+  String get crashThreshold => 'ক্র্যাশ থ্রেশহোল্ড (জি-ফোর্স)';
+
+  @override
+  String get minConfidence => 'ন্যূনতম আস্থা (%)';
+
+  @override
+  String get sensitivitySaved => 'সংবেদনশীলতা সেটিংস সংরক্ষিত';
+
+  @override
+  String get resetDefaults => 'ডিফল্ট রিসেট';
+
+  @override
   String get themeSystem => 'সিস্টেম ডিফল্ট';
 
   @override

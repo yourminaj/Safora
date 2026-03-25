@@ -37,6 +37,31 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>Safora uses Face ID to unlock the app securely.</string>
 
+	<!-- Motion sensors: used for crash/fall and snatch detection -->
+	<key>NSMotionUsageDescription</key>
+	<string>Safora uses motion sensors to detect falls, crashes, and phone snatch attempts for your safety.</string>
+
+	<!-- Contacts: used to pick emergency contacts -->
+	<key>NSContactsUsageDescription</key>
+	<string>Safora accesses your contacts to quickly add emergency contacts who will be notified during SOS alerts.</string>
+
+	<!-- Microphone: used for decoy call audio -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Safora uses the microphone for the decoy call feature to simulate realistic incoming calls.</string>
+
+	<!-- Background modes -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>audio</string>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+
+	<!-- Background location indicator -->
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Safora needs background location access to send accurate GPS coordinates during emergencies.</string>
+
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

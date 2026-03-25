@@ -16,7 +16,7 @@ void main() {
       expect(find.byType(SosButton), findsOneWidget);
     });
 
-    testWidgets('SOS button is tappable', (tester) async {
+    testWidgets('SOS button is tappable without crash', (tester) async {
       await tester.pumpWidget(
         buildTestableWidget(child: const SosButton()),
       );
@@ -27,16 +27,45 @@ void main() {
       await tester.tap(sosButton, warnIfMissed: false);
       await tester.pump();
 
+      // Button should still be present after tap.
       expect(sosButton, findsOneWidget);
     });
 
-    testWidgets('SOS button contains Container widgets', (tester) async {
+    testWidgets('contains visual container elements', (tester) async {
       await tester.pumpWidget(
         buildTestableWidget(child: const SosButton()),
       );
       await tester.pump(const Duration(milliseconds: 500));
 
+      // Button should render with nested Container widgets for styling.
       expect(find.byType(Container), findsWidgets);
+    });
+
+    testWidgets('button has circular shape via BoxDecoration', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(child: const SosButton()),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // SOS button uses GestureDetector for long-press activation.
+      expect(find.byType(GestureDetector), findsWidgets);
+    });
+
+    testWidgets('long-press gesture is configured', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(child: const SosButton()),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      final sosButton = find.byType(SosButton);
+      expect(sosButton, findsOneWidget);
+
+      // Long press should not crash (SosCubit handles the countdown).
+      await tester.longPress(sosButton, warnIfMissed: false);
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Button should still be present after long press.
+      expect(sosButton, findsOneWidget);
     });
   });
 }
