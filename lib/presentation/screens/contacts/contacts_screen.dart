@@ -32,6 +32,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
   Future<void> _handleCloudSync(String action, BuildContext ctx) async {
     final cloudSync = getIt<ContactsCloudSync>();
     final messenger = ScaffoldMessenger.of(ctx);
+    final l = AppLocalizations.of(ctx)!;
 
     // Show loading.
     showDialog(
@@ -58,8 +59,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
         if (ctx.mounted) Navigator.pop(ctx);
         if (cloudContacts.isEmpty) {
           messenger.showSnackBar(
-            const SnackBar(
-              content: Text('No contacts found in cloud'),
+            SnackBar(
+              content: Text(l.noContactsInCloud),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -86,7 +87,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
       if (ctx.mounted) Navigator.pop(ctx);
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Sync failed: $e'),
+          content: Text('${l.syncFailed}: $e'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -107,23 +108,23 @@ class _ContactsScreenState extends State<ContactsScreen> {
               tooltip: 'Cloud Sync',
               onSelected: (value) => _handleCloudSync(value, context),
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'backup',
                   child: Row(
                     children: [
-                      Icon(Icons.cloud_upload_outlined, size: 20),
-                      SizedBox(width: 8),
-                      Text('Backup to Cloud'),
+                      const Icon(Icons.cloud_upload_outlined, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l.backupToCloud),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'restore',
                   child: Row(
                     children: [
-                      Icon(Icons.cloud_download_outlined, size: 20),
-                      SizedBox(width: 8),
-                      Text('Restore from Cloud'),
+                      const Icon(Icons.cloud_download_outlined, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l.restoreFromCloud),
                     ],
                   ),
                 ),

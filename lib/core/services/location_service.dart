@@ -18,28 +18,33 @@ class LocationService {
   ///
   /// Returns `true` if permission is granted.
   Future<bool> ensurePermission() async {
-    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return false;
+    try {
+      final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return false;
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return false;
-    }
-
-    if (permission == LocationPermission.deniedForever) return false;
-
-    // On Android 10+, request background location for SOS when app is minimized.
-    if (permission == LocationPermission.whileInUse) {
-      final bgPermission = await Geolocator.requestPermission();
-      // Even if background is denied, foreground still works — just can't
-      // get location when app is fully backgrounded.
-      if (bgPermission == LocationPermission.always) {
-        AppLogger.info('[Location] Background location granted');
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return false;
       }
-    }
 
-    return true;
+      if (permission == LocationPermission.deniedForever) return false;
+
+      // On Android 10+, request background location for SOS when app is minimized.
+      if (permission == LocationPermission.whileInUse) {
+        final bgPermission = await Geolocator.requestPermission();
+        // Even if background is denied, foreground still works — just can't
+        // get location when app is fully backgrounded.
+        if (bgPermission == LocationPermission.always) {
+          AppLogger.info('[Location] Background location granted');
+        }
+      }
+
+      return true;
+    } catch (e) {
+      AppLogger.warning('[Location] Permission check failed: $e');
+      return false;
+    }
   }
 
   /// Get the current GPS position.

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/colors.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../injection.dart';
 
 /// Sign-up screen with email, password, and display name.
@@ -227,8 +228,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text('Create Account',
-                                        style: TextStyle(fontSize: 16)),
+                                    : Text(AppLocalizations.of(context)!.createAccount,
+                                        style: const TextStyle(fontSize: 16)),
                               ),
                             ),
                           ],

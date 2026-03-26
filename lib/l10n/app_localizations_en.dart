@@ -751,4 +751,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get contextAlertDesc =>
       'AI-powered alerts for heat, drowsy driving, and more';
+
+  @override
+  String get watchAd => 'Watch Ad';
+
+  @override
+  String get signOut => 'Sign Out';
+
+  @override
+  String get signOutConfirm => 'Are you sure you want to sign out?';
+
+  @override
+  String get createAccount => 'Create Account';
+
+  @override
+  String get forgotPassword => 'Forgot Password?';
+
+  @override
+  String get signIn => 'Sign In';
+
+  @override
+  String get signInSubtitle => 'Sync your contacts to the cloud';
+
+  @override
+  String get resetPassword => 'Reset Password';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get noContactsInCloud => 'No contacts found in cloud';
+
+  @override
+  String get syncFailed => 'Sync failed';
+
+  @override
+  String get backupToCloud => 'Backup to Cloud';
+
+  @override
+  String get restoreFromCloud => 'Restore from Cloud';
 }

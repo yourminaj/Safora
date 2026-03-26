@@ -15,13 +15,16 @@ import 'core/services/shake_detection_service.dart';
 import 'core/services/snatch_detection_service.dart';
 import 'core/services/sms_service.dart';
 import 'core/services/speed_alert_service.dart';
+import 'core/services/weather_feed_service.dart';
 import 'detection/ml/crash_fall_detection_service.dart';
+import 'detection/ml/crash_fall_detection_engine.dart';
 import 'presentation/blocs/theme/theme_cubit.dart';
 import 'data/datasources/alerts_local_datasource.dart';
 import 'data/datasources/contacts_cloud_sync.dart';
 import 'data/datasources/contacts_local_datasource.dart';
 import 'data/datasources/disaster_api_client.dart';
 import 'data/datasources/military_alert_client.dart';
+import 'data/datasources/weather_api_client.dart';
 import 'data/datasources/profile_local_datasource.dart';
 import 'data/datasources/reminders_local_datasource.dart';
 import 'data/datasources/sos_history_datasource.dart';
@@ -130,9 +133,18 @@ Future<void> configureDependencies() async {
     () => ThemeCubit(settingsBox: appSettingsBox),
   );
 
-  // Crash/Fall detection service.
+  // Crash/Fall detection service — load saved thresholds from Hive.
+  final savedFallG = appSettingsBox.get('fall_threshold_g', defaultValue: 3.0) as double;
+  final savedCrashG = appSettingsBox.get('crash_threshold_g', defaultValue: 4.0) as double;
+  final savedMinConf = appSettingsBox.get('min_confidence', defaultValue: 0.5) as double;
   getIt.registerLazySingleton<CrashFallDetectionService>(
-    () => CrashFallDetectionService(),
+    () => CrashFallDetectionService(
+      engine: CrashFallDetectionEngine(
+        fallThresholdG: savedFallG,
+        crashThresholdG: savedCrashG,
+        minConfidence: savedMinConf,
+      ),
+    ),
     dispose: (s) => s.dispose(),
   );
 
@@ -144,6 +156,20 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<MilitaryAlertClient>(
     () => MilitaryAlertClient(),
     dispose: (client) => client.dispose(),
+  );
+
+  getIt.registerLazySingleton<WeatherApiClient>(
+    () => WeatherApiClient(),
+    dispose: (client) => client.dispose(),
+  );
+
+  getIt.registerLazySingleton<WeatherFeedService>(
+    () => WeatherFeedService(
+      locationService: getIt<LocationService>(),
+      weatherApiClient: getIt<WeatherApiClient>(),
+      contextAlertService: getIt<ContextAlertService>(),
+    ),
+    dispose: (s) => s.dispose(),
   );
 
   getIt.registerLazySingleton<ContactsCloudSync>(

@@ -563,7 +563,7 @@ class DisasterApiClient {
       // Use the open CSV endpoint for VIIRS data.
       final uri = Uri.parse(
         'https://firms.modaps.eosdis.nasa.gov/api/area/csv/'
-        'MAP_KEY/VIIRS_SNPP_NRT/$latitude,$longitude,$radiusKm/1',
+        'b26b696f584a2b6cf8638c11b3e48612/VIIRS_SNPP_NRT/$latitude,$longitude,$radiusKm/1',
       );
 
       final response = await _client.get(uri).timeout(_timeout);

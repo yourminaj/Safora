@@ -20,6 +20,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../detection/ml/crash_fall_detection_service.dart';
 import '../../../detection/ml/crash_fall_detection_engine.dart';
+import '../../../core/services/weather_feed_service.dart';
 import '../../../injection.dart';
 import '../../blocs/contacts/contacts_cubit.dart';
 import '../../blocs/contacts/contacts_state.dart';
@@ -70,6 +71,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _snatchEnabled = _appSettings.get('snatch_enabled', defaultValue: false) as bool;
     _speedAlertEnabled = _appSettings.get('speed_alert_enabled', defaultValue: false) as bool;
     _contextAlertEnabled = _appSettings.get('context_alert_enabled', defaultValue: false) as bool;
+  }
+
+  @override
+  void dispose() {
+    _crashSubscription?.cancel();
+    super.dispose();
   }
 
   void _toggleShake(bool enabled) {
@@ -444,7 +451,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _contextAlertEnabled = enabled);
     _appSettings.put('context_alert_enabled', enabled);
     final service = getIt<ContextAlertService>();
+    final feed = getIt<WeatherFeedService>();
     if (enabled) {
+      // Start app-level weather feed (persists across navigation).
+      feed.start();
       service.start(onContextAlert: (ctxAlert) {
         // Map ContextAlertType to AlertType.
         final alertType = _mapContextAlertType(ctxAlert.type);
@@ -464,6 +474,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
     } else {
       service.stop();
+      feed.stop();
     }
   }
 
@@ -679,7 +690,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               }
                             },
                             icon: const Icon(Icons.play_circle_outline),
-                            label: const Text('Watch Ad'),
+                            label: Text(l.watchAd),
                           ),
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
@@ -979,22 +990,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (getIt<AuthService>().isSignedIn)
             _SettingsTile(
               icon: Icons.logout_rounded,
-              title: 'Sign Out',
+              title: l.signOut,
               subtitle: getIt<AuthService>().currentUser?.email ?? '',
               onTap: () async {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: const Text('Sign Out'),
-                    content: const Text('Are you sure you want to sign out?'),
+                    title: Text(l.signOut),
+                    content: Text(l.signOutConfirm),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel'),
+                        child: Text(l.cancel),
                       ),
                       ElevatedButton(
                         onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Sign Out'),
+                        child: Text(l.signOut),
                       ),
                     ],
                   ),
@@ -1008,8 +1019,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           else
             _SettingsTile(
               icon: Icons.login_rounded,
-              title: 'Sign In',
-              subtitle: 'Sync your contacts to the cloud',
+              title: l.signIn,
+              subtitle: l.signInSubtitle,
               onTap: () => context.go('/login'),
             ),
         ],

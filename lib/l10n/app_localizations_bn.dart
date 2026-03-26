@@ -734,4 +734,43 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get contextAlertDesc =>
       'তাপ, তন্দ্রাচ্ছন্ন ড্রাইভিং এবং আরও অনেক কিছুর জন্য AI-চালিত সতর্কতা';
+
+  @override
+  String get watchAd => 'বিজ্ঞাপন দেখুন';
+
+  @override
+  String get signOut => 'সাইন আউট';
+
+  @override
+  String get signOutConfirm => 'আপনি কি সাইন আউট করতে চান?';
+
+  @override
+  String get createAccount => 'অ্যাকাউন্ট তৈরি করুন';
+
+  @override
+  String get forgotPassword => 'পাসওয়ার্ড ভুলে গেছেন?';
+
+  @override
+  String get signIn => 'সাইন ইন';
+
+  @override
+  String get signInSubtitle => 'আপনার পরিচিতিগুলো ক্লাউডে সিঙ্ক করুন';
+
+  @override
+  String get resetPassword => 'পাসওয়ার্ড রিসেট করুন';
+
+  @override
+  String get send => 'পাঠান';
+
+  @override
+  String get noContactsInCloud => 'ক্লাউডে কোনো পরিচিতি পাওয়া যায়নি';
+
+  @override
+  String get syncFailed => 'সিঙ্ক ব্যর্থ হয়েছে';
+
+  @override
+  String get backupToCloud => 'ক্লাউডে ব্যাকআপ';
+
+  @override
+  String get restoreFromCloud => 'ক্লাউড থেকে পুনরুদ্ধার';
 }

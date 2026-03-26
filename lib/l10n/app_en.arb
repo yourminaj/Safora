@@ -270,5 +270,19 @@
   "speedAlertTitle": "Speed Alert",
   "speedAlertDesc": "Alert when traveling above 120 km/h",
   "contextAlertTitle": "Smart Context Alerts",
-  "contextAlertDesc": "AI-powered alerts for heat, drowsy driving, and more"
+  "contextAlertDesc": "AI-powered alerts for heat, drowsy driving, and more",
+
+  "watchAd": "Watch Ad",
+  "signOut": "Sign Out",
+  "signOutConfirm": "Are you sure you want to sign out?",
+  "createAccount": "Create Account",
+  "forgotPassword": "Forgot Password?",
+  "signIn": "Sign In",
+  "signInSubtitle": "Sync your contacts to the cloud",
+  "resetPassword": "Reset Password",
+  "send": "Send",
+  "noContactsInCloud": "No contacts found in cloud",
+  "syncFailed": "Sync failed",
+  "backupToCloud": "Backup to Cloud",
+  "restoreFromCloud": "Restore from Cloud"
 }

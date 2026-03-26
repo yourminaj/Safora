@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/colors.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../injection.dart';
 
 /// Login screen with email and password authentication.
@@ -184,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               alignment: Alignment.centerRight,
                               child: TextButton(
                                 onPressed: _showResetDialog,
-                                child: const Text('Forgot Password?'),
+                                child: Text(AppLocalizations.of(context)!.forgotPassword),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -202,8 +203,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text('Sign In',
-                                        style: TextStyle(fontSize: 16)),
+                                    : Text(AppLocalizations.of(context)!.signIn,
+                                        style: const TextStyle(fontSize: 16)),
                               ),
                             ),
                           ],
@@ -261,7 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Reset Password'),
+        title: Text(AppLocalizations.of(context)!.resetPassword),
         content: TextField(
           controller: resetController,
           keyboardType: TextInputType.emailAddress,
@@ -273,7 +274,7 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -301,7 +302,7 @@ class _LoginScreenState extends State<LoginScreen> {
               }
               resetController.dispose();
             },
-            child: const Text('Send'),
+            child: Text(AppLocalizations.of(context)!.send),
           ),
         ],
       ),
