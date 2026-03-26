@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Safora</title>
+  <meta name="description" content="Safora Privacy Policy — how we collect, use, and protect your personal data.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">🛡️ Safora</a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/privacy" class="active">Privacy Policy</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="policy-header">
+      <h1>Privacy Policy</h1>
+      <p class="effective-date">Effective Date: March 26, 2026</p>
+    </div>
+
+    <div class="policy-content">
+      <section>
+        <h2>1. Introduction</h2>
+        <p>
+          Safora ("we", "our", "us") is a personal safety and emergency alert application developed by
+          <strong>Digital Drive</strong>. We respect your privacy and are committed to protecting the personal
+          data you share with us. This Privacy Policy explains how we collect, use, store, and protect your
+          information when you use the Safora mobile application.
+        </p>
+      </section>
+
+      <section>
+        <h2>2. Information We Collect</h2>
+
+        <h3>2.1 Information You Provide</h3>
+        <ul>
+          <li><strong>Account Information:</strong> Email address, display name, and password when you create an account via Firebase Authentication.</li>
+          <li><strong>Profile Information:</strong> Name, blood group, date of birth, and medical information you choose to add to your Medical ID.</li>
+          <li><strong>Emergency Contacts:</strong> Names and phone numbers of people you designate as emergency contacts.</li>
+          <li><strong>Medicine Reminders:</strong> Medication names, dosages, and schedule times you configure.</li>
+        </ul>
+
+        <h3>2.2 Information Collected Automatically</h3>
+        <ul>
+          <li><strong>Location Data:</strong> GPS coordinates are collected <em>only</em> when you activate SOS, enable speed alerts, geofence monitoring, or weather alerts. Location is used to send your coordinates to emergency contacts and fetch location-relevant safety data.</li>
+          <li><strong>Sensor Data:</strong> Accelerometer data is processed <em>on-device only</em> for crash/fall detection and snatch detection. This data is <strong>never transmitted</strong> to any server.</li>
+          <li><strong>Device Information:</strong> Battery level, connectivity status, and device platform (for notification delivery).</li>
+          <li><strong>Crash Reports:</strong> Anonymous crash reports via Firebase Crashlytics to improve app stability.</li>
+          <li><strong>Analytics:</strong> Anonymous usage analytics via Firebase Analytics to understand feature adoption.</li>
+        </ul>
+
+        <h3>2.3 Information We Do NOT Collect</h3>
+        <ul>
+          <li>We do <strong>not</strong> record audio, video, or phone calls.</li>
+          <li>We do <strong>not</strong> read your SMS messages, emails, or browsing history.</li>
+          <li>We do <strong>not</strong> sell, rent, or share your personal data with third parties for marketing purposes.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>3. How We Use Your Information</h2>
+        <ul>
+          <li><strong>Emergency Alerts:</strong> To send SMS messages with your GPS location to your emergency contacts during an SOS event.</li>
+          <li><strong>Safety Detection:</strong> To process accelerometer data on your device for crash, fall, and snatch detection.</li>
+          <li><strong>Speed & Geofence Alerts:</strong> To monitor your speed and location relative to configured safe zones.</li>
+          <li><strong>Weather & Disaster Alerts:</strong> To fetch location-based weather data and disaster warnings from public APIs (USGS, Open-Meteo, GDACS).</li>
+          <li><strong>Push Notifications:</strong> To deliver critical safety alerts via Firebase Cloud Messaging.</li>
+          <li><strong>App Improvement:</strong> To diagnose crashes and understand anonymous usage patterns.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>4. Data Storage & Security</h2>
+        <ul>
+          <li><strong>Cloud Storage:</strong> Your account data, emergency contacts, and profile are stored in Google Firebase (Cloud Firestore) with security rules enforcing owner-only access. Only you can read and write your own data.</li>
+          <li><strong>Local Storage:</strong> Alert history, medicine reminders, and app preferences are stored locally on your device using encrypted Hive databases.</li>
+          <li><strong>Sensor Data:</strong> Accelerometer readings are processed entirely on-device in real-time and are <strong>never stored or transmitted</strong>.</li>
+          <li><strong>PIN & Biometric Lock:</strong> Your app lock PIN is stored as a SHA-256 hash. Biometric authentication uses your device's secure enclave — we never access your biometric data.</li>
+          <li><strong>Encryption:</strong> All data in transit uses TLS/HTTPS encryption. Firebase services are SOC 2, ISO 27001, and GDPR compliant.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>5. Third-Party Services</h2>
+        <p>Safora uses the following third-party services, each governed by their own privacy policies:</p>
+        <ul>
+          <li><strong>Firebase (Google):</strong> Authentication, Firestore, Crashlytics, Analytics, Cloud Messaging — <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Firebase Privacy Policy</a></li>
+          <li><strong>Google Mobile Ads (AdMob):</strong> Non-intrusive advertising with frequency capping. Ads are <strong>never</strong> shown during active emergencies — <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a></li>
+          <li><strong>Open-Meteo:</strong> Free weather data API (no personal data shared) — <a href="https://open-meteo.com/en/terms" target="_blank" rel="noopener">Open-Meteo Terms</a></li>
+          <li><strong>USGS / GDACS:</strong> Public earthquake and disaster data APIs (no personal data shared)</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>6. Permissions</h2>
+        <p>Safora requests the following device permissions, each for a specific safety feature:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Permission</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Location (foreground & background)</td><td>Send GPS coordinates in SOS alerts; speed, geofence, and weather monitoring</td></tr>
+            <tr><td>Motion Sensors</td><td>On-device crash/fall and snatch detection</td></tr>
+            <tr><td>SMS (Android only)</td><td>Send emergency SMS directly without opening the Messages app</td></tr>
+            <tr><td>Notifications</td><td>Deliver SOS, battery, disaster, and safety alerts</td></tr>
+            <tr><td>Face ID / Biometrics</td><td>App lock authentication</td></tr>
+            <tr><td>Contacts</td><td>Quickly add emergency contacts from your address book</td></tr>
+            <tr><td>Microphone</td><td>Decoy call feature (realistic call simulation)</td></tr>
+            <tr><td>Battery</td><td>Low battery alerts sent to emergency contacts</td></tr>
+          </tbody>
+        </table>
+        <p>You can revoke any permission at any time through your device's Settings. Some features may be unavailable without their required permission.</p>
+      </section>
+
+      <section>
+        <h2>7. Data Retention</h2>
+        <ul>
+          <li><strong>Account Data:</strong> Retained while your account is active. Deleted upon account deletion.</li>
+          <li><strong>Alert History:</strong> Stored locally on your device. Cleared when you uninstall the app or manually delete it.</li>
+          <li><strong>Crash Reports:</strong> Retained for 90 days by Firebase Crashlytics, then automatically deleted.</li>
+          <li><strong>Analytics:</strong> Aggregated and anonymized; never linked to individual users.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>8. Your Rights</h2>
+        <p>You have the right to:</p>
+        <ul>
+          <li><strong>Access</strong> the personal data we hold about you.</li>
+          <li><strong>Correct</strong> inaccurate personal data via the Edit Profile screen.</li>
+          <li><strong>Delete</strong> your account and all associated data from within the app (Settings → Delete Account).</li>
+          <li><strong>Withdraw Consent</strong> for specific permissions at any time via your device Settings.</li>
+          <li><strong>Export</strong> your data by contacting us.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>9. Children's Privacy</h2>
+        <p>
+          Safora is designed as a family safety app and may be used by children under parental supervision.
+          We do not knowingly collect personal information from children under 13 without parental consent.
+          If you believe a child has provided personal information without consent, please contact us to have it removed.
+        </p>
+      </section>
+
+      <section>
+        <h2>10. Changes to This Policy</h2>
+        <p>
+          We may update this Privacy Policy from time to time. Changes will be posted on this page with an
+          updated "Effective Date". We encourage you to review this page periodically. Continued use of the
+          app after changes constitutes acceptance of the updated policy.
+        </p>
+      </section>
+
+      <section>
+        <h2>11. Contact Us</h2>
+        <p>If you have any questions about this Privacy Policy or our data practices, please contact us:</p>
+        <ul class="contact-info">
+          <li>📧 <strong>Email:</strong> <a href="mailto:minhajsadik2@gmail.com">minhajsadik2@gmail.com</a></li>
+          <li>🌐 <strong>Website:</strong> <a href="https://safora.minhajsadik.com">safora.minhajsadik.com</a></li>
+          <li>👤 <strong>Developer:</strong> Minhaj Sadik — Digital Drive</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2026 Safora by Digital Drive. All rights reserved.</p>
+  </footer>
+</body>
+</html>
