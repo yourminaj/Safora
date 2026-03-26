@@ -304,19 +304,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentFreePlan => 'Current free plan includes:';
 
   @override
-  String get freeSos => '✅ SOS with SMS alerts';
+  String get freeSos => 'SOS with SMS alerts';
 
   @override
-  String get freeContacts => '✅ 3 emergency contacts';
+  String get freeContacts => '3 emergency contacts';
 
   @override
-  String get freeAlerts => '✅ Real-time disaster alerts';
+  String get freeAlerts => 'Real-time disaster alerts';
 
   @override
-  String get freeDetection => '✅ Crash & fall detection';
+  String get freeDetection => 'Crash & fall detection';
 
   @override
-  String get freeMedicalId => '✅ Medical ID profile';
+  String get freeMedicalId => 'Medical ID profile';
 
   @override
   String get pro => 'PRO';
@@ -344,13 +344,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Alert sounds are configured automatically based on alert priority:';
 
   @override
-  String get criticalSiren => '🔴 Critical — Emergency siren';
+  String get criticalSiren => 'Critical — Emergency siren';
 
   @override
-  String get highMediumWarning => '🟡 High / Medium — Warning tone';
+  String get highMediumWarning => 'High / Medium — Warning tone';
 
   @override
-  String get lowNotification => '🟢 Low — Gentle notification';
+  String get lowNotification => 'Low — Gentle notification';
 
   @override
   String get customSoundFuture =>
@@ -376,7 +376,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toChangeLanguage => 'To change the language, go to:';
 
   @override
-  String get deviceSettingsLanguage => '📱 Device Settings → Language & Region';
+  String get deviceSettingsLanguage => 'Device Settings → Language & Region';
 
   @override
   String get inAppLanguageFuture =>
@@ -405,7 +405,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your Family\'s Safety Guardian — protecting you with real-time disaster alerts, SOS, and emergency notifications.';
 
   @override
-  String get medicineReminders => '💊 Medicine Reminders';
+  String get medicineReminders => 'Medicine Reminders';
 
   @override
   String nActive(int count) {

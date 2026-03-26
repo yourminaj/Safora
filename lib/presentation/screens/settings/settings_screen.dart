@@ -658,11 +658,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         children: [
                           Text(l.currentFreePlan),
                           const SizedBox(height: 8),
-                          Text(l.freeSos),
-                          Text(l.freeContacts),
-                          Text(l.freeAlerts),
-                          Text(l.freeDetection),
-                          Text(l.freeMedicalId),
+                          _iconText(Icons.check_circle, AppColors.success, l.freeSos),
+                          _iconText(Icons.check_circle, AppColors.success, l.freeContacts),
+                          _iconText(Icons.check_circle, AppColors.success, l.freeAlerts),
+                          _iconText(Icons.check_circle, AppColors.success, l.freeDetection),
+                          _iconText(Icons.check_circle, AppColors.success, l.freeMedicalId),
                           const SizedBox(height: 12),
                           Text(
                             l.premiumRoadmap,
@@ -857,10 +857,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         children: [
                           Text(l.alertSoundExplain),
                           const SizedBox(height: 12),
-                          Text(l.criticalSiren,
-                              style: const TextStyle(fontWeight: FontWeight.w600)),
-                          Text(l.highMediumWarning),
-                          Text(l.lowNotification),
+                          _colorDotText(Colors.red, l.criticalSiren,
+                              fontWeight: FontWeight.w600),
+                          _colorDotText(Colors.amber, l.highMediumWarning),
+                          _colorDotText(Colors.green, l.lowNotification),
                           const SizedBox(height: 12),
                           Text(
                             l.customSoundFuture,
@@ -906,7 +906,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 4),
-                          Text(l.deviceSettingsLanguage),
+                          _iconText(Icons.smartphone, null, l.deviceSettingsLanguage),
                           const SizedBox(height: 12),
                           Text(
                             l.inAppLanguageFuture,
@@ -1023,6 +1023,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: l.signInSubtitle,
               onTap: () => context.go('/login'),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconText(IconData icon, Color? color, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color ?? AppColors.textSecondary),
+          const SizedBox(width: 6),
+          Flexible(child: Text(text)),
+        ],
+      ),
+    );
+  }
+
+  Widget _colorDotText(Color dotColor, String text, {FontWeight? fontWeight}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              text,
+              style: fontWeight != null
+                  ? TextStyle(fontWeight: fontWeight)
+                  : null,
+            ),
+          ),
         ],
       ),
     );

@@ -641,31 +641,31 @@ abstract class AppLocalizations {
   /// No description provided for @freeSos.
   ///
   /// In en, this message translates to:
-  /// **'✅ SOS with SMS alerts'**
+  /// **'SOS with SMS alerts'**
   String get freeSos;
 
   /// No description provided for @freeContacts.
   ///
   /// In en, this message translates to:
-  /// **'✅ 3 emergency contacts'**
+  /// **'3 emergency contacts'**
   String get freeContacts;
 
   /// No description provided for @freeAlerts.
   ///
   /// In en, this message translates to:
-  /// **'✅ Real-time disaster alerts'**
+  /// **'Real-time disaster alerts'**
   String get freeAlerts;
 
   /// No description provided for @freeDetection.
   ///
   /// In en, this message translates to:
-  /// **'✅ Crash & fall detection'**
+  /// **'Crash & fall detection'**
   String get freeDetection;
 
   /// No description provided for @freeMedicalId.
   ///
   /// In en, this message translates to:
-  /// **'✅ Medical ID profile'**
+  /// **'Medical ID profile'**
   String get freeMedicalId;
 
   /// No description provided for @pro.
@@ -719,19 +719,19 @@ abstract class AppLocalizations {
   /// No description provided for @criticalSiren.
   ///
   /// In en, this message translates to:
-  /// **'🔴 Critical — Emergency siren'**
+  /// **'Critical — Emergency siren'**
   String get criticalSiren;
 
   /// No description provided for @highMediumWarning.
   ///
   /// In en, this message translates to:
-  /// **'🟡 High / Medium — Warning tone'**
+  /// **'High / Medium — Warning tone'**
   String get highMediumWarning;
 
   /// No description provided for @lowNotification.
   ///
   /// In en, this message translates to:
-  /// **'🟢 Low — Gentle notification'**
+  /// **'Low — Gentle notification'**
   String get lowNotification;
 
   /// No description provided for @customSoundFuture.
@@ -779,7 +779,7 @@ abstract class AppLocalizations {
   /// No description provided for @deviceSettingsLanguage.
   ///
   /// In en, this message translates to:
-  /// **'📱 Device Settings → Language & Region'**
+  /// **'Device Settings → Language & Region'**
   String get deviceSettingsLanguage;
 
   /// No description provided for @inAppLanguageFuture.
@@ -833,7 +833,7 @@ abstract class AppLocalizations {
   /// No description provided for @medicineReminders.
   ///
   /// In en, this message translates to:
-  /// **'💊 Medicine Reminders'**
+  /// **'Medicine Reminders'**
   String get medicineReminders;
 
   /// No description provided for @nActive.

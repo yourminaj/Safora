@@ -96,6 +96,10 @@ class _AlertIconWidgetState extends State<AlertIconWidget>
   /// Lottie asset path if available for this category.
   String? get _lottieAsset => switch (widget.category) {
     AlertCategory.personalSafety => 'assets/lottie/shield_pulse.json',
+    AlertCategory.weatherEmergency => 'assets/lottie/warning_alert.json',
+    AlertCategory.naturalDisaster => 'assets/lottie/warning_alert.json',
+    AlertCategory.healthMedical => 'assets/lottie/sos_active.json',
+    AlertCategory.travelOutdoor => 'assets/lottie/location_tracking.json',
     _ => null,
   };
 

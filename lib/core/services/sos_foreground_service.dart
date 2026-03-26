@@ -52,7 +52,7 @@ class SosForegroundService {
     }
 
     return FlutterForegroundTask.startService(
-      notificationTitle: '🛡️ Safora is protecting you',
+      notificationTitle: 'Safora is protecting you',
       notificationText: 'SOS monitoring is active',
       callback: startCallback,
     );
@@ -89,7 +89,7 @@ class SosTaskHandler extends TaskHandler {
     // and ShakeDetectionService which run independently via their
     // stream subscriptions. This handler just keeps the service alive.
     FlutterForegroundTask.updateService(
-      notificationTitle: '🛡️ Safora is protecting you',
+      notificationTitle: 'Safora is protecting you',
       notificationText: 'SOS monitoring active',
     );
   }

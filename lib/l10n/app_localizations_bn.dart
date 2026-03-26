@@ -293,19 +293,19 @@ class AppLocalizationsBn extends AppLocalizations {
   String get currentFreePlan => 'বর্তমান ফ্রি প্ল্যানে আছে:';
 
   @override
-  String get freeSos => '✅ SMS সতর্কতাসহ SOS';
+  String get freeSos => 'SMS সতর্কতাসহ SOS';
 
   @override
-  String get freeContacts => '✅ ৩টি জরুরি যোগাযোগ';
+  String get freeContacts => '৩টি জরুরি যোগাযোগ';
 
   @override
-  String get freeAlerts => '✅ রিয়েল-টাইম দুর্যোগ সতর্কতা';
+  String get freeAlerts => 'রিয়েল-টাইম দুর্যোগ সতর্কতা';
 
   @override
-  String get freeDetection => '✅ দুর্ঘটনা ও পতন সনাক্তকরণ';
+  String get freeDetection => 'দুর্ঘটনা ও পতন সনাক্তকরণ';
 
   @override
-  String get freeMedicalId => '✅ মেডিকেল আইডি প্রোফাইল';
+  String get freeMedicalId => 'মেডিকেল আইডি প্রোফাইল';
 
   @override
   String get pro => 'প্রো';
@@ -333,13 +333,13 @@ class AppLocalizationsBn extends AppLocalizations {
       'সতর্কতা শব্দ অগ্রাধিকার অনুযায়ী স্বয়ংক্রিয়ভাবে কনফিগার করা হয়:';
 
   @override
-  String get criticalSiren => '🔴 জটিল — জরুরি সাইরেন';
+  String get criticalSiren => 'জটিল — জরুরি সাইরেন';
 
   @override
-  String get highMediumWarning => '🟡 উচ্চ / মাঝারি — সতর্কতা টোন';
+  String get highMediumWarning => 'উচ্চ / মাঝারি — সতর্কতা টোন';
 
   @override
-  String get lowNotification => '🟢 নিম্ন — মৃদু বিজ্ঞপ্তি';
+  String get lowNotification => 'নিম্ন — মৃদু বিজ্ঞপ্তি';
 
   @override
   String get customSoundFuture =>
@@ -365,7 +365,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get toChangeLanguage => 'ভাষা পরিবর্তন করতে যান:';
 
   @override
-  String get deviceSettingsLanguage => '📱 ডিভাইস সেটিংস → ভাষা ও অঞ্চল';
+  String get deviceSettingsLanguage => 'ডিভাইস সেটিংস → ভাষা ও অঞ্চল';
 
   @override
   String get inAppLanguageFuture =>
@@ -394,7 +394,7 @@ class AppLocalizationsBn extends AppLocalizations {
       'আপনার পরিবারের নিরাপত্তা অভিভাবক — রিয়েল-টাইম দুর্যোগ সতর্কতা, SOS, এবং জরুরি বিজ্ঞপ্তি দিয়ে আপনাকে সুরক্ষিত রাখে।';
 
   @override
-  String get medicineReminders => '💊 ওষুধের রিমাইন্ডার';
+  String get medicineReminders => 'ওষুধের রিমাইন্ডার';
 
   @override
   String nActive(int count) {

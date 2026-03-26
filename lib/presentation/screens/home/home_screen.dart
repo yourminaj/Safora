@@ -72,9 +72,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            l.medicineReminders,
-                            style: AppTypography.titleMedium,
+                          Row(
+                            children: [
+                              Icon(Icons.medication_rounded,
+                                  size: 20, color: AppColors.accent),
+                              const SizedBox(width: 6),
+                              Text(
+                                l.medicineReminders,
+                                style: AppTypography.titleMedium,
+                              ),
+                            ],
                           ),
                           Row(
                             mainAxisSize: MainAxisSize.min,
@@ -107,7 +114,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
                       if (state is RemindersLoading)
-                        const Center(child: CircularProgressIndicator())
+                        const Center(
+                          child: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
                       else if (state is RemindersLoaded &&
                           state.reminders.isEmpty)
                         Expanded(

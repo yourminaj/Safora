@@ -114,7 +114,7 @@ class RemindersCubit extends Cubit<RemindersState> {
     final body = '${reminder.dosage}${reminder.notes != null ? ' — ${reminder.notes}' : ''}';
 
     await _notificationService.showDisasterAlert(
-      title: '💊 Time to take ${reminder.name}',
+      title: 'Time to take ${reminder.name}',
       body: body,
     );
 

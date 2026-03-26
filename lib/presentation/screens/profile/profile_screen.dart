@@ -104,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         if (p.organDonor)
                           _InfoRow(
                             label: l.organDonor,
-                            value: '✅ Yes',
+                            value: 'Yes',
                           ),
                       ],
                     ),
@@ -126,9 +126,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '📋 ${l.emergencyNotes}',
-                            style: AppTypography.titleSmall,
+                          Row(
+                            children: [
+                              Icon(Icons.description_rounded,
+                                  size: 18, color: AppColors.warning),
+                              const SizedBox(width: 6),
+                              Text(
+                                l.emergencyNotes,
+                                style: AppTypography.titleSmall,
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(

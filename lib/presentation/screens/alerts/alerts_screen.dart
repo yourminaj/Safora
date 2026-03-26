@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/constants/alert_types.dart';
@@ -42,7 +43,16 @@ class _AlertsScreenState extends State<AlertsScreen> {
       body: BlocBuilder<AlertsCubit, AlertsState>(
         builder: (context, state) {
           if (state is AlertsLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: Lottie.asset(
+                  'assets/lottie/loading_spinner.json',
+                  fit: BoxFit.contain,
+                ),
+              ),
+            );
           }
 
           if (state is AlertsError) {

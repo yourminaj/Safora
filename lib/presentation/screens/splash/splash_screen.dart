@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:hive/hive.dart';
@@ -108,12 +109,12 @@ class _SplashScreenState extends State<SplashScreen> {
             FadeIn(
               duration: const Duration(milliseconds: 800),
               delay: const Duration(milliseconds: 1000),
-              child: const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: Lottie.asset(
+                  'assets/lottie/loading_spinner.json',
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
