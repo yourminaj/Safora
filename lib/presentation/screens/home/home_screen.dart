@@ -74,8 +74,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.medication_rounded,
-                                  size: 20, color: AppColors.accent),
+                              const Icon(
+                                Icons.medication_rounded,
+                                size: 20,
+                                color: AppColors.accent,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 l.medicineReminders,

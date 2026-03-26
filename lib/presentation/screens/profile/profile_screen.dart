@@ -102,10 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ].join(' · '),
                           ),
                         if (p.organDonor)
-                          _InfoRow(
-                            label: l.organDonor,
-                            value: 'Yes',
-                          ),
+                          _InfoRow(label: l.organDonor, value: 'Yes'),
                       ],
                     ),
                   ),
@@ -128,8 +125,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.description_rounded,
-                                  size: 18, color: AppColors.warning),
+                              const Icon(
+                                Icons.description_rounded,
+                                size: 18,
+                                color: AppColors.warning,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 l.emergencyNotes,
@@ -151,10 +151,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ElevatedButton.icon(
                     onPressed: () async {
                       final cubit = context.read<ProfileCubit>();
-                      await context.push(
-                        '/profile/edit',
-                        extra: p,
-                      );
+                      await context.push('/profile/edit', extra: p);
                       if (mounted) cubit.loadProfile();
                     },
                     icon: const Icon(Icons.edit_rounded),
@@ -188,10 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    l.noMedicalProfile,
-                    style: AppTypography.headlineSmall,
-                  ),
+                  Text(l.noMedicalProfile, style: AppTypography.headlineSmall),
                   const SizedBox(height: 8),
                   Text(
                     l.createProfileHint,
