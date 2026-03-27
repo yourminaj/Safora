@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:safora/l10n/app_localizations.dart';
-import '../../../core/services/ad_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../blocs/profile/profile_cubit.dart';
 import '../../blocs/profile/profile_state.dart';
-import '../../widgets/ad_banner_widget.dart';
+
 
 /// Medical profile screen — shows blood type, allergies, conditions.
 ///
@@ -30,7 +29,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      bottomNavigationBar: AdBanner(adUnitId: AdService.bannerProfile),
       appBar: AppBar(title: Text(l.medicalProfile)),
       body: BlocBuilder<ProfileCubit, ProfileState>(
         builder: (context, state) {

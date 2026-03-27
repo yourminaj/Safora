@@ -9,6 +9,7 @@ import 'package:safora/core/services/location_service.dart';
 import 'package:safora/core/services/notification_service.dart';
 import 'package:safora/data/datasources/contacts_cloud_sync.dart';
 import 'package:safora/data/datasources/sos_history_datasource.dart';
+import 'package:safora/data/models/alert_preferences.dart';
 import 'package:safora/data/models/sos_history_entry.dart';
 import 'package:safora/data/repositories/alerts_repository.dart';
 import 'package:safora/data/repositories/contacts_repository.dart';
@@ -44,6 +45,8 @@ class MockContactsCloudSync extends Mock implements ContactsCloudSync {}
 class MockSosHistoryDatasource extends Mock implements SosHistoryDatasource {}
 
 class MockLocationService extends Mock implements LocationService {}
+
+class MockAlertPreferences extends Mock implements AlertPreferences {}
 
 // ─── Test Wrapper ─────────────────────────────────────────────
 /// Wraps a widget under test with all required providers and
@@ -110,7 +113,10 @@ Widget buildTestableWidget({
   when(() => mockHistory.add(any())).thenAnswer((_) async {});
   when(() => mockLocation.lastPosition).thenReturn(null);
 
-  return MultiBlocProvider(
+  final mockPrefs = MockAlertPreferences();
+    when(() => mockPrefs.isEnabled(any())).thenReturn(true);
+
+    return MultiBlocProvider(
     providers: [
       BlocProvider<SosCubit>(
         create: (_) =>
@@ -129,6 +135,7 @@ Widget buildTestableWidget({
             AlertsCubit(
               alertsRepository: mockAlertsRepo,
               notificationService: mockNotificationSvc,
+              alertPreferences: mockPrefs,
             ),
       ),
       BlocProvider<ContactsCubit>(

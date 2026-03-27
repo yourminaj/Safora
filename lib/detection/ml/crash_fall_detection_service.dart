@@ -39,11 +39,16 @@ class CrashFallDetectionService {
   double? currentSpeedKmh;
 
   /// Start crash/fall monitoring.
-  void start() {
+  ///
+  /// Loads the TFLite model first, then starts the sensor pipeline.
+  /// If model loading fails, the engine falls back to threshold-only mode.
+  Future<void> start() async {
+    await _engine.loadModel();
     _engine.start(
       onDetection: _handleDetection,
     );
-    AppLogger.info('[CrashFallDetectionService] Started monitoring');
+    AppLogger.info('[CrashFallDetectionService] Started monitoring '
+        '(ML: ${_engine.isModelLoaded ? "hybrid" : "threshold-only"})');
   }
 
   /// Stop crash/fall monitoring.
@@ -91,9 +96,9 @@ class CrashFallDetectionService {
 
   AlertPriority _mapToSeverity(double confidence) {
     if (confidence >= 0.8) return AlertPriority.critical;
-    if (confidence >= 0.6) return AlertPriority.high;
-    if (confidence >= 0.4) return AlertPriority.medium;
-    return AlertPriority.low;
+    if (confidence >= 0.6) return AlertPriority.danger;
+    if (confidence >= 0.4) return AlertPriority.warning;
+    return AlertPriority.advisory;
   }
 
   String _generateTitle(DetectionEvent event, AlertType alertType) {

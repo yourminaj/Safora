@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/audio_service.dart';
 import 'package:safora/core/services/location_service.dart';
 import 'package:safora/data/datasources/sos_history_datasource.dart';
+import 'package:safora/data/models/emergency_contact.dart';
 import 'package:safora/data/models/sos_history_entry.dart';
 import 'package:safora/data/repositories/contacts_repository.dart';
 import 'package:safora/domain/usecases/trigger_sos_usecase.dart';
@@ -45,9 +46,20 @@ void main() {
     when(() => mockAudio.playSiren()).thenAnswer((_) async {});
     when(() => mockAudio.stopAll()).thenAnswer((_) async {});
     when(() => mockUseCase.cancel()).thenAnswer((_) async {});
-    when(() => mockContacts.getAll()).thenReturn([]);
+    // Provide at least one contact so pre-flight passes.
+    when(() => mockContacts.getAll()).thenReturn([
+      const EmergencyContact(
+        id: '1',
+        name: 'Test',
+        phone: '+8801700000000',
+        isPrimary: true,
+      ),
+    ]);
     when(() => mockHistory.add(any())).thenAnswer((_) async {});
     when(() => mockLocation.lastPosition).thenReturn(null);
+    // Stub getCurrentPosition so pre-flight GPS fix resolves immediately.
+    when(() => mockLocation.getCurrentPosition())
+        .thenAnswer((_) async => null);
     when(
       () => mockUseCase.execute(
         contacts: any(named: 'contacts'),

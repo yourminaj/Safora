@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:get_it/get_it.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/constants/alert_types.dart';
 import '../../../core/theme/colors.dart';
+import '../../../core/theme/typography.dart';
+import '../../../core/services/location_service.dart';
+import '../../../data/datasources/overpass_api_client.dart';
 import '../../../data/models/alert_event.dart';
+import '../../../data/models/emergency_poi.dart';
 import '../../blocs/alerts/alerts_cubit.dart';
 import '../../blocs/alerts/alerts_state.dart';
 
@@ -25,11 +30,45 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
   /// Currently selected filter (null = show all).
   AlertType? _selectedType;
 
+  /// Nearby emergency POIs (hospitals, police, fire stations).
+  List<EmergencyPoi> _pois = [];
+  bool _poisLoading = false;
+
+  /// Whether to show POI markers.
+  bool _showPois = true;
+
   @override
   void initState() {
     super.initState();
     // Refresh alerts on entry.
     context.read<AlertsCubit>().loadAlerts();
+    // Fetch nearby emergency POIs.
+    _fetchNearbyPois();
+  }
+
+  Future<void> _fetchNearbyPois() async {
+    setState(() => _poisLoading = true);
+    try {
+      final location = GetIt.instance<LocationService>();
+      final pos = await location.getCurrentPosition();
+      if (pos != null) {
+        final client = GetIt.instance<OverpassApiClient>();
+        final pois = await client.fetchNearbyPois(
+          latitude: pos.latitude,
+          longitude: pos.longitude,
+          radiusMeters: 10000, // 10 km radius
+        );
+        if (mounted) {
+          setState(() => _pois = pois);
+        }
+      }
+    } catch (_) {
+      // Silently fail — POIs are supplementary.
+    } finally {
+      if (mounted) {
+        setState(() => _poisLoading = false);
+      }
+    }
   }
 
   @override
@@ -79,33 +118,38 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
                   MarkerLayer(
                     markers: filteredAlerts.map(_buildMarker).toList(),
                   ),
+                  // Emergency POI markers.
+                  if (_showPois && _pois.isNotEmpty)
+                    MarkerLayer(
+                      markers: _pois.map(_buildPoiMarker).toList(),
+                    ),
                 ],
               ),
 
               // ── Loading indicator ──────────────────────────
               if (isLoading)
-                const Positioned(
+                Positioned(
                   top: 8,
                   left: 0,
                   right: 0,
                   child: Center(
                     child: Card(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 8,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            SizedBox(
+                            const SizedBox(
                               width: 16,
                               height: 16,
                               child:
                                   CircularProgressIndicator(strokeWidth: 2),
                             ),
-                            SizedBox(width: 8),
-                            Text('Loading alerts...'),
+                            const SizedBox(width: 8),
+                            Text(l.loadingAlerts),
                           ],
                         ),
                       ),
@@ -118,14 +162,51 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
                 bottom: 16,
                 left: 8,
                 right: 8,
-                child: _FilterBar(
-                  selectedType: _selectedType,
-                  alertCounts: _alertCounts(allAlerts),
-                  onSelected: (type) {
-                    setState(() {
-                      _selectedType = _selectedType == type ? null : type;
-                    });
-                  },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // POI toggle + loading indicator
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (_poisLoading)
+                          const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        const SizedBox(width: 8),
+                        FilterChip(
+                          avatar: Icon(
+                            Icons.local_hospital_rounded,
+                            size: 16,
+                            color: _showPois ? Colors.white : AppColors.accent,
+                          ),
+                          label: Text(
+                            'Nearby (${_pois.length})',
+                            style: TextStyle(
+                              color: _showPois ? Colors.white : null,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          selected: _showPois,
+                          onSelected: (v) => setState(() => _showPois = v),
+                          selectedColor: AppColors.accent,
+                          checkmarkColor: Colors.white,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _FilterBar(
+                      selectedType: _selectedType,
+                      alertCounts: _alertCounts(allAlerts),
+                      onSelected: (type) {
+                        setState(() {
+                          _selectedType = _selectedType == type ? null : type;
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ),
 
@@ -178,6 +259,89 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
             ],
           ),
           child: Icon(icon, color: Colors.white, size: 20),
+        ),
+      ),
+    );
+  }
+
+  /// Build a map marker for a nearby emergency POI.
+  Marker _buildPoiMarker(EmergencyPoi poi) {
+    final color = _poiColor(poi.type);
+    final icon = _poiIcon(poi.type);
+
+    return Marker(
+      point: LatLng(poi.latitude, poi.longitude),
+      width: 34,
+      height: 34,
+      child: GestureDetector(
+        onTap: () => _showPoiDetail(poi),
+        child: Container(
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white, width: 1.5),
+          ),
+          child: Icon(icon, color: Colors.white, size: 18),
+        ),
+      ),
+    );
+  }
+
+  Color _poiColor(EmergencyPoiType type) => switch (type) {
+    EmergencyPoiType.hospital => const Color(0xFF2196F3),
+    EmergencyPoiType.policeStation => const Color(0xFF1565C0),
+    EmergencyPoiType.fireStation => const Color(0xFFFF5722),
+    EmergencyPoiType.pharmacy => const Color(0xFF4CAF50),
+    EmergencyPoiType.shelter => const Color(0xFF9C27B0),
+  };
+
+  IconData _poiIcon(EmergencyPoiType type) => switch (type) {
+    EmergencyPoiType.hospital => Icons.local_hospital_rounded,
+    EmergencyPoiType.policeStation => Icons.local_police_rounded,
+    EmergencyPoiType.fireStation => Icons.local_fire_department_rounded,
+    EmergencyPoiType.pharmacy => Icons.local_pharmacy_rounded,
+    EmergencyPoiType.shelter => Icons.night_shelter_rounded,
+  };
+
+  void _showPoiDetail(EmergencyPoi poi) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(_poiIcon(poi.type), color: _poiColor(poi.type), size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(poi.name, style: AppTypography.titleMedium),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(poi.type.label, style: AppTypography.bodyMedium),
+            if (poi.phone != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.phone, size: 16, color: AppColors.accent),
+                  const SizedBox(width: 8),
+                  Text(poi.phone!, style: AppTypography.bodyMedium),
+                ],
+              ),
+            ],
+            const SizedBox(height: 8),
+            Text(
+              '${poi.latitude.toStringAsFixed(4)}, ${poi.longitude.toStringAsFixed(4)}',
+              style: AppTypography.bodySmall,
+            ),
+          ],
         ),
       ),
     );
@@ -286,9 +450,10 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
   Color _priorityColor(AlertPriority priority) {
     return switch (priority) {
       AlertPriority.critical => AppColors.error,
-      AlertPriority.high => Colors.deepOrange,
-      AlertPriority.medium => AppColors.warning,
-      AlertPriority.low => AppColors.success,
+      AlertPriority.danger => Colors.deepOrange,
+      AlertPriority.warning => AppColors.warning,
+      AlertPriority.advisory => AppColors.success,
+      AlertPriority.info => const Color(0xFF60A5FA),
     };
   }
 
@@ -306,6 +471,10 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
       AlertCategory.environmentalChemical => Icons.science_rounded,
       AlertCategory.digitalCyber => Icons.phone_android_rounded,
       AlertCategory.childElder => Icons.family_restroom_rounded,
+      AlertCategory.militaryDefense => Icons.military_tech_rounded,
+      AlertCategory.infrastructure => Icons.domain_rounded,
+      AlertCategory.spaceAstronomical => Icons.satellite_alt_rounded,
+      AlertCategory.maritimeAviation => Icons.flight_rounded,
     };
   }
 

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
+import '../../widgets/safora_animated_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/constants/alert_types.dart';
-import '../../../core/services/ad_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
+import '../../../data/models/alert_preferences.dart';
 import '../../blocs/alerts/alerts_cubit.dart';
 import '../../blocs/alerts/alerts_state.dart';
-import '../../widgets/ad_banner_widget.dart';
 import '../../widgets/alert_card.dart';
 
 /// Alert list screen with filtering by category and priority.
@@ -33,25 +34,23 @@ class _AlertsScreenState extends State<AlertsScreen> {
       appBar: AppBar(
         title: Text(l.disasterAlerts),
         actions: [
+          // Alert Preferences entry point
+          IconButton(
+            icon: const Icon(Icons.tune_rounded),
+            tooltip: 'Alert Preferences',
+            onPressed: () => context.push('/alert-preferences'),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () => context.read<AlertsCubit>().refreshAlerts(),
           ),
         ],
       ),
-      bottomNavigationBar: AdBanner(adUnitId: AdService.bannerAlerts),
       body: BlocBuilder<AlertsCubit, AlertsState>(
         builder: (context, state) {
           if (state is AlertsLoading) {
-            return Center(
-              child: SizedBox(
-                width: 48,
-                height: 48,
-                child: Lottie.asset(
-                  'assets/lottie/loading_spinner.json',
-                  fit: BoxFit.contain,
-                ),
-              ),
+            return const Center(
+              child: SaforaLoadingSpinner(size: 48),
             );
           }
 
@@ -98,6 +97,33 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
+                label: l.filterHigh,
+                isSelected: state.filterPriority == AlertPriority.danger,
+                color: Colors.deepOrange,
+                onTap: () => context
+                    .read<AlertsCubit>()
+                    .filterByPriority(AlertPriority.danger),
+              ),
+              const SizedBox(width: 8),
+              _FilterChip(
+                label: l.filterMedium,
+                isSelected: state.filterPriority == AlertPriority.warning,
+                color: AppColors.warning,
+                onTap: () => context
+                    .read<AlertsCubit>()
+                    .filterByPriority(AlertPriority.warning),
+              ),
+              const SizedBox(width: 8),
+              _FilterChip(
+                label: l.filterLow,
+                isSelected: state.filterPriority == AlertPriority.advisory,
+                color: AppColors.success,
+                onTap: () => context
+                    .read<AlertsCubit>()
+                    .filterByPriority(AlertPriority.advisory),
+              ),
+              const SizedBox(width: 8),
+              _FilterChip(
                 label: l.filterDisaster,
                 isSelected:
                     state.filterCategory == AlertCategory.naturalDisaster,
@@ -128,7 +154,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: 'Safety',
+                label: l.filterSafety,
                 isSelected:
                     state.filterCategory == AlertCategory.personalSafety,
                 color: const Color(0xFF7E57C2),
@@ -138,7 +164,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: 'Health',
+                label: l.filterHealth,
                 isSelected:
                     state.filterCategory == AlertCategory.healthMedical,
                 color: const Color(0xFFEF5350),
@@ -148,7 +174,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: 'Vehicle',
+                label: l.filterVehicle,
                 isSelected:
                     state.filterCategory == AlertCategory.vehicleTransport,
                 color: const Color(0xFF78909C),
@@ -158,7 +184,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               ),
               const SizedBox(width: 8),
               _FilterChip(
-                label: 'Environmental',
+                label: l.filterEnvironmental,
                 isSelected:
                     state.filterCategory == AlertCategory.environmentalChemical,
                 color: const Color(0xFFFF8F00),
@@ -169,6 +195,16 @@ class _AlertsScreenState extends State<AlertsScreen> {
             ],
           ),
         ),
+
+        // ── Preference info banner ────────────────────────
+        if (state.preferencesApplied)
+          _PreferenceInfoBanner(
+            enabledCount:
+                GetIt.instance<AlertPreferences>().totalEnabled,
+            totalCount:
+                GetIt.instance<AlertPreferences>().totalAlerts,
+            onTap: () => context.push('/alert-preferences'),
+          ),
 
         // ─── Alert count ──────────────────────────────────
         Padding(
@@ -338,6 +374,59 @@ class _FilterChip extends StatelessWidget {
               color: isSelected ? chipColor : AppColors.textSecondary,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Info banner showing how many alert types are active from preferences.
+class _PreferenceInfoBanner extends StatelessWidget {
+  const _PreferenceInfoBanner({
+    required this.enabledCount,
+    required this.totalCount,
+    required this.onTap,
+  });
+
+  final int enabledCount;
+  final int totalCount;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: primary.withValues(alpha: isDark ? 0.12 : 0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: primary.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.tune_rounded, size: 16, color: primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Showing $enabledCount of $totalCount alert types',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, size: 18, color: primary),
+            ],
           ),
         ),
       ),

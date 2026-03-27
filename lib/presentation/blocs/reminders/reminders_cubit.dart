@@ -113,9 +113,12 @@ class RemindersCubit extends Cubit<RemindersState> {
     final time = reminder.timeParts;
     final body = '${reminder.dosage}${reminder.notes != null ? ' — ${reminder.notes}' : ''}';
 
-    await _notificationService.showDisasterAlert(
+    await _notificationService.scheduleDaily(
+      notificationId: reminder.id!.hashCode.abs() % 100000,
       title: 'Time to take ${reminder.name}',
       body: body,
+      hour: time.hour,
+      minute: time.minute,
     );
 
     AppLogger.info(

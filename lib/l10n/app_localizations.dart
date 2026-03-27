@@ -1543,6 +1543,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore from Cloud'**
   String get restoreFromCloud;
+
+  /// No description provided for @filterHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get filterHigh;
+
+  /// No description provided for @filterMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get filterMedium;
+
+  /// No description provided for @filterLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get filterLow;
+
+  /// No description provided for @filterSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety'**
+  String get filterSafety;
+
+  /// No description provided for @filterHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get filterHealth;
+
+  /// No description provided for @filterVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get filterVehicle;
+
+  /// No description provided for @filterEnvironmental.
+  ///
+  /// In en, this message translates to:
+  /// **'Environmental'**
+  String get filterEnvironmental;
+
+  /// No description provided for @sosPreparingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PREPARING SOS'**
+  String get sosPreparingTitle;
+
+  /// No description provided for @sosPreflightChecks.
+  ///
+  /// In en, this message translates to:
+  /// **'Running pre-flight checks...'**
+  String get sosPreflightChecks;
+
+  /// No description provided for @preflightGps.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS Location'**
+  String get preflightGps;
+
+  /// No description provided for @preflightNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get preflightNetwork;
+
+  /// No description provided for @preflightContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Contacts'**
+  String get preflightContacts;
+
+  /// No description provided for @preflightNoContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'No emergency contacts configured. Add at least one contact in Settings to use SOS.'**
+  String get preflightNoContacts;
+
+  /// No description provided for @loadingAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading alerts...'**
+  String get loadingAlerts;
+
+  /// No description provided for @preflightNoGps.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS location is not available. SOS will proceed without precise coordinates.'**
+  String get preflightNoGps;
+
+  /// No description provided for @preflightNoNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'No network connection. SMS alerts will still be sent if cellular is available.'**
+  String get preflightNoNetwork;
+
+  /// No description provided for @alertGeofenceExitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Left Safe Zone: {zone}'**
+  String alertGeofenceExitTitle(String zone);
+
+  /// No description provided for @alertGeofenceExitDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You have left the designated safe zone \"{zone}\". Your emergency contacts have been notified.'**
+  String alertGeofenceExitDesc(String zone);
+
+  /// No description provided for @alertSnatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Snatch Detected'**
+  String get alertSnatchTitle;
+
+  /// No description provided for @alertSnatchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A sudden directional grab was detected (confidence: {pct}%). SOS countdown started.'**
+  String alertSnatchDesc(String pct);
+
+  /// No description provided for @alertSpeedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Overspeeding: {speed} km/h'**
+  String alertSpeedTitle(String speed);
+
+  /// No description provided for @alertSpeedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your speed exceeded the safe limit ({speed} km/h). Slow down.'**
+  String alertSpeedDesc(String speed);
+
+  /// No description provided for @ctxHeatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Heat Stroke Risk'**
+  String get ctxHeatTitle;
+
+  /// No description provided for @ctxHeatMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature is {temp}°C and you are active outdoors. Stay hydrated and seek shade.'**
+  String ctxHeatMsg(String temp);
+
+  /// No description provided for @ctxHypothermiaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hypothermia Risk'**
+  String get ctxHypothermiaTitle;
+
+  /// No description provided for @ctxHypothermiaMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature: {temp}°C, Wind chill: {chill}°C. Seek warm shelter immediately.'**
+  String ctxHypothermiaMsg(String temp, String chill);
+
+  /// No description provided for @ctxDrowsyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drowsy Driving Alert'**
+  String get ctxDrowsyTitle;
+
+  /// No description provided for @ctxDrowsyMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s {time} and you\'re traveling at {speed} km/h. Consider pulling over for a rest.'**
+  String ctxDrowsyMsg(String time, String speed);
+
+  /// No description provided for @ctxNightWalkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Late Night Walking'**
+  String get ctxNightWalkTitle;
+
+  /// No description provided for @ctxNightWalkMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'You are walking alone late at night. Share your live location with a trusted contact. Safora SOS is ready if needed.'**
+  String get ctxNightWalkMsg;
+
+  /// No description provided for @ctxAltitudeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rapid Altitude Change'**
+  String get ctxAltitudeTitle;
+
+  /// No description provided for @ctxAltitudeMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve gained {meters}m in {minutes} minutes. Watch for symptoms: headache, nausea, dizziness.'**
+  String ctxAltitudeMsg(String meters, String minutes);
+
+  /// No description provided for @ctxFloodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Flash Flood Risk'**
+  String get ctxFloodTitle;
+
+  /// No description provided for @ctxFloodMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy rainfall ({mm}mm) forecast and you\'re at low elevation ({alt}m). Move to higher ground.'**
+  String ctxFloodMsg(String mm, String alt);
+
+  /// No description provided for @liveMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Map'**
+  String get liveMap;
+
+  /// No description provided for @myLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'My Location'**
+  String get myLocation;
+
+  /// No description provided for @safeZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe Zones'**
+  String get safeZones;
+
+  /// No description provided for @showSafeZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Safe Zones'**
+  String get showSafeZones;
+
+  /// No description provided for @hideSafeZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Safe Zones'**
+  String get hideSafeZones;
+
+  /// No description provided for @locationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location unavailable'**
+  String get locationUnavailable;
+
+  /// No description provided for @more.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get more;
+
+  /// No description provided for @safetyTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety Tools'**
+  String get safetyTools;
+
+  /// No description provided for @profileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal information'**
+  String get profileSubtitle;
+
+  /// No description provided for @settingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App preferences & detection'**
+  String get settingsSubtitle;
+
+  /// No description provided for @decoyCallSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate an incoming call'**
+  String get decoyCallSubtitle;
+
+  /// No description provided for @remindersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine & safety reminders'**
+  String get remindersSubtitle;
+
+  /// No description provided for @sosHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Past SOS events & outcomes'**
+  String get sosHistorySubtitle;
+
+  /// No description provided for @alertMapSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View alerts on the map'**
+  String get alertMapSubtitle;
+
+  /// No description provided for @aboutSafora.
+  ///
+  /// In en, this message translates to:
+  /// **'About Safora'**
+  String get aboutSafora;
+
+  /// No description provided for @aboutSaforaSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Version info & credits'**
+  String get aboutSaforaSubtitle;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @remindersAccessedFromHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders can be accessed from the Home screen'**
+  String get remindersAccessedFromHome;
 }
 
 class _AppLocalizationsDelegate

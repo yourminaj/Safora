@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:safora/core/constants/alert_types.dart';
 import 'package:safora/core/services/context_alert_service.dart';
 
 void main() {
@@ -105,6 +106,46 @@ void main() {
       final result = ContextAlertService.calculateWindChillForTest(raw, 30);
       // Wind chill should make it feel colder.
       expect(result, lessThan(raw));
+    });
+  });
+
+  group('mapToAlertType canonical mapping', () {
+    test('covers all ContextAlertType values', () {
+      for (final type in ContextAlertType.values) {
+        expect(
+          () => ContextAlertService.mapToAlertType(type),
+          returnsNormally,
+          reason: 'mapToAlertType should handle $type',
+        );
+      }
+    });
+
+    test('maps heatStroke correctly', () {
+      expect(
+        ContextAlertService.mapToAlertType(ContextAlertType.heatStroke),
+        AlertType.heatStroke,
+      );
+    });
+
+    test('maps loneNightWalk to suspiciousActivity', () {
+      expect(
+        ContextAlertService.mapToAlertType(ContextAlertType.loneNightWalk),
+        AlertType.suspiciousActivity,
+      );
+    });
+
+    test('maps altitudeSickness to altitudeSickness', () {
+      expect(
+        ContextAlertService.mapToAlertType(ContextAlertType.altitudeSickness),
+        AlertType.altitudeSickness,
+      );
+    });
+
+    test('maps flashFloodRisk to flood', () {
+      expect(
+        ContextAlertService.mapToAlertType(ContextAlertType.flashFloodRisk),
+        AlertType.flood,
+      );
     });
   });
 }

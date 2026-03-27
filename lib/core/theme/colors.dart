@@ -19,10 +19,10 @@ abstract final class AppColors {
   static const Color accentLight = Color(0xFFFFB74D);
 
   // ─── Alert Priority Colors ───────────────────────────────
-  static const Color critical = Color(0xFFD32F2F); // 🔴 Critical
-  static const Color high = Color(0xFFF57C00); // 🟠 High
-  static const Color medium = Color(0xFFFBC02D); // 🟡 Medium
-  static const Color low = Color(0xFF388E3C); // 🟢 Low
+  static const Color critical = Color(0xFFD32F2F); // Critical
+  static const Color high = Color(0xFFF57C00); // High
+  static const Color medium = Color(0xFFFBC02D); // Medium
+  static const Color low = Color(0xFF388E3C); // Low
 
   // ─── Status Colors ───────────────────────────────────────
   static const Color success = Color(0xFF2E7D32);

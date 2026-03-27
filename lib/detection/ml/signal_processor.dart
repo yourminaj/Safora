@@ -38,6 +38,9 @@ class SignalProcessor {
   /// Sliding window of recent raw acceleration tuples.
   final List<(double, double, double)> _rawWindow = [];
 
+  /// Public read-only access to the raw acceleration window for ML feature extraction.
+  List<(double, double, double)> get rawSamples => List.unmodifiable(_rawWindow);
+
   /// Compute the Signal Magnitude Vector (SMV).
   ///
   /// SMV = √(ax² + ay² + az²)

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../../core/services/app_logger.dart';
+import 'ml_feature_extractor.dart';
 import 'signal_processor.dart';
+import 'tflite_crash_classifier.dart';
 
 /// Detection result from the crash/fall detection engine.
 class DetectionEvent {
@@ -95,10 +97,13 @@ class CrashFallDetectionEngine {
     this.cooldownDuration = const Duration(seconds: 10),
     this.postImpactWindowMs = 2000,
     this.samplingRateHz = 50,
+    this.mlWeight = 0.6,
   }) : _signalProcessor = SignalProcessor(
          smoothingFactor: 0.8,
          windowSize: samplingRateHz * 2, // 2-second window
-       );
+       ),
+       _featureExtractor = MlFeatureExtractor(samplingRateHz: samplingRateHz),
+       _classifier = TfliteCrashClassifier();
 
   // ── Thresholds (from research) ────────────────────────────
 
@@ -126,9 +131,16 @@ class CrashFallDetectionEngine {
   /// Sensor sampling rate in Hz.
   final int samplingRateHz;
 
+  /// Weight given to the ML model confidence in hybrid scoring.
+  /// The threshold-based score receives `1 - mlWeight`.
+  /// Ignored when the model is not loaded (threshold-only mode).
+  final double mlWeight;
+
   // ── Internal state ────────────────────────────────────────
 
   final SignalProcessor _signalProcessor;
+  final MlFeatureExtractor _featureExtractor;
+  final TfliteCrashClassifier _classifier;
   StreamSubscription<AccelerometerEvent>? _subscription;
   bool _isRunning = false;
   DateTime? _lastDetectionTime;
@@ -143,6 +155,19 @@ class CrashFallDetectionEngine {
 
   /// Whether the engine is currently monitoring.
   bool get isRunning => _isRunning;
+
+  /// Whether the TFLite model has been loaded successfully.
+  bool get isModelLoaded => _classifier.isModelLoaded;
+
+  /// Initialise the TFLite model. Call this at app startup.
+  ///
+  /// If loading fails, the engine operates in threshold-only mode.
+  Future<void> loadModel() async {
+    final loaded = await _classifier.loadModel();
+    AppLogger.info(
+      '[CrashFallDetection] ML model ${loaded ? 'loaded — hybrid mode' : 'unavailable — threshold-only mode'}',
+    );
+  }
 
   /// Start the detection engine.
   ///
@@ -239,8 +264,8 @@ class CrashFallDetectionEngine {
       return;
     }
 
-    // Phase 4: Confidence scoring.
-    final double confidence = _computeConfidence(
+    // Phase 4: Hybrid confidence scoring.
+    final double thresholdConfidence = _computeConfidence(
       type: type,
       peakG: _impactPeakG,
       hadFreefall: _hadFreefall,
@@ -248,6 +273,31 @@ class CrashFallDetectionEngine {
       jerk: jerk,
       variance: smvVariance,
     );
+
+    // Phase 4b: ML confidence (if model available).
+    double confidence = thresholdConfidence;
+    if (_classifier.isModelLoaded) {
+      final rawSamples = _signalProcessor.rawSamples;
+      final features = _featureExtractor.extract(rawSamples);
+      if (features != null) {
+        final result = _classifier.classify(features);
+        if (result != null) {
+          final mlConfidence = type == DetectionType.fall
+              ? result.fallConfidence
+              : type == DetectionType.vehicleCrash
+                  ? result.crashConfidence
+                  : result.maxConfidence;
+          confidence = (1 - mlWeight) * thresholdConfidence +
+              mlWeight * mlConfidence;
+          AppLogger.info(
+            '[CrashFallDetection] Hybrid score: '
+            'threshold=${thresholdConfidence.toStringAsFixed(3)}, '
+            'ml=${mlConfidence.toStringAsFixed(3)}, '
+            'final=${confidence.toStringAsFixed(3)}',
+          );
+        }
+      }
+    }
 
     // Suppress low-confidence events.
     if (confidence < minConfidence) {
@@ -323,6 +373,7 @@ class CrashFallDetectionEngine {
   /// Release all resources.
   void dispose() {
     stop();
+    _classifier.dispose();
     _onDetection = null;
   }
 }

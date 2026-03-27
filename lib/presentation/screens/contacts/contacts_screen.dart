@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
+import '../../widgets/safora_animated_icons.dart';
 import 'package:safora/l10n/app_localizations.dart';
-import '../../../core/services/ad_service.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
@@ -12,7 +11,7 @@ import '../../../data/models/emergency_contact.dart';
 import '../../../injection.dart';
 import '../../blocs/contacts/contacts_cubit.dart';
 import '../../blocs/contacts/contacts_state.dart';
-import '../../widgets/ad_banner_widget.dart';
+
 
 /// Emergency contacts list screen with CRUD operations.
 class ContactsScreen extends StatefulWidget {
@@ -98,7 +97,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      bottomNavigationBar: AdBanner(adUnitId: AdService.bannerContacts),
       appBar: AppBar(
         title: Text(l.emergencyContacts),
         actions: [
@@ -256,14 +254,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(
-              width: 100,
-              height: 100,
-              child: Lottie.asset(
-                'assets/lottie/empty_state.json',
-                fit: BoxFit.contain,
-              ),
-            ),
+            const SaforaEmptyState(size: 100),
             const SizedBox(height: 24),
             Text(
               l.noEmergencyContacts,

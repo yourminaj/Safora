@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/colors.dart';
+import '../../widgets/safora_brand_mark.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../injection.dart';
 
@@ -82,13 +83,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: Colors.white.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.shield_rounded,
-                      size: 44,
-                      color: Colors.white,
+                    child: const Center(
+                      child: SaforaBrandMark(size: 50, color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 16),

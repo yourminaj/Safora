@@ -26,9 +26,10 @@ class AlertsLoaded extends AlertsState {
     required this.alerts,
     this.filterCategory,
     this.filterPriority,
+    this.preferencesApplied = false,
   });
 
-  /// All fetched alerts.
+  /// All fetched alerts (already filtered by user preferences).
   final List<AlertEvent> alerts;
 
   /// Active category filter (null = show all).
@@ -37,7 +38,10 @@ class AlertsLoaded extends AlertsState {
   /// Active priority filter (null = show all).
   final AlertPriority? filterPriority;
 
-  /// Filtered view of alerts.
+  /// Whether user preferences have been applied to filter alert types.
+  final bool preferencesApplied;
+
+  /// Filtered view of alerts (applies UI-level category/priority filters).
   List<AlertEvent> get filtered {
     var result = alerts;
     if (filterCategory != null) {
@@ -55,6 +59,7 @@ class AlertsLoaded extends AlertsState {
     List<AlertEvent>? alerts,
     AlertCategory? Function()? filterCategory,
     AlertPriority? Function()? filterPriority,
+    bool? preferencesApplied,
   }) {
     return AlertsLoaded(
       alerts: alerts ?? this.alerts,
@@ -62,11 +67,13 @@ class AlertsLoaded extends AlertsState {
           filterCategory != null ? filterCategory() : this.filterCategory,
       filterPriority:
           filterPriority != null ? filterPriority() : this.filterPriority,
+      preferencesApplied: preferencesApplied ?? this.preferencesApplied,
     );
   }
 
   @override
-  List<Object?> get props => [alerts, filterCategory, filterPriority];
+  List<Object?> get props =>
+      [alerts, filterCategory, filterPriority, preferencesApplied];
 }
 
 /// Error loading alerts.

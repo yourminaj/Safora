@@ -13,9 +13,10 @@ abstract final class AlertSounds {
   static String forType(AlertType type) {
     return switch (type.priority) {
       AlertPriority.critical => sirenSos,
-      AlertPriority.high => generalWarning,
-      AlertPriority.medium => generalWarning,
-      AlertPriority.low => generalWarning,
+      AlertPriority.danger => generalWarning,
+      AlertPriority.warning => generalWarning,
+      AlertPriority.advisory => generalWarning,
+      AlertPriority.info => generalWarning,
     };
   }
 

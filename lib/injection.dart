@@ -15,7 +15,10 @@ import 'core/services/shake_detection_service.dart';
 import 'core/services/snatch_detection_service.dart';
 import 'core/services/sms_service.dart';
 import 'core/services/speed_alert_service.dart';
+import 'services/dead_man_switch_service.dart';
 import 'core/services/weather_feed_service.dart';
+import 'core/services/alert_permission_gate.dart';
+import 'data/models/alert_preferences.dart';
 import 'detection/ml/crash_fall_detection_service.dart';
 import 'detection/ml/crash_fall_detection_engine.dart';
 import 'presentation/blocs/theme/theme_cubit.dart';
@@ -25,6 +28,7 @@ import 'data/datasources/contacts_local_datasource.dart';
 import 'data/datasources/disaster_api_client.dart';
 import 'data/datasources/military_alert_client.dart';
 import 'data/datasources/weather_api_client.dart';
+import 'data/datasources/overpass_api_client.dart';
 import 'data/datasources/profile_local_datasource.dart';
 import 'data/datasources/reminders_local_datasource.dart';
 import 'data/datasources/sos_history_datasource.dart';
@@ -39,6 +43,7 @@ import 'presentation/blocs/contacts/contacts_cubit.dart';
 import 'presentation/blocs/profile/profile_cubit.dart';
 import 'presentation/blocs/reminders/reminders_cubit.dart';
 import 'presentation/blocs/sos/sos_cubit.dart';
+import 'presentation/blocs/alert_preferences/alert_preferences_cubit.dart';
 
 /// Global service locator instance.
 final GetIt getIt = GetIt.instance;
@@ -133,6 +138,15 @@ Future<void> configureDependencies() async {
     () => ThemeCubit(settingsBox: appSettingsBox),
   );
 
+  // Alert preferences (per-alert enable/disable).
+  final alertPrefsBox = await _openBoxSafe(AlertPreferences.boxName);
+  getIt.registerLazySingleton<AlertPreferences>(
+    () => AlertPreferences(alertPrefsBox),
+  );
+  getIt.registerLazySingleton<AlertPermissionGate>(
+    () => const AlertPermissionGate(),
+  );
+
   // Crash/Fall detection service — load saved thresholds from Hive.
   final savedFallG = appSettingsBox.get('fall_threshold_g', defaultValue: 3.0) as double;
   final savedCrashG = appSettingsBox.get('crash_threshold_g', defaultValue: 4.0) as double;
@@ -160,6 +174,11 @@ Future<void> configureDependencies() async {
 
   getIt.registerLazySingleton<WeatherApiClient>(
     () => WeatherApiClient(),
+    dispose: (client) => client.dispose(),
+  );
+
+  getIt.registerLazySingleton<OverpassApiClient>(
+    () => OverpassApiClient(),
     dispose: (client) => client.dispose(),
   );
 
@@ -205,40 +224,67 @@ Future<void> configureDependencies() async {
   );
 
   // ── BLoCs / Cubits ─────────────────────────────────────
-  getIt.registerFactory<ContactsCubit>(
+  getIt.registerLazySingleton<ContactsCubit>(
     () => ContactsCubit(getIt<ContactsRepository>()),
   );
-  getIt.registerFactory<SosCubit>(
+  getIt.registerLazySingleton<SosCubit>(
     () => SosCubit(
       audioService: getIt<AudioService>(),
       triggerSosUseCase: getIt<TriggerSosUseCase>(),
       contactsRepository: getIt<ContactsRepository>(),
       sosHistoryDatasource: getIt<SosHistoryDatasource>(),
       locationService: getIt<LocationService>(),
+      connectivityService: getIt<ConnectivityService>(),
     ),
   );
-  getIt.registerFactory<BatteryCubit>(
+  getIt.registerLazySingleton<BatteryCubit>(
     () => BatteryCubit(
       batteryService: getIt<BatteryService>(),
       notificationService: getIt<NotificationService>(),
       smsService: getIt<SmsService>(),
       contactsRepository: getIt<ContactsRepository>(),
+      alertsCubit: getIt<AlertsCubit>(),
     ),
   );
-  getIt.registerFactory<AlertsCubit>(
+  getIt.registerLazySingleton<AlertsCubit>(
     () => AlertsCubit(
       alertsRepository: getIt<AlertsRepository>(),
       notificationService: getIt<NotificationService>(),
+      alertPreferences: getIt<AlertPreferences>(),
     ),
   );
-  getIt.registerFactory<ProfileCubit>(
+  getIt.registerLazySingleton<ProfileCubit>(
     () => ProfileCubit(profileRepository: getIt<ProfileRepository>()),
   );
-  getIt.registerFactory<RemindersCubit>(
+  getIt.registerLazySingleton<RemindersCubit>(
     () => RemindersCubit(
       repository: getIt<RemindersRepository>(),
       notificationService: getIt<NotificationService>(),
     ),
+  );
+  getIt.registerLazySingleton<AlertPreferencesCubit>(
+    () => AlertPreferencesCubit(
+      alertPreferences: getIt<AlertPreferences>(),
+      permissionGate: getIt<AlertPermissionGate>(),
+    ),
+  );
+
+  // Dead Man's Switch — periodic safety check-in timer.
+  getIt.registerLazySingleton<DeadManSwitchService>(
+    () => DeadManSwitchService(
+      onTrigger: () {
+        // When timer expires without check-in, auto-send SOS to all contacts.
+        final contacts = getIt<ContactsRepository>().getAll();
+        if (contacts.isNotEmpty) {
+          getIt<SmsService>().sendEmergencySms(contacts: contacts);
+        }
+        getIt<NotificationService>().showDisasterAlert(
+          title: 'Dead Man\'s Switch Triggered',
+          body: 'You did not check in. Emergency SOS sent to your contacts.',
+        );
+      },
+    ),
+    dispose: (s) => s.dispose(),
   );
 }
 

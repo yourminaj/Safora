@@ -1,11 +1,14 @@
 import 'package:battery_plus/battery_plus.dart' as bp;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:safora/core/constants/alert_types.dart';
 import 'package:safora/core/services/battery_service.dart';
 import 'package:safora/core/services/notification_service.dart';
 import 'package:safora/core/services/sms_service.dart';
+import 'package:safora/data/models/alert_event.dart';
 import 'package:safora/data/models/emergency_contact.dart';
 import 'package:safora/data/repositories/contacts_repository.dart';
+import 'package:safora/presentation/blocs/alerts/alerts_cubit.dart';
 import 'package:safora/presentation/blocs/battery/battery_cubit.dart';
 import 'package:safora/presentation/blocs/battery/battery_state.dart';
 
@@ -17,12 +20,15 @@ class MockSmsService extends Mock implements SmsService {}
 
 class MockContactsRepository extends Mock implements ContactsRepository {}
 
+class MockAlertsCubit extends Mock implements AlertsCubit {}
+
 void main() {
   late BatteryCubit cubit;
   late MockBatteryService mockBattery;
   late MockNotificationService mockNotification;
   late MockSmsService mockSms;
   late MockContactsRepository mockContacts;
+  late MockAlertsCubit mockAlerts;
 
   // Callback holder for driving the cubit.
   late void Function(int level, bp.BatteryState state) batteryCallback;
@@ -32,6 +38,10 @@ void main() {
     mockNotification = MockNotificationService();
     mockSms = MockSmsService();
     mockContacts = MockContactsRepository();
+    mockAlerts = MockAlertsCubit();
+
+    // Stub AlertsCubit.addLocalAlert so battery critical path works.
+    when(() => mockAlerts.addLocalAlert(any())).thenReturn(null);
 
     // Capture the callback when startMonitoring is called.
     when(() => mockBattery.startMonitoring(
@@ -63,6 +73,7 @@ void main() {
       notificationService: mockNotification,
       smsService: mockSms,
       contactsRepository: mockContacts,
+      alertsCubit: mockAlerts,
     );
   });
 
@@ -70,6 +81,13 @@ void main() {
     registerFallbackValue(const EmergencyContact(
       name: 'fallback',
       phone: '000',
+    ));
+    registerFallbackValue(AlertEvent(
+      type: AlertType.batteryCritical,
+      title: 'fallback',
+      latitude: 0,
+      longitude: 0,
+      timestamp: DateTime(2026),
     ));
   });
 

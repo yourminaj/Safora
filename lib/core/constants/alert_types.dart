@@ -1,12 +1,15 @@
-/// Alert priority levels used throughout the app.
+/// 5-tier alert priority system.
+///
+/// Maps to user-visible severity: Info → Advisory → Warning → Danger → Critical
 enum AlertPriority {
-  critical, // 🔴 Auto-trigger SOS, 30-sec siren
-  high, // 🟠 Urgent alarm, notify contacts
-  medium, // 🟡 Warning notification + vibration
-  low, // 🟢 Silent notification + badge
+  critical, // Life-threatening — auto-trigger SOS, 30-sec siren
+  danger,   // Dangerous — urgent alarm, notify contacts
+  warning,  // Warning — notification + vibration
+  advisory, // Advisory — standard notification
+  info,     // Informational — silent notification + badge
 }
 
-/// Alert categories grouping the 127 risk types.
+/// Alert categories grouping all risk types.
 enum AlertCategory {
   healthMedical('Health & Medical'),
   vehicleTransport('Vehicle & Transport'),
@@ -19,7 +22,11 @@ enum AlertCategory {
   travelOutdoor('Travel & Outdoor'),
   environmentalChemical('Environmental & Chemical'),
   digitalCyber('Digital & Cyber'),
-  childElder('Child & Elder Safety');
+  childElder('Child & Elder Safety'),
+  militaryDefense('Military & Defense'),
+  infrastructure('Infrastructure'),
+  spaceAstronomical('Space & Astronomical'),
+  maritimeAviation('Maritime & Aviation');
 
   const AlertCategory(this.label);
 
@@ -52,7 +59,7 @@ enum AlertType {
   severeBurns(
     label: 'Severe Burns',
     category: AlertCategory.healthMedical,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   cardiacArrest(
@@ -70,7 +77,7 @@ enum AlertType {
   dehydration(
     label: 'Severe Dehydration',
     category: AlertCategory.healthMedical,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: false,
   ),
   diabeticCrisis(
@@ -106,7 +113,7 @@ enum AlertType {
   foodPoisoning(
     label: 'Food Poisoning',
     category: AlertCategory.healthMedical,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   heartAttack(
@@ -130,7 +137,7 @@ enum AlertType {
   lowBloodPressure(
     label: 'Low Blood Pressure',
     category: AlertCategory.healthMedical,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   highBloodPressure(
@@ -142,7 +149,7 @@ enum AlertType {
   panicAttack(
     label: 'Panic Attack',
     category: AlertCategory.healthMedical,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   pregnancyEmergency(
@@ -210,7 +217,7 @@ enum AlertType {
   drowsyDriving(
     label: 'Drowsy Driving',
     category: AlertCategory.vehicleTransport,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   eScooterCrash(
@@ -258,19 +265,19 @@ enum AlertType {
   seatbeltReminder(
     label: 'Seatbelt Reminder',
     category: AlertCategory.vehicleTransport,
-    priority: AlertPriority.low,
+    priority: AlertPriority.advisory,
     isFree: true,
   ),
   speedWarning(
     label: 'Speed Limit Warning',
     category: AlertCategory.vehicleTransport,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: true,
   ),
   vehicleBreakdown(
     label: 'Vehicle Breakdown',
     category: AlertCategory.vehicleTransport,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   wrongWayDriving(
@@ -296,7 +303,7 @@ enum AlertType {
   drought(
     label: 'Drought Warning',
     category: AlertCategory.naturalDisaster,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: false,
   ),
   earthquake(
@@ -314,7 +321,7 @@ enum AlertType {
   hailstorm(
     label: 'Hailstorm',
     category: AlertCategory.naturalDisaster,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   landslide(
@@ -364,25 +371,25 @@ enum AlertType {
   denseFog(
     label: 'Dense Fog',
     category: AlertCategory.weatherEmergency,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   dustStorm(
     label: 'Dust Storm',
     category: AlertCategory.weatherEmergency,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   extremeCold(
     label: 'Extreme Cold',
     category: AlertCategory.weatherEmergency,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: true,
   ),
   extremeHeat(
     label: 'Extreme Heat',
     category: AlertCategory.weatherEmergency,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: true,
   ),
   flashFlood(
@@ -394,19 +401,19 @@ enum AlertType {
   thunderstorm(
     label: 'Thunderstorm',
     category: AlertCategory.weatherEmergency,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: true,
   ),
   strongWind(
     label: 'Strong Wind',
     category: AlertCategory.weatherEmergency,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: false,
   ),
   uvRadiation(
     label: 'UV Radiation',
     category: AlertCategory.weatherEmergency,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: false,
   ),
 
@@ -432,7 +439,7 @@ enum AlertType {
   blackmail(
     label: 'Blackmail',
     category: AlertCategory.personalSafety,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   bombThreat(
@@ -468,7 +475,7 @@ enum AlertType {
   decoyCall(
     label: 'Decoy Call (Safety Exit)',
     category: AlertCategory.personalSafety,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: true,
   ),
   missingPerson(
@@ -486,13 +493,13 @@ enum AlertType {
   phoneSnatching(
     label: 'Phone Snatching',
     category: AlertCategory.personalSafety,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   protest(
     label: 'Protest / Riot',
     category: AlertCategory.personalSafety,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   sexualAssault(
@@ -504,13 +511,13 @@ enum AlertType {
   stalking(
     label: 'Stalking',
     category: AlertCategory.personalSafety,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   suspiciousActivity(
     label: 'Suspicious Activity',
     category: AlertCategory.personalSafety,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: true,
   ),
   terrorism(
@@ -548,7 +555,7 @@ enum AlertType {
   kitchenAccident(
     label: 'Kitchen Accident',
     category: AlertCategory.homeDomestic,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   structuralCollapse(
@@ -560,7 +567,7 @@ enum AlertType {
   waterPipeBurst(
     label: 'Water Pipe Burst',
     category: AlertCategory.homeDomestic,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
 
@@ -592,13 +599,13 @@ enum AlertType {
   factoryMalfunction(
     label: 'Factory Malfunction',
     category: AlertCategory.workplace,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   loneWorker(
     label: 'Lone Worker Check-In',
     category: AlertCategory.workplace,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: false,
   ),
   radiationExposure(
@@ -618,13 +625,13 @@ enum AlertType {
   ripCurrent(
     label: 'Rip Current',
     category: AlertCategory.waterMarine,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   dangerousMarineLife(
     label: 'Dangerous Marine Life',
     category: AlertCategory.waterMarine,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   ferryCapsize(
@@ -644,13 +651,13 @@ enum AlertType {
   altitudeSickness(
     label: 'Altitude Sickness',
     category: AlertCategory.travelOutdoor,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   animalAttack(
     label: 'Animal Attack',
     category: AlertCategory.travelOutdoor,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   caveCollapse(
@@ -662,13 +669,13 @@ enum AlertType {
   dangerousRoad(
     label: 'Dangerous Road',
     category: AlertCategory.travelOutdoor,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: false,
   ),
   gettingLost(
     label: 'Getting Lost',
     category: AlertCategory.travelOutdoor,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   hikingAccident(
@@ -686,13 +693,13 @@ enum AlertType {
   pickpocketing(
     label: 'Pickpocketing',
     category: AlertCategory.travelOutdoor,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   touristScam(
     label: 'Tourist Scam',
     category: AlertCategory.travelOutdoor,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: false,
   ),
 
@@ -700,7 +707,7 @@ enum AlertType {
   airQuality(
     label: 'Hazardous Air Quality',
     category: AlertCategory.environmentalChemical,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   biologicalHazard(
@@ -724,19 +731,19 @@ enum AlertType {
   oilSpill(
     label: 'Oil / Chemical Spill',
     category: AlertCategory.environmentalChemical,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   pandemic(
     label: 'Pandemic',
     category: AlertCategory.environmentalChemical,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   waterContamination(
     label: 'Water Contamination',
     category: AlertCategory.environmentalChemical,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
 
@@ -744,25 +751,25 @@ enum AlertType {
   fakeEmergency(
     label: 'Fake Emergency Detection',
     category: AlertCategory.digitalCyber,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: false,
   ),
   unknownTracking(
     label: 'Unknown Location Tracking',
     category: AlertCategory.digitalCyber,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   batteryCritical(
     label: 'Battery Critical',
     category: AlertCategory.digitalCyber,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: true,
   ),
   simRemoval(
     label: 'SIM Removal / Tamper',
     category: AlertCategory.digitalCyber,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   unknownAirTag(
@@ -794,13 +801,13 @@ enum AlertType {
   elderlyInactivity(
     label: 'Elderly Inactivity',
     category: AlertCategory.childElder,
-    priority: AlertPriority.high,
+    priority: AlertPriority.danger,
     isFree: false,
   ),
   medicineReminder(
     label: 'Medicine Reminder',
     category: AlertCategory.childElder,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: true,
   ),
   schoolEmergency(
@@ -812,27 +819,153 @@ enum AlertType {
   sugarBpReminder(
     label: 'Sugar/BP Check',
     category: AlertCategory.childElder,
-    priority: AlertPriority.medium,
+    priority: AlertPriority.warning,
     isFree: true,
   ),
 
-  // ── Group 13: Military & Conflict (Regional) ──────────
+  // ── Group 13: Military & Defense ───────────────────────
   airRaid(
     label: 'Air Raid',
-    category: AlertCategory.personalSafety,
+    category: AlertCategory.militaryDefense,
     priority: AlertPriority.critical,
     isFree: true,
   ),
   missileStrike(
     label: 'Missile Strike',
-    category: AlertCategory.personalSafety,
+    category: AlertCategory.militaryDefense,
     priority: AlertPriority.critical,
     isFree: true,
   ),
   droneAttack(
     label: 'Drone Attack',
+    category: AlertCategory.militaryDefense,
+    priority: AlertPriority.critical,
+    isFree: true,
+  ),
+  militaryOperation(
+    label: 'Military Operation',
+    category: AlertCategory.militaryDefense,
+    priority: AlertPriority.critical,
+    isFree: true,
+  ),
+  curfew(
+    label: 'Curfew',
+    category: AlertCategory.militaryDefense,
+    priority: AlertPriority.danger,
+    isFree: true,
+  ),
+
+  // ── Group 14: Infrastructure ───────────────────────────
+  powerOutage(
+    label: 'Power Outage',
+    category: AlertCategory.infrastructure,
+    priority: AlertPriority.warning,
+    isFree: true,
+  ),
+  damFailure(
+    label: 'Dam Failure',
+    category: AlertCategory.infrastructure,
+    priority: AlertPriority.critical,
+    isFree: true,
+  ),
+  bridgeCollapse(
+    label: 'Bridge Collapse',
+    category: AlertCategory.infrastructure,
+    priority: AlertPriority.critical,
+    isFree: true,
+  ),
+  gasLeakInfra(
+    label: 'Gas Leak (Infrastructure)',
+    category: AlertCategory.infrastructure,
+    priority: AlertPriority.danger,
+    isFree: true,
+  ),
+  buildingCollapse(
+    label: 'Building Collapse',
+    category: AlertCategory.infrastructure,
+    priority: AlertPriority.critical,
+    isFree: true,
+  ),
+
+  // ── Group 15: Space & Astronomical ─────────────────────
+  solarFlare(
+    label: 'Solar Flare',
+    category: AlertCategory.spaceAstronomical,
+    priority: AlertPriority.advisory,
+    isFree: true,
+  ),
+  asteroidProximity(
+    label: 'Asteroid Proximity',
+    category: AlertCategory.spaceAstronomical,
+    priority: AlertPriority.info,
+    isFree: true,
+  ),
+  satelliteDebris(
+    label: 'Satellite Re-entry Debris',
+    category: AlertCategory.spaceAstronomical,
+    priority: AlertPriority.advisory,
+    isFree: true,
+  ),
+
+  // ── Group 16: Maritime & Aviation ──────────────────────
+  aviationIncident(
+    label: 'Aviation Incident',
+    category: AlertCategory.maritimeAviation,
+    priority: AlertPriority.critical,
+    isFree: true,
+  ),
+  noFlyZoneViolation(
+    label: 'No-Fly Zone Violation',
+    category: AlertCategory.maritimeAviation,
+    priority: AlertPriority.danger,
+    isFree: true,
+  ),
+  shipDistress(
+    label: 'Ship Distress Signal',
+    category: AlertCategory.maritimeAviation,
+    priority: AlertPriority.critical,
+    isFree: true,
+  ),
+
+  // ── Group 17: Traffic Additions ────────────────────────
+  roadClosure(
+    label: 'Road Closure',
+    category: AlertCategory.vehicleTransport,
+    priority: AlertPriority.advisory,
+    isFree: true,
+  ),
+  transitEmergency(
+    label: 'Transit Emergency',
+    category: AlertCategory.vehicleTransport,
+    priority: AlertPriority.danger,
+    isFree: true,
+  ),
+
+  // ── Group 18: Cyber Additions ──────────────────────────
+  dataBreach(
+    label: 'Data Breach',
+    category: AlertCategory.digitalCyber,
+    priority: AlertPriority.warning,
+    isFree: false,
+  ),
+  criticalInfraAttack(
+    label: 'Critical Infrastructure Attack',
+    category: AlertCategory.digitalCyber,
+    priority: AlertPriority.danger,
+    isFree: false,
+  ),
+
+  // ── Group 19: Personal/Local Additions ─────────────────
+  amberAlert(
+    label: 'Amber Alert (Missing Child)',
     category: AlertCategory.personalSafety,
     priority: AlertPriority.critical,
+    isFree: true,
+  ),
+  silverAlert(
+    label: 'Silver Alert (Missing Elder)',
+    category: AlertCategory.personalSafety,
+    priority: AlertPriority.danger,
     isFree: true,
   ),
 

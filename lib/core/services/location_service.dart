@@ -30,14 +30,11 @@ class LocationService {
 
       if (permission == LocationPermission.deniedForever) return false;
 
-      // On Android 10+, request background location for SOS when app is minimized.
-      if (permission == LocationPermission.whileInUse) {
-        final bgPermission = await Geolocator.requestPermission();
-        // Even if background is denied, foreground still works — just can't
-        // get location when app is fully backgrounded.
-        if (bgPermission == LocationPermission.always) {
-          AppLogger.info('[Location] Background location granted');
-        }
+      // Foreground (whileInUse or always) is sufficient for most operations.
+      // Background location (always) should only be requested explicitly
+      // by the user through Settings, not auto-requested at startup.
+      if (permission == LocationPermission.always) {
+        AppLogger.info('[Location] Background location already granted');
       }
 
       return true;

@@ -773,4 +773,185 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get restoreFromCloud => 'ক্লাউড থেকে পুনরুদ্ধার';
+
+  @override
+  String get filterHigh => 'উচ্চ';
+
+  @override
+  String get filterMedium => 'মাঝারি';
+
+  @override
+  String get filterLow => 'নিম্ন';
+
+  @override
+  String get filterSafety => 'নিরাপত্তা';
+
+  @override
+  String get filterHealth => 'স্বাস্থ্য';
+
+  @override
+  String get filterVehicle => 'যানবাহন';
+
+  @override
+  String get filterEnvironmental => 'পরিবেশগত';
+
+  @override
+  String get sosPreparingTitle => 'SOS প্রস্তুত হচ্ছে';
+
+  @override
+  String get sosPreflightChecks => 'প্রি-ফ্লাইট চেক চলছে...';
+
+  @override
+  String get preflightGps => 'জিপিএস অবস্থান';
+
+  @override
+  String get preflightNetwork => 'নেটওয়ার্ক';
+
+  @override
+  String get preflightContacts => 'জরুরি যোগাযোগ';
+
+  @override
+  String get preflightNoContacts =>
+      'কোনো জরুরি যোগাযোগ কনফিগার করা হয়নি। SOS ব্যবহার করতে সেটিংসে অন্তত একটি যোগাযোগ যোগ করুন।';
+
+  @override
+  String get loadingAlerts => 'সতর্কতা লোড হচ্ছে...';
+
+  @override
+  String get preflightNoGps =>
+      'জিপিএস অবস্থান পাওয়া যাচ্ছে না। সুনির্দিষ্ট স্থানাঙ্ক ছাড়াই SOS চালু হবে।';
+
+  @override
+  String get preflightNoNetwork =>
+      'নেটওয়ার্ক সংযোগ নেই। সেলুলার উপলব্ধ থাকলে SMS সতর্কতা পাঠানো হবে।';
+
+  @override
+  String alertGeofenceExitTitle(String zone) {
+    return 'নিরাপদ অঞ্চল ত্যাগ: $zone';
+  }
+
+  @override
+  String alertGeofenceExitDesc(String zone) {
+    return 'আপনি \"$zone\" নিরাপদ অঞ্চল ত্যাগ করেছেন। আপনার জরুরি পরিচিতিদের জানানো হয়েছে।';
+  }
+
+  @override
+  String get alertSnatchTitle => 'ফোন ছিনতাই শনাক্ত';
+
+  @override
+  String alertSnatchDesc(String pct) {
+    return 'হঠাৎ দিকনির্দেশক টান শনাক্ত হয়েছে (আত্মবিশ্বাস: $pct%)। SOS কাউন্টডাউন শুরু হয়েছে।';
+  }
+
+  @override
+  String alertSpeedTitle(String speed) {
+    return 'অতিরিক্ত গতি: $speed km/h';
+  }
+
+  @override
+  String alertSpeedDesc(String speed) {
+    return 'আপনার গতি নিরাপদ সীমা অতিক্রম করেছে ($speed km/h)। ধীর করুন।';
+  }
+
+  @override
+  String get ctxHeatTitle => 'হিট স্ট্রোকের ঝুঁকি';
+
+  @override
+  String ctxHeatMsg(String temp) {
+    return 'তাপমাত্রা $temp°C এবং আপনি বাইরে সক্রিয়। পানি পান করুন এবং ছায়ায় যান।';
+  }
+
+  @override
+  String get ctxHypothermiaTitle => 'হাইপোথার্মিয়ার ঝুঁকি';
+
+  @override
+  String ctxHypothermiaMsg(String temp, String chill) {
+    return 'তাপমাত্রা: $temp°C, উইন্ড চিল: $chill°C। অবিলম্বে উষ্ণ আশ্রয়ে যান।';
+  }
+
+  @override
+  String get ctxDrowsyTitle => 'ঘুমন্ত ড্রাইভিং সতর্কতা';
+
+  @override
+  String ctxDrowsyMsg(String time, String speed) {
+    return 'এখন $time এবং আপনি $speed km/h গতিতে চলছেন। বিশ্রামের জন্য থামুন।';
+  }
+
+  @override
+  String get ctxNightWalkTitle => 'রাতে একা হাঁটা';
+
+  @override
+  String get ctxNightWalkMsg =>
+      'আপনি রাতে একা হাঁটছেন। বিশ্বস্ত পরিচিতির সাথে লাইভ অবস্থান শেয়ার করুন। Safora SOS প্রস্তুত।';
+
+  @override
+  String get ctxAltitudeTitle => 'দ্রুত উচ্চতা পরিবর্তন';
+
+  @override
+  String ctxAltitudeMsg(String meters, String minutes) {
+    return '$minutes মিনিটে ${meters}m উচ্চতা বৃদ্ধি। লক্ষণ দেখুন: মাথাব্যথা, বমি, মাথা ঘোরা।';
+  }
+
+  @override
+  String get ctxFloodTitle => 'ফ্ল্যাশ ফ্লাডের ঝুঁকি';
+
+  @override
+  String ctxFloodMsg(String mm, String alt) {
+    return 'ভারী বৃষ্টিপাত (${mm}mm) পূর্বাভাস এবং আপনি নিচু উচ্চতায় (${alt}m)। উঁচু জায়গায় যান।';
+  }
+
+  @override
+  String get liveMap => 'লাইভ ম্যাপ';
+
+  @override
+  String get myLocation => 'আমার অবস্থান';
+
+  @override
+  String get safeZones => 'নিরাপদ অঞ্চল';
+
+  @override
+  String get showSafeZones => 'নিরাপদ অঞ্চল দেখান';
+
+  @override
+  String get hideSafeZones => 'নিরাপদ অঞ্চল লুকান';
+
+  @override
+  String get locationUnavailable => 'অবস্থান অনুপলব্ধ';
+
+  @override
+  String get more => 'আরো';
+
+  @override
+  String get safetyTools => 'নিরাপত্তা টুলস';
+
+  @override
+  String get profileSubtitle => 'আপনার ব্যক্তিগত তথ্য';
+
+  @override
+  String get settingsSubtitle => 'অ্যাপ পছন্দ ও সনাক্তকরণ';
+
+  @override
+  String get decoyCallSubtitle => 'ইনকামিং কল অনুকরণ করুন';
+
+  @override
+  String get remindersSubtitle => 'ওষুধ ও নিরাপত্তা রিমাইন্ডার';
+
+  @override
+  String get sosHistorySubtitle => 'পূর্ববর্তী SOS ইভেন্ট ও ফলাফল';
+
+  @override
+  String get alertMapSubtitle => 'মানচিত্রে সতর্কতা দেখুন';
+
+  @override
+  String get aboutSafora => 'Safora সম্পর্কে';
+
+  @override
+  String get aboutSaforaSubtitle => 'সংস্করণ তথ্য ও ক্রেডিট';
+
+  @override
+  String get close => 'বন্ধ করুন';
+
+  @override
+  String get remindersAccessedFromHome =>
+      'রিমাইন্ডার হোম স্ক্রিন থেকে অ্যাক্সেস করা যায়';
 }

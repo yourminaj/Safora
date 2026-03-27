@@ -6,6 +6,7 @@ import 'data/models/emergency_contact.dart';
 import 'data/models/user_profile.dart';
 import 'injection.dart';
 import 'presentation/blocs/alerts/alerts_cubit.dart';
+import 'presentation/blocs/alert_preferences/alert_preferences_cubit.dart';
 import 'presentation/blocs/battery/battery_cubit.dart';
 import 'presentation/blocs/contacts/contacts_cubit.dart';
 import 'presentation/blocs/profile/profile_cubit.dart';
@@ -27,6 +28,10 @@ import 'presentation/screens/alerts/alert_map_screen.dart';
 import 'presentation/screens/settings/settings_screen.dart';
 import 'presentation/screens/decoycall/decoy_call_screen.dart';
 import 'presentation/screens/lock/lock_screen.dart';
+import 'presentation/screens/map/live_map_screen.dart';
+import 'presentation/screens/settings/alert_preferences_screen.dart';
+import 'presentation/screens/more/more_screen.dart';
+import 'presentation/screens/shell/main_shell.dart';
 
 /// Named route paths.
 abstract final class AppRoutes {
@@ -46,10 +51,34 @@ abstract final class AppRoutes {
   static const String alertMap = '/alert-map';
   static const String lock = '/lock';
   static const String sosHistory = '/sos-history';
+  static const String liveMap = '/live-map';
+  static const String more = '/more';
+  static const String alertPreferences = '/alert-preferences';
 }
 
-/// GoRouter configuration.
-GoRouter createRouter() => GoRouter(
+// Navigation keys for the shell branches.
+// Re-created each time createRouter() is called so hot restart works cleanly.
+GlobalKey<NavigatorState> _rootKey = GlobalKey<NavigatorState>();
+GlobalKey<NavigatorState> _homeKey = GlobalKey<NavigatorState>(debugLabel: 'home');
+GlobalKey<NavigatorState> _alertsKey = GlobalKey<NavigatorState>(debugLabel: 'alerts');
+GlobalKey<NavigatorState> _contactsKey = GlobalKey<NavigatorState>(debugLabel: 'contacts');
+GlobalKey<NavigatorState> _mapKey = GlobalKey<NavigatorState>(debugLabel: 'map');
+GlobalKey<NavigatorState> _moreKey = GlobalKey<NavigatorState>(debugLabel: 'more');
+
+void _resetNavKeys() {
+  _rootKey = GlobalKey<NavigatorState>();
+  _homeKey = GlobalKey<NavigatorState>(debugLabel: 'home');
+  _alertsKey = GlobalKey<NavigatorState>(debugLabel: 'alerts');
+  _contactsKey = GlobalKey<NavigatorState>(debugLabel: 'contacts');
+  _mapKey = GlobalKey<NavigatorState>(debugLabel: 'map');
+  _moreKey = GlobalKey<NavigatorState>(debugLabel: 'more');
+}
+
+/// GoRouter configuration with StatefulShellRoute for bottom tab navigation.
+GoRouter createRouter() {
+  _resetNavKeys();
+  return GoRouter(
+      navigatorKey: _rootKey,
       initialLocation: AppRoutes.splash,
       // Enterprise: friendly error page for unknown routes / deep links.
       errorBuilder: (context, state) {
@@ -74,6 +103,7 @@ GoRouter createRouter() => GoRouter(
         );
       },
       routes: [
+        // ─── Top-Level Routes (no bottom nav) ──────────
         GoRoute(
           path: AppRoutes.splash,
           builder: (context, state) => const SplashScreen(),
@@ -91,34 +121,27 @@ GoRouter createRouter() => GoRouter(
           builder: (context, state) => const SignupScreen(),
         ),
         GoRoute(
-          path: AppRoutes.home,
-          builder: (context, state) => const HomeScreen(),
+          path: AppRoutes.lock,
+          builder: (context, state) => const LockScreen(),
         ),
+
+        // ─── Sub-routes that push on top of the shell ──
         GoRoute(
-          path: AppRoutes.contacts,
-          builder: (context, state) => const ContactsScreen(),
-        ),
-        GoRoute(
+          parentNavigatorKey: _rootKey,
           path: AppRoutes.addContact,
           builder: (context, state) => const AddContactScreen(),
         ),
         GoRoute(
+          parentNavigatorKey: _rootKey,
           path: AppRoutes.editContact,
           builder: (context, state) {
-            // Enterprise: null-safe cast prevents crash from deep links.
             final contact = state.extra as EmergencyContact?;
-            if (contact == null) {
-              // Redirect to contacts list if no contact was passed.
-              return const ContactsScreen();
-            }
+            if (contact == null) return const ContactsScreen();
             return EditContactScreen(contact: contact);
           },
         ),
         GoRoute(
-          path: AppRoutes.profile,
-          builder: (context, state) => const ProfileScreen(),
-        ),
-        GoRoute(
+          parentNavigatorKey: _rootKey,
           path: AppRoutes.editProfile,
           builder: (context, state) {
             final profile = state.extra as UserProfile?;
@@ -126,38 +149,107 @@ GoRouter createRouter() => GoRouter(
           },
         ),
         GoRoute(
-          path: AppRoutes.alerts,
-          builder: (context, state) => const AlertsScreen(),
+          parentNavigatorKey: _rootKey,
+          path: AppRoutes.profile,
+          builder: (context, state) => const ProfileScreen(),
         ),
         GoRoute(
-          path: AppRoutes.alertMap,
-          builder: (context, state) => const AlertMapScreen(),
-        ),
-        GoRoute(
+          parentNavigatorKey: _rootKey,
           path: AppRoutes.settings,
           builder: (context, state) => const SettingsScreen(),
         ),
         GoRoute(
+          parentNavigatorKey: _rootKey,
           path: AppRoutes.decoyCall,
           builder: (context, state) => const DecoyCallScreen(),
         ),
         GoRoute(
-          path: AppRoutes.lock,
-          builder: (context, state) => const LockScreen(),
+          parentNavigatorKey: _rootKey,
+          path: AppRoutes.alertMap,
+          builder: (context, state) => const AlertMapScreen(),
         ),
         GoRoute(
+          parentNavigatorKey: _rootKey,
           path: AppRoutes.sosHistory,
           builder: (context, state) => const SosHistoryScreen(),
         ),
+        GoRoute(
+          parentNavigatorKey: _rootKey,
+          path: AppRoutes.alertPreferences,
+          builder: (context, state) => BlocProvider.value(
+            value: getIt<AlertPreferencesCubit>(),
+            child: const AlertPreferencesScreen(),
+          ),
+        ),
+
+        // ─── Shell Route: 5-Tab Bottom Navigation ──────
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
+            return MainShell(navigationShell: navigationShell);
+          },
+          branches: [
+            // Tab 0: Home
+            StatefulShellBranch(
+              navigatorKey: _homeKey,
+              routes: [
+                GoRoute(
+                  path: AppRoutes.home,
+                  builder: (context, state) => const HomeScreen(),
+                ),
+              ],
+            ),
+            // Tab 1: Alerts
+            StatefulShellBranch(
+              navigatorKey: _alertsKey,
+              routes: [
+                GoRoute(
+                  path: AppRoutes.alerts,
+                  builder: (context, state) => const AlertsScreen(),
+                ),
+              ],
+            ),
+            // Tab 2: Contacts
+            StatefulShellBranch(
+              navigatorKey: _contactsKey,
+              routes: [
+                GoRoute(
+                  path: AppRoutes.contacts,
+                  builder: (context, state) => const ContactsScreen(),
+                ),
+              ],
+            ),
+            // Tab 3: Map
+            StatefulShellBranch(
+              navigatorKey: _mapKey,
+              routes: [
+                GoRoute(
+                  path: AppRoutes.liveMap,
+                  builder: (context, state) => const LiveMapScreen(),
+                ),
+              ],
+            ),
+            // Tab 4: More
+            StatefulShellBranch(
+              navigatorKey: _moreKey,
+              routes: [
+                GoRoute(
+                  path: AppRoutes.more,
+                  builder: (context, state) => const MoreScreen(),
+                ),
+              ],
+            ),
+          ],
+        ),
       ],
     );
+}
 
 /// Provides all BLoCs at the app root level.
 Widget wrapWithProviders(Widget child) {
   return MultiBlocProvider(
     providers: [
-      BlocProvider<SosCubit>(
-        create: (_) => getIt<SosCubit>(),
+      BlocProvider<SosCubit>.value(
+        value: getIt<SosCubit>(),
       ),
       BlocProvider<ContactsCubit>(
         create: (_) => getIt<ContactsCubit>(),
@@ -165,11 +257,11 @@ Widget wrapWithProviders(Widget child) {
       BlocProvider<BatteryCubit>(
         create: (_) => getIt<BatteryCubit>()..startMonitoring(),
       ),
-      BlocProvider<AlertsCubit>(
-        create: (_) => getIt<AlertsCubit>(),
+      BlocProvider<AlertsCubit>.value(
+        value: getIt<AlertsCubit>(),
       ),
-      BlocProvider<ProfileCubit>(
-        create: (_) => getIt<ProfileCubit>(),
+      BlocProvider<ProfileCubit>.value(
+        value: getIt<ProfileCubit>(),
       ),
       BlocProvider<RemindersCubit>(
         create: (_) => getIt<RemindersCubit>(),

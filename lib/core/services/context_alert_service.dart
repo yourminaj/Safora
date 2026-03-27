@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:geolocator/geolocator.dart';
+import '../constants/alert_types.dart';
 import 'app_logger.dart';
 
 /// Smart context-aware alert service that combines GPS, weather, and time
@@ -25,7 +27,7 @@ class ContextAlertService {
   Timer? _checkTimer;
   double? _lastAltitude;
   DateTime? _lastAltitudeTime;
-  DateTime? _lastAlertTime;
+  final Map<ContextAlertType, DateTime> _lastAlertTimes = {};
 
   /// External data injected before each check cycle.
   double? currentTemperatureCelsius;
@@ -218,12 +220,12 @@ class ContextAlertService {
     ContextAlert alert,
   ) {
     final now = DateTime.now();
-    // 10-minute cooldown between any context alerts.
-    if (_lastAlertTime != null &&
-        now.difference(_lastAlertTime!).inMinutes < 10) {
+    // 10-minute cooldown per alert type (not global).
+    final lastTime = _lastAlertTimes[alert.type];
+    if (lastTime != null && now.difference(lastTime).inMinutes < 10) {
       return;
     }
-    _lastAlertTime = now;
+    _lastAlertTimes[alert.type] = now;
     onAlert(alert);
     AppLogger.info('[ContextAlert] Emitted: ${alert.type.name}');
   }
@@ -233,38 +235,13 @@ class ContextAlertService {
     if (windKmh < 5) return tempC;
     return 13.12 +
         0.6215 * tempC -
-        11.37 * _pow(windKmh, 0.16) +
-        0.3965 * tempC * _pow(windKmh, 0.16);
+        11.37 * math.pow(windKmh, 0.16) +
+        0.3965 * tempC * math.pow(windKmh, 0.16);
   }
 
   /// Exposed for testing only.
   static double calculateWindChillForTest(double tempC, double windKmh) =>
       _calculateWindChill(tempC, windKmh);
-
-  /// Simple power function for wind chill (avoids dart:math import).
-  static double _pow(double base, double exp) {
-    // Use natural log approximation for fractional exponent.
-    if (base <= 0) return 0;
-    // For 0.16 exponent, use iterative approximation.
-    final double current = base;
-    // x^0.16 ≈ e^(0.16 * ln(x))
-    // Approximate using Newton's method.
-    double ln = 0;
-    double y = (current - 1) / (current + 1);
-    for (int i = 0; i < 20; i++) {
-      ln += 2 * y / (2 * i + 1);
-      y *= (current - 1) * (current - 1) / ((current + 1) * (current + 1));
-    }
-    // e^x approximation
-    final double ex = exp * ln;
-    double result = 1;
-    double term = 1;
-    for (int i = 1; i <= 15; i++) {
-      term *= ex / i;
-      result += term;
-    }
-    return result;
-  }
 
   Future<Position?> _getCurrentPosition() async {
     try {
@@ -281,6 +258,21 @@ class ContextAlertService {
 
   void dispose() {
     stop();
+  }
+
+  /// Canonical mapping from [ContextAlertType] → [AlertType].
+  ///
+  /// Used by both `ServiceBootstrapper` and `SettingsScreen` to
+  /// ensure a single source of truth for type translation.
+  static AlertType mapToAlertType(ContextAlertType type) {
+    return switch (type) {
+      ContextAlertType.heatStroke => AlertType.heatStroke,
+      ContextAlertType.hypothermia => AlertType.hypothermia,
+      ContextAlertType.drowsyDriving => AlertType.drowsyDriving,
+      ContextAlertType.loneNightWalk => AlertType.suspiciousActivity,
+      ContextAlertType.altitudeSickness => AlertType.altitudeSickness,
+      ContextAlertType.flashFloodRisk => AlertType.flood,
+    };
   }
 }
 

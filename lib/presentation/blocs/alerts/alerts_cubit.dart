@@ -3,51 +3,62 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/alert_types.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../data/models/alert_event.dart';
+import '../../../data/models/alert_preferences.dart';
 import '../../../data/repositories/alerts_repository.dart';
 import 'alerts_state.dart';
 
 /// Cubit for fetching, caching, and filtering disaster alerts.
 ///
+/// **Preference-aware**: Only alerts whose [AlertType] is enabled in
+/// [AlertPreferences] are emitted to the UI and trigger notifications.
 /// Auto-refreshes every 15 minutes when active.
 class AlertsCubit extends Cubit<AlertsState> {
   AlertsCubit({
     required AlertsRepository alertsRepository,
     required NotificationService notificationService,
+    required AlertPreferences alertPreferences,
   })  : _alertsRepository = alertsRepository,
         _notificationService = notificationService,
+        _prefs = alertPreferences,
         super(const AlertsInitial());
 
   final AlertsRepository _alertsRepository;
   final NotificationService _notificationService;
+  final AlertPreferences _prefs;
   Timer? _refreshTimer;
 
   static const Duration refreshInterval = Duration(minutes: 15);
 
-  /// Load alerts — either from API or from local cache.
+  /// Load alerts — from cache then API — filtered by user preferences.
   Future<void> loadAlerts() async {
     emit(const AlertsLoading());
 
     try {
       // First show cached data quickly.
-      final cached = _alertsRepository.getAlertHistory(limit: 50);
+      final cached = _filterByPreferences(
+        _alertsRepository.getAlertHistory(limit: 50),
+      );
       if (cached.isNotEmpty) {
-        emit(AlertsLoaded(alerts: cached));
+        emit(AlertsLoaded(alerts: cached, preferencesApplied: true));
       }
 
       // Then fetch fresh data from APIs.
-      final fresh = await _alertsRepository.fetchLatestAlerts();
+      final rawFresh = await _alertsRepository.fetchLatestAlerts();
+      final fresh = _filterByPreferences(rawFresh);
 
-      // Notify about new critical alerts.
+      // Notify about new critical alerts (only if enabled by user).
       _notifyNewCritical(fresh, cached);
 
-      emit(AlertsLoaded(alerts: fresh));
+      emit(AlertsLoaded(alerts: fresh, preferencesApplied: true));
 
       // Start auto-refresh timer.
       _startAutoRefresh();
     } catch (e) {
-      final cached = _alertsRepository.getAlertHistory(limit: 50);
+      final cached = _filterByPreferences(
+        _alertsRepository.getAlertHistory(limit: 50),
+      );
       if (cached.isNotEmpty) {
-        emit(AlertsLoaded(alerts: cached));
+        emit(AlertsLoaded(alerts: cached, preferencesApplied: true));
       } else {
         emit(AlertsError(e.toString()));
       }
@@ -55,8 +66,12 @@ class AlertsCubit extends Cubit<AlertsState> {
   }
 
   /// Inject a locally-detected alert (from on-device services) into
-  /// the cubit state and trigger notification if critical.
+  /// the cubit state and trigger notification — only if the user has
+  /// enabled that alert type.
   void addLocalAlert(AlertEvent alert) {
+    // Gate: if the user has disabled this alert type, drop it silently.
+    if (!_prefs.isEnabled(alert.type)) return;
+
     final currentState = state;
     final List<AlertEvent> current;
 
@@ -78,7 +93,7 @@ class AlertsCubit extends Cubit<AlertsState> {
     // Persist to history.
     _alertsRepository.saveAlerts(unique);
 
-    emit(AlertsLoaded(alerts: unique));
+    emit(AlertsLoaded(alerts: unique, preferencesApplied: true));
 
     // Notify if critical.
     if (alert.type.priority == AlertPriority.critical) {
@@ -90,21 +105,41 @@ class AlertsCubit extends Cubit<AlertsState> {
     }
   }
 
-  /// Force refresh alerts from all APIs.
+  /// Force refresh alerts from all APIs — filtered by preferences.
   Future<void> refreshAlerts() async {
     final currentState = state;
 
     try {
-      final fresh = await _alertsRepository.fetchLatestAlerts();
+      final rawFresh = await _alertsRepository.fetchLatestAlerts();
+      final fresh = _filterByPreferences(rawFresh);
 
       if (currentState is AlertsLoaded) {
         _notifyNewCritical(fresh, currentState.alerts);
-        emit(currentState.copyWith(alerts: fresh));
+        emit(currentState.copyWith(
+          alerts: fresh,
+          preferencesApplied: true,
+        ));
       } else {
-        emit(AlertsLoaded(alerts: fresh));
+        emit(AlertsLoaded(alerts: fresh, preferencesApplied: true));
       }
     } catch (_) {
       // Keep current state on refresh failure.
+    }
+  }
+
+  /// Re-apply preferences filter (call after user changes preferences).
+  void reapplyPreferences() {
+    final currentState = state;
+    if (currentState is AlertsLoaded) {
+      // Re-filter against the backing store (unfiltered history).
+      final allAlerts = _alertsRepository.getAlertHistory(limit: 200);
+      final filtered = _filterByPreferences(allAlerts);
+      emit(AlertsLoaded(
+        alerts: filtered,
+        filterCategory: currentState.filterCategory,
+        filterPriority: currentState.filterPriority,
+        preferencesApplied: true,
+      ));
     }
   }
 
@@ -137,6 +172,13 @@ class AlertsCubit extends Cubit<AlertsState> {
         filterPriority: () => null,
       ));
     }
+  }
+
+  // ─── Internals ──────────────────────────────────────────────────
+
+  /// Core filter: drops alerts whose type is disabled in user preferences.
+  List<AlertEvent> _filterByPreferences(List<AlertEvent> alerts) {
+    return alerts.where((a) => _prefs.isEnabled(a.type)).toList();
   }
 
   /// Max notifications per refresh to avoid flooding.

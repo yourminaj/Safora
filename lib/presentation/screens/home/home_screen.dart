@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
+import '../../widgets/safora_brand_mark.dart';
 import '../../../data/models/medicine_reminder.dart';
+import '../../../services/dead_man_switch_service.dart';
+import '../../../services/risk_score_engine.dart';
+import '../../../core/services/sms_service.dart';
+import '../../../data/repositories/contacts_repository.dart';
+import '../emergency/emergency_full_screen_card.dart';
 import '../../blocs/alerts/alerts_cubit.dart';
 import '../../blocs/alerts/alerts_state.dart';
 import '../../blocs/reminders/reminders_cubit.dart';
@@ -22,13 +28,94 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late final DeadManSwitchService _dms;
+  bool _dmsActive = false;
+  final _riskEngine = const RiskScoreEngine();
+  /// Track which alert IDs have already triggered a full-screen card.
+  final _triggeredAlertIds = <String>{};
+
   @override
   void initState() {
     super.initState();
+    _dms = GetIt.instance<DeadManSwitchService>();
+    _dmsActive = _dms.isActive;
+
     // Load alerts when home screen opens (if not already loaded).
     final alertsCubit = context.read<AlertsCubit>();
     if (alertsCubit.state is AlertsInitial) {
       alertsCubit.loadAlerts();
+    }
+  }
+
+  void _toggleDeadManSwitch() {
+    setState(() {
+      if (_dmsActive) {
+        _dms.stop();
+        _dmsActive = false;
+      } else {
+        _dms.start();
+        _dmsActive = true;
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _dmsActive
+              ? 'Dead Man\'s Switch activated — check in every 30 min'
+              : 'Dead Man\'s Switch deactivated',
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _checkInDeadManSwitch() {
+    _dms.checkIn();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Checked in — timer reset'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
+  /// Check if any loaded alert has riskScore >= 80 and trigger
+  /// the emergency full-screen card (only once per alert).
+  void _checkForCriticalAlerts(List<dynamic> alerts) {
+    for (final alert in alerts) {
+      final enriched = _riskEngine.enrichWithScore(alert);
+      final score = enriched.riskScore ?? 0;
+      final id = enriched.id ?? '${enriched.title}_${enriched.timestamp}';
+
+      if (score >= 80 && !_triggeredAlertIds.contains(id)) {
+        _triggeredAlertIds.add(id);
+        // Show emergency card after the current frame completes.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            EmergencyFullScreenCard.show(context, enriched).then((isSafe) {
+              if (isSafe == true) {
+                _sendIAmSafeSms();
+              }
+            });
+          }
+        });
+        break; // Only show one emergency card at a time.
+      }
+    }
+  }
+
+  void _sendIAmSafeSms() {
+    final contacts = GetIt.instance<ContactsRepository>().getAll();
+    if (contacts.isNotEmpty) {
+      GetIt.instance<SmsService>().sendIAmSafeSms(contacts: contacts);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('"I Am Safe" sent to emergency contacts'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -217,7 +304,17 @@ class _HomeScreenState extends State<HomeScreen> {
               pinned: true,
               title: Row(
                 children: [
-                  const Icon(Icons.shield_rounded, color: Colors.white),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(
+                      child: SaforaBrandMark(size: 24, color: Colors.white),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     l.appTitle,
@@ -274,13 +371,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: isSafe
-                              ? SizedBox(
-                                  width: 28,
-                                  height: 28,
-                                  child: Lottie.asset(
-                                    'assets/lottie/shield_pulse.json',
-                                    fit: BoxFit.contain,
-                                  ),
+                              ? const SaforaBrandMark(
+                                  size: 28,
+                                  color: Colors.white,
                                 )
                               : const Icon(
                                   Icons.warning_amber_rounded,
@@ -389,12 +482,39 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () => context.push('/alert-map'),
                         ),
                         _QuickAction(
+                          icon: Icons.my_location_rounded,
+                          label: l.liveMap,
+                          color: AppColors.secondaryDark,
+                          onTap: () => context.push('/live-map'),
+                        ),
+                        _QuickAction(
                           icon: Icons.medication_rounded,
                           label: l.reminders,
                           color: AppColors.primary,
                           onTap: () {
                             _showRemindersSheet(context);
                           },
+                        ),
+                        _QuickAction(
+                          icon: _dmsActive
+                              ? Icons.timer_rounded
+                              : Icons.timer_off_rounded,
+                          label: _dmsActive ? 'Check In' : 'Dead Switch',
+                          color: _dmsActive
+                              ? AppColors.warning
+                              : AppColors.textSecondary,
+                          onTap: _dmsActive
+                              ? _checkInDeadManSwitch
+                              : _toggleDeadManSwitch,
+                          onLongPress: _dmsActive
+                              ? _toggleDeadManSwitch
+                              : null,
+                        ),
+                        _QuickAction(
+                          icon: Icons.settings_rounded,
+                          label: l.settings,
+                          color: AppColors.textSecondary,
+                          onTap: () => context.push('/settings'),
                         ),
                       ],
                     ),
@@ -425,6 +545,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     BlocBuilder<AlertsCubit, AlertsState>(
                       builder: (context, state) {
                         if (state is AlertsLoaded && state.alerts.isNotEmpty) {
+                          // Auto-trigger emergency card for critical alerts.
+                          _checkForCriticalAlerts(state.alerts);
                           final recent = state.alerts.take(3).toList();
                           return Column(
                             children: recent
@@ -487,12 +609,14 @@ class _QuickAction extends StatelessWidget {
     required this.label,
     required this.color,
     required this.onTap,
+    this.onLongPress,
   });
 
   final IconData icon;
   final String label;
   final Color color;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -501,6 +625,7 @@ class _QuickAction extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/constants/alert_types.dart';
 import 'package:safora/core/services/notification_service.dart';
 import 'package:safora/data/models/alert_event.dart';
+import 'package:safora/data/models/alert_preferences.dart';
 import 'package:safora/data/repositories/alerts_repository.dart';
 import 'package:safora/presentation/blocs/alerts/alerts_cubit.dart';
 import 'package:safora/presentation/blocs/alerts/alerts_state.dart';
@@ -11,14 +12,18 @@ class MockAlertsRepository extends Mock implements AlertsRepository {}
 
 class MockNotificationService extends Mock implements NotificationService {}
 
+class MockAlertPreferences extends Mock implements AlertPreferences {}
+
 void main() {
   late AlertsCubit cubit;
   late MockAlertsRepository mockRepo;
   late MockNotificationService mockNotifs;
+  late MockAlertPreferences mockPrefs;
 
   setUp(() {
     mockRepo = MockAlertsRepository();
     mockNotifs = MockNotificationService();
+    mockPrefs = MockAlertPreferences();
 
     when(() => mockRepo.getAlertHistory(limit: any(named: 'limit')))
         .thenReturn([]);
@@ -32,9 +37,13 @@ void main() {
 
     when(() => mockRepo.saveAlerts(any())).thenAnswer((_) async {});
 
+    // By default, all alerts are enabled.
+    when(() => mockPrefs.isEnabled(any())).thenReturn(true);
+
     cubit = AlertsCubit(
       alertsRepository: mockRepo,
       notificationService: mockNotifs,
+      alertPreferences: mockPrefs,
     );
   });
 

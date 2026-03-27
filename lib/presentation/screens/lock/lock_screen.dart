@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/services/app_lock_service.dart';
 import '../../../core/theme/colors.dart';
@@ -85,7 +86,9 @@ class _LockScreenState extends State<LockScreen> {
     if (widget.onUnlocked != null) {
       widget.onUnlocked!();
     } else {
-      Navigator.of(context).pop(true);
+      // Use GoRouter's pop so the push() Future in SaforaApp resolves
+      // correctly, resetting the _lockScreenShowing flag.
+      context.pop(true);
     }
   }
 

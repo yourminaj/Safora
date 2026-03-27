@@ -111,9 +111,12 @@ void main() {
     test('adds reminder and reloads list', () async {
       when(() => mockRepo.add(any())).thenAnswer((_) async => 'new-id');
       when(() => mockRepo.getAll()).thenReturn([]);
-      when(() => mockNotificationService.showDisasterAlert(
+      when(() => mockNotificationService.scheduleDaily(
+            notificationId: any(named: 'notificationId'),
             title: any(named: 'title'),
             body: any(named: 'body'),
+            hour: any(named: 'hour'),
+            minute: any(named: 'minute'),
           )).thenAnswer((_) async {});
 
       final states = <RemindersState>[];

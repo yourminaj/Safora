@@ -790,4 +790,185 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoreFromCloud => 'Restore from Cloud';
+
+  @override
+  String get filterHigh => 'High';
+
+  @override
+  String get filterMedium => 'Medium';
+
+  @override
+  String get filterLow => 'Low';
+
+  @override
+  String get filterSafety => 'Safety';
+
+  @override
+  String get filterHealth => 'Health';
+
+  @override
+  String get filterVehicle => 'Vehicle';
+
+  @override
+  String get filterEnvironmental => 'Environmental';
+
+  @override
+  String get sosPreparingTitle => 'PREPARING SOS';
+
+  @override
+  String get sosPreflightChecks => 'Running pre-flight checks...';
+
+  @override
+  String get preflightGps => 'GPS Location';
+
+  @override
+  String get preflightNetwork => 'Network';
+
+  @override
+  String get preflightContacts => 'Emergency Contacts';
+
+  @override
+  String get preflightNoContacts =>
+      'No emergency contacts configured. Add at least one contact in Settings to use SOS.';
+
+  @override
+  String get loadingAlerts => 'Loading alerts...';
+
+  @override
+  String get preflightNoGps =>
+      'GPS location is not available. SOS will proceed without precise coordinates.';
+
+  @override
+  String get preflightNoNetwork =>
+      'No network connection. SMS alerts will still be sent if cellular is available.';
+
+  @override
+  String alertGeofenceExitTitle(String zone) {
+    return 'Left Safe Zone: $zone';
+  }
+
+  @override
+  String alertGeofenceExitDesc(String zone) {
+    return 'You have left the designated safe zone \"$zone\". Your emergency contacts have been notified.';
+  }
+
+  @override
+  String get alertSnatchTitle => 'Phone Snatch Detected';
+
+  @override
+  String alertSnatchDesc(String pct) {
+    return 'A sudden directional grab was detected (confidence: $pct%). SOS countdown started.';
+  }
+
+  @override
+  String alertSpeedTitle(String speed) {
+    return 'Overspeeding: $speed km/h';
+  }
+
+  @override
+  String alertSpeedDesc(String speed) {
+    return 'Your speed exceeded the safe limit ($speed km/h). Slow down.';
+  }
+
+  @override
+  String get ctxHeatTitle => 'Heat Stroke Risk';
+
+  @override
+  String ctxHeatMsg(String temp) {
+    return 'Temperature is $temp°C and you are active outdoors. Stay hydrated and seek shade.';
+  }
+
+  @override
+  String get ctxHypothermiaTitle => 'Hypothermia Risk';
+
+  @override
+  String ctxHypothermiaMsg(String temp, String chill) {
+    return 'Temperature: $temp°C, Wind chill: $chill°C. Seek warm shelter immediately.';
+  }
+
+  @override
+  String get ctxDrowsyTitle => 'Drowsy Driving Alert';
+
+  @override
+  String ctxDrowsyMsg(String time, String speed) {
+    return 'It\'s $time and you\'re traveling at $speed km/h. Consider pulling over for a rest.';
+  }
+
+  @override
+  String get ctxNightWalkTitle => 'Late Night Walking';
+
+  @override
+  String get ctxNightWalkMsg =>
+      'You are walking alone late at night. Share your live location with a trusted contact. Safora SOS is ready if needed.';
+
+  @override
+  String get ctxAltitudeTitle => 'Rapid Altitude Change';
+
+  @override
+  String ctxAltitudeMsg(String meters, String minutes) {
+    return 'You\'ve gained ${meters}m in $minutes minutes. Watch for symptoms: headache, nausea, dizziness.';
+  }
+
+  @override
+  String get ctxFloodTitle => 'Flash Flood Risk';
+
+  @override
+  String ctxFloodMsg(String mm, String alt) {
+    return 'Heavy rainfall (${mm}mm) forecast and you\'re at low elevation (${alt}m). Move to higher ground.';
+  }
+
+  @override
+  String get liveMap => 'Live Map';
+
+  @override
+  String get myLocation => 'My Location';
+
+  @override
+  String get safeZones => 'Safe Zones';
+
+  @override
+  String get showSafeZones => 'Show Safe Zones';
+
+  @override
+  String get hideSafeZones => 'Hide Safe Zones';
+
+  @override
+  String get locationUnavailable => 'Location unavailable';
+
+  @override
+  String get more => 'More';
+
+  @override
+  String get safetyTools => 'Safety Tools';
+
+  @override
+  String get profileSubtitle => 'Your personal information';
+
+  @override
+  String get settingsSubtitle => 'App preferences & detection';
+
+  @override
+  String get decoyCallSubtitle => 'Simulate an incoming call';
+
+  @override
+  String get remindersSubtitle => 'Medicine & safety reminders';
+
+  @override
+  String get sosHistorySubtitle => 'Past SOS events & outcomes';
+
+  @override
+  String get alertMapSubtitle => 'View alerts on the map';
+
+  @override
+  String get aboutSafora => 'About Safora';
+
+  @override
+  String get aboutSaforaSubtitle => 'Version info & credits';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get remindersAccessedFromHome =>
+      'Reminders can be accessed from the Home screen';
 }

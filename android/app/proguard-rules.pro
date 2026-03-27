@@ -36,3 +36,8 @@
 -keepattributes InnerClasses
 -keep class kotlin.** { *; }
 -dontwarn kotlin.**
+
+# ─── TFLite Flutter (ML crash/fall detection) ─────────────────
+# Prevents R8 from stripping JNI bindings used by tflite_flutter plugin.
+-keep class org.tensorflow.lite.** { *; }
+-dontwarn org.tensorflow.lite.**

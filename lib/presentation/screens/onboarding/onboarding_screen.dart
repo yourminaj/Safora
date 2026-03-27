@@ -7,11 +7,13 @@ import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../injection.dart';
+import '../../widgets/safora_animated_icons.dart';
 
 /// 3-step onboarding: SOS Overview, Emergency Contacts, Medical Profile.
 ///
-/// Features rich animated illustrations, entrance animations, and permission
-/// requests. Sets a Hive flag when completed so splash won't show again.
+/// Features custom animated Safora-branded illustrations, entrance
+/// animations, and permission requests. Sets a Hive flag when completed
+/// so splash won't show again.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -85,51 +87,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     final pages = [
       _OnboardingPage(
-        primaryIcon: Icons.notifications_active_rounded,
-        secondaryIcons: [
-          Icons.location_on_rounded,
-          Icons.phone_rounded,
-          Icons.shield_rounded,
-        ],
+        iconBuilder: (size) => SaforaSosIcon(size: size, animated: true),
         title: l.onboardingTitle1,
         description: l.onboardingDesc1,
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE53935), Color(0xFFFF7043)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         backgroundColor: const Color(0xFFFFF3F0),
       ),
       _OnboardingPage(
-        primaryIcon: Icons.contacts_rounded,
-        secondaryIcons: [
-          Icons.sms_rounded,
-          Icons.gps_fixed_rounded,
-          Icons.group_rounded,
-        ],
+        iconBuilder: (size) => SaforaLocationIcon(size: size, animated: true),
         title: l.onboardingTitle2,
         description: l.onboardingDesc2,
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1E88E5), Color(0xFF42A5F5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         backgroundColor: const Color(0xFFF0F7FF),
       ),
       _OnboardingPage(
-        primaryIcon: Icons.medical_information_rounded,
-        secondaryIcons: [
-          Icons.bloodtype_rounded,
-          Icons.medication_rounded,
-          Icons.health_and_safety_rounded,
-        ],
+        iconBuilder: (size) => SaforaMedicalIcon(size: size, animated: true),
         title: l.onboardingTitle3,
         description: l.onboardingDesc3,
-        gradient: const LinearGradient(
-          colors: [Color(0xFF43A047), Color(0xFF66BB6A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         backgroundColor: const Color(0xFFF0FFF0),
       ),
     ];
@@ -165,14 +137,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // ── Rich Illustration ────────────
+                        // Custom Branded Illustration
                         FadeInDown(
                           key: ValueKey('illustration_$index'),
                           duration: const Duration(milliseconds: 600),
                           child: _OnboardingIllustration(page: page),
                         ),
                         const SizedBox(height: 40),
-                        // ── Title ────────────────────────
+                        // Title
                         FadeInUp(
                           key: ValueKey('title_$index'),
                           duration: const Duration(milliseconds: 500),
@@ -184,7 +156,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // ── Description ──────────────────
+                        // Description
                         FadeInUp(
                           key: ValueKey('desc_$index'),
                           duration: const Duration(milliseconds: 500),
@@ -252,14 +224,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  ONBOARDING ILLUSTRATION
-// ═══════════════════════════════════════════════════════════
-
-/// A rich, animated illustration widget for onboarding pages.
-///
-/// Features a gradient circle with the primary icon and three
-/// orbiting secondary icons for visual interest.
+// Onboarding illustration - custom animated icon on background circle
 class _OnboardingIllustration extends StatelessWidget {
   const _OnboardingIllustration({required this.page});
 
@@ -282,94 +247,25 @@ class _OnboardingIllustration extends StatelessWidget {
               color: page.backgroundColor,
             ),
           ),
-          // Gradient main circle.
-          Container(
-            width: 140,
-            height: 140,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: page.gradient,
-              boxShadow: [
-                BoxShadow(
-                  color: (page.gradient as LinearGradient)
-                      .colors
-                      .first
-                      .withValues(alpha: 0.3),
-                  blurRadius: 24,
-                  spreadRadius: 4,
-                ),
-              ],
-            ),
-            child: Icon(
-              page.primaryIcon,
-              size: 64,
-              color: Colors.white,
-            ),
-          ),
-          // Orbiting secondary icons.
-          ..._buildSecondaryIcons(),
+          // Custom animated icon (no Lottie).
+          page.iconBuilder(140),
         ],
       ),
     );
   }
-
-  List<Widget> _buildSecondaryIcons() {
-    final positions = [
-      const Alignment(-0.85, -0.8),  // Top-left
-      const Alignment(0.9, -0.5),    // Top-right
-      const Alignment(0.7, 0.85),    // Bottom-right
-    ];
-    final delays = [0, 200, 400];
-
-    return List.generate(page.secondaryIcons.length, (i) {
-      return Align(
-        alignment: positions[i % positions.length],
-        child: BounceInDown(
-          delay: Duration(milliseconds: 300 + delays[i]),
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Icon(
-              page.secondaryIcons[i],
-              size: 22,
-              color: (page.gradient as LinearGradient).colors.first,
-            ),
-          ),
-        ),
-      );
-    });
-  }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  PAGE MODEL
-// ═══════════════════════════════════════════════════════════
-
+// Page model
 class _OnboardingPage {
   const _OnboardingPage({
-    required this.primaryIcon,
-    required this.secondaryIcons,
+    required this.iconBuilder,
     required this.title,
     required this.description,
-    required this.gradient,
     required this.backgroundColor,
   });
 
-  final IconData primaryIcon;
-  final List<IconData> secondaryIcons;
+  final Widget Function(double size) iconBuilder;
   final String title;
   final String description;
-  final Gradient gradient;
   final Color backgroundColor;
 }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:hive/hive.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/colors.dart';
+import '../../widgets/safora_brand_mark.dart';
+import '../../widgets/safora_animated_icons.dart';
 import '../../../core/theme/typography.dart';
 import '../../../injection.dart';
 
@@ -69,13 +70,11 @@ class _SplashScreenState extends State<SplashScreen> {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.shield_rounded,
-                  size: 64,
-                  color: Colors.white,
+                child: const Center(
+                  child: SaforaBrandMark(size: 72, color: Colors.white),
                 ),
               ),
             ),
@@ -105,17 +104,13 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 48),
-            // Loading indicator
+            // Custom branded loading spinner (replaces Lottie)
             FadeIn(
               duration: const Duration(milliseconds: 800),
               delay: const Duration(milliseconds: 1000),
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: Lottie.asset(
-                  'assets/lottie/loading_spinner.json',
-                  fit: BoxFit.contain,
-                ),
+              child: const SaforaLoadingSpinner(
+                size: 40,
+                color: Colors.white,
               ),
             ),
           ],

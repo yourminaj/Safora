@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/services/audio_service.dart';
+import '../../../core/services/connectivity_service.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/services/sos_foreground_service.dart';
+import '../../../core/services/app_logger.dart';
 import '../../../data/datasources/sos_history_datasource.dart';
 import '../../../data/models/sos_history_entry.dart';
 import '../../../data/repositories/contacts_repository.dart';
@@ -10,7 +12,7 @@ import '../../../domain/usecases/trigger_sos_usecase.dart';
 import 'sos_state.dart';
 
 /// Cubit managing the SOS panic button flow:
-/// tap → 30-sec countdown → trigger alert → play siren → send SMS.
+/// pre-flight → 30-sec countdown → trigger alert → play siren → send SMS.
 class SosCubit extends Cubit<SosState> {
   SosCubit({
     required AudioService audioService,
@@ -18,11 +20,13 @@ class SosCubit extends Cubit<SosState> {
     required ContactsRepository contactsRepository,
     required SosHistoryDatasource sosHistoryDatasource,
     required LocationService locationService,
+    ConnectivityService? connectivityService,
   })  : _audioService = audioService,
         _triggerSosUseCase = triggerSosUseCase,
         _contactsRepository = contactsRepository,
         _sosHistory = sosHistoryDatasource,
         _locationService = locationService,
+        _connectivityService = connectivityService,
         super(const SosIdle());
 
   final AudioService _audioService;
@@ -30,15 +34,70 @@ class SosCubit extends Cubit<SosState> {
   final ContactsRepository _contactsRepository;
   final SosHistoryDatasource _sosHistory;
   final LocationService _locationService;
+  final ConnectivityService? _connectivityService;
   Timer? _countdownTimer;
   int _secondsRemaining = 30;
 
   static const int countdownDuration = 30;
 
-  /// Start the SOS countdown.
+  /// Start the SOS flow with pre-flight checks.
+  ///
+  /// Pre-flight checks:
+  /// 1. GPS: attempts a fresh fix if no cached position.
+  /// 2. Network: checks connectivity (warn-only, doesn't block).
+  /// 3. Contacts: verifies at least one emergency contact exists (blocks SOS).
   void startCountdown() {
-    if (state is SosCountdown || state is SosActive) return;
+    if (state is SosPreparing || state is SosCountdown || state is SosActive) {
+      return;
+    }
 
+    _runPreflightAndStart();
+  }
+
+  Future<void> _runPreflightAndStart() async {
+    // ── Pre-flight checks ──────────────────────────────────
+    final gpsReady = _locationService.lastPosition != null;
+    final networkReady = _connectivityService?.isOnline ?? true;
+    final contacts = _contactsRepository.getAll();
+    final contactsReady = contacts.isNotEmpty;
+
+    emit(SosPreparing(
+      gpsReady: gpsReady,
+      networkReady: networkReady,
+      contactsReady: contactsReady,
+    ));
+
+    AppLogger.info(
+      '[SOS] Pre-flight: GPS=$gpsReady, '
+      'Network=$networkReady, '
+      'Contacts=${contacts.length}',
+    );
+
+    // Block SOS if no emergency contacts exist.
+    if (!contactsReady) {
+      emit(const SosPreflightFailed(
+        reason: SosFailureReason.noContacts,
+      ));
+      // Return to idle after a brief pause.
+      Future.delayed(const Duration(seconds: 3), () {
+        if (!isClosed) emit(const SosIdle());
+      });
+      return;
+    }
+
+    // If GPS not ready, attempt a quick fix (non-blocking).
+    if (!gpsReady) {
+      AppLogger.info('[SOS] No cached GPS — attempting quick fix...');
+      try {
+        await _locationService.getCurrentPosition().timeout(
+              const Duration(seconds: 3),
+            );
+      } catch (_) {
+        AppLogger.warning('[SOS] GPS fix timed out — proceeding without location');
+      }
+    }
+
+    // ── Start countdown ──────────────────────────────────
     _secondsRemaining = countdownDuration;
     emit(SosCountdown(secondsRemaining: _secondsRemaining));
 

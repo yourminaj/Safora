@@ -56,6 +56,31 @@ class SmsService {
     return _sendSms(phone: contact.phone, message: message);
   }
 
+  /// Send an "I Am Safe" message to all emergency contacts.
+  ///
+  /// Called when the user dismisses an emergency alert by confirming safety.
+  /// Includes current location so contacts know where the user is.
+  Future<int> sendIAmSafeSms({
+    required List<EmergencyContact> contacts,
+    String? userName,
+  }) async {
+    if (contacts.isEmpty) return 0;
+
+    final locationMsg = await _locationService.buildLocationMessage();
+    final name = userName ?? 'Someone';
+    final message = 'I AM SAFE\n\n'
+        '$name is confirming they are safe.\n\n'
+        '$locationMsg\n\n'
+        'Sent via Safora';
+
+    int sent = 0;
+    for (final contact in contacts) {
+      final success = await _sendSms(phone: contact.phone, message: message);
+      if (success) sent++;
+    }
+    return sent;
+  }
+
   /// Send a custom alert SMS.
   Future<bool> sendAlertSms({
     required String phone,

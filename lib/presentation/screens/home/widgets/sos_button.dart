@@ -101,6 +101,19 @@ class _SosButtonState extends State<SosButton>
             ),
           );
         }
+        if (state is SosPreflightFailed) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_localizeFailureReason(context, state.reason)),
+              backgroundColor: AppColors.danger,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
       },
       child: Center(
         child: AnimatedBuilder(
@@ -184,4 +197,14 @@ class AnimatedBuilder extends AnimatedWidget {
   Widget build(BuildContext context) {
     return builder(context, child);
   }
+}
+
+/// Map [SosFailureReason] enum to a localized string at display time.
+String _localizeFailureReason(BuildContext context, SosFailureReason reason) {
+  final l = AppLocalizations.of(context)!;
+  return switch (reason) {
+    SosFailureReason.noContacts => l.preflightNoContacts,
+    SosFailureReason.noGps => l.preflightNoGps,
+    SosFailureReason.noNetwork => l.preflightNoNetwork,
+  };
 }

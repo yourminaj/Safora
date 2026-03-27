@@ -27,7 +27,6 @@ import '../../blocs/contacts/contacts_state.dart';
 import '../../blocs/alerts/alerts_cubit.dart';
 import '../../blocs/sos/sos_cubit.dart';
 import '../../blocs/theme/theme_cubit.dart';
-import '../../widgets/ad_banner_widget.dart';
 
 /// Functional settings screen with real navigation and state.
 ///
@@ -362,17 +361,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _appSettings.put('geofence_enabled', enabled);
     final service = getIt<GeofenceService>();
     if (enabled) {
-      service.start(onExitAllZones: (zoneName) {
+      service.start(onExitAllZones: (position) {
+        final l = AppLocalizations.of(context)!;
+        final zoneName = l.geofenceTitle; // generic; API provides Position not name
         // Inject into main alert pipeline.
         final alertEvent = AlertEvent(
           id: 'geofence_exit_${DateTime.now().millisecondsSinceEpoch}',
           type: AlertType.geofenceExit,
-          title: 'Left Safe Zone: $zoneName',
-          description:
-              'You have left the designated safe zone "$zoneName". '
-              'Your emergency contacts have been notified.',
-          latitude: _lastLat,
-          longitude: _lastLon,
+          title: l.alertGeofenceExitTitle(zoneName),
+          description: l.alertGeofenceExitDesc(zoneName),
+          latitude: position.latitude,
+          longitude: position.longitude,
           timestamp: DateTime.now(),
           source: 'On-Device GPS',
         );
@@ -391,19 +390,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final service = getIt<SnatchDetectionService>();
     if (enabled) {
       service.start(onSnatchDetected: (confidence) {
+        final l = AppLocalizations.of(context)!;
         // Snatch is critical — auto-trigger SOS countdown.
         if (mounted) {
           context.read<SosCubit>().startCountdown();
         }
         // Also inject into alert pipeline.
+        final pct = (confidence * 100).toStringAsFixed(0);
         final alertEvent = AlertEvent(
           id: 'snatch_${DateTime.now().millisecondsSinceEpoch}',
           type: AlertType.phoneSnatching,
-          title: 'Phone Snatch Detected',
-          description:
-              'A sudden directional grab was detected '
-              '(confidence: ${(confidence * 100).toStringAsFixed(0)}%). '
-              'SOS countdown started.',
+          title: l.alertSnatchTitle,
+          description: l.alertSnatchDesc(pct),
           latitude: _lastLat,
           longitude: _lastLon,
           timestamp: DateTime.now(),
@@ -424,24 +422,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _appSettings.put('speed_alert_enabled', enabled);
     final service = getIt<SpeedAlertService>();
     if (enabled) {
-      service.start(onSpeedExceeded: (speedKmh) {
-        final alertEvent = AlertEvent(
-          id: 'speed_${DateTime.now().millisecondsSinceEpoch}',
-          type: AlertType.speedWarning,
-          title: 'Overspeeding: ${speedKmh.toStringAsFixed(0)} km/h',
-          description:
-              'Your speed exceeded the safe limit '
-              '(${speedKmh.toStringAsFixed(0)} km/h). Slow down.',
-          latitude: _lastLat,
-          longitude: _lastLon,
-          timestamp: DateTime.now(),
-          source: 'On-Device GPS',
-          magnitude: speedKmh,
-        );
-        if (mounted) {
-          context.read<AlertsCubit>().addLocalAlert(alertEvent);
-        }
-      });
+      final crashService = getIt<CrashFallDetectionService>();
+      service.start(
+        onSpeedExceeded: (speedKmh) {
+          final l = AppLocalizations.of(context)!;
+          final speedStr = speedKmh.toStringAsFixed(0);
+          final alertEvent = AlertEvent(
+            id: 'speed_${DateTime.now().millisecondsSinceEpoch}',
+            type: AlertType.speedWarning,
+            title: l.alertSpeedTitle(speedStr),
+            description: l.alertSpeedDesc(speedStr),
+            latitude: _lastLat,
+            longitude: _lastLon,
+            timestamp: DateTime.now(),
+            source: 'On-Device GPS',
+            magnitude: speedKmh,
+          );
+          if (mounted) {
+            context.read<AlertsCubit>().addLocalAlert(alertEvent);
+          }
+        },
+        // Cross-service wiring: feed live speed into crash/fall detector.
+        onSpeedUpdate: (speedKmh) {
+          crashService.currentSpeedKmh = speedKmh;
+        },
+      );
     } else {
       service.stop();
     }
@@ -458,11 +463,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       service.start(onContextAlert: (ctxAlert) {
         // Map ContextAlertType to AlertType.
         final alertType = _mapContextAlertType(ctxAlert.type);
+        // Localize title/message at display time.
+        final localized = _localizeContextAlert(ctxAlert);
         final alertEvent = AlertEvent(
           id: 'ctx_${ctxAlert.type.name}_${DateTime.now().millisecondsSinceEpoch}',
           type: alertType,
-          title: ctxAlert.title,
-          description: ctxAlert.message,
+          title: localized.$1,
+          description: localized.$2,
           latitude: _lastLat,
           longitude: _lastLon,
           timestamp: DateTime.now(),
@@ -478,15 +485,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  /// Map ContextAlertType → AlertType for pipeline integration.
+  /// Map ContextAlertType → AlertType via canonical single-source method.
   AlertType _mapContextAlertType(ContextAlertType type) {
-    return switch (type) {
-      ContextAlertType.heatStroke => AlertType.heatStroke,
-      ContextAlertType.hypothermia => AlertType.hypothermia,
-      ContextAlertType.drowsyDriving => AlertType.drowsyDriving,
-      ContextAlertType.loneNightWalk => AlertType.suspiciousActivity,
-      ContextAlertType.altitudeSickness => AlertType.avalanche,
-      ContextAlertType.flashFloodRisk => AlertType.flood,
+    return ContextAlertService.mapToAlertType(type);
+  }
+
+  /// Localize context alert title + message at display time.
+  /// Returns (localizedTitle, localizedMessage).
+  (String, String) _localizeContextAlert(ContextAlert alert) {
+    final l = AppLocalizations.of(context)!;
+    return switch (alert.type) {
+      ContextAlertType.heatStroke => (
+          l.ctxHeatTitle,
+          l.ctxHeatMsg(
+            (getIt<ContextAlertService>().currentTemperatureCelsius ?? 0)
+                .toStringAsFixed(0),
+          ),
+        ),
+      ContextAlertType.hypothermia => (
+          l.ctxHypothermiaTitle,
+          l.ctxHypothermiaMsg(
+            (getIt<ContextAlertService>().currentTemperatureCelsius ?? 0)
+                .toStringAsFixed(0),
+            '—', // wind chill unavailable at this point; use service message as fallback
+          ),
+        ),
+      ContextAlertType.drowsyDriving => (
+          l.ctxDrowsyTitle,
+          l.ctxDrowsyMsg(
+            '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, "0")}',
+            (getIt<ContextAlertService>().currentSpeedKmh ?? 0)
+                .toStringAsFixed(0),
+          ),
+        ),
+      ContextAlertType.loneNightWalk => (
+          l.ctxNightWalkTitle,
+          l.ctxNightWalkMsg,
+        ),
+      ContextAlertType.altitudeSickness => (
+          l.ctxAltitudeTitle,
+          alert.message, // keep service-generated message (has precise altitude data)
+        ),
+      ContextAlertType.flashFloodRisk => (
+          l.ctxFloodTitle,
+          alert.message, // keep service-generated message (has precise precipitation data)
+        ),
     };
   }
 
@@ -622,7 +665,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      bottomNavigationBar: AdBanner(adUnitId: AdService.bannerSettings),
       appBar: AppBar(title: Text(l.settings)),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -835,6 +877,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onChanged: _toggleContextAlert,
                   activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
                 ),
+              ),
+              _SettingsTile(
+                icon: Icons.tune_rounded,
+                title: 'Alert Preferences',
+                subtitle: 'Choose which alerts to receive',
+                onTap: () => context.push(AppRoutes.alertPreferences),
               ),
               _SettingsTile(
                 icon: Icons.history_rounded,

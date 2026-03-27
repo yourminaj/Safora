@@ -29,6 +29,9 @@ void main() {
 
       // Button should still be present after tap.
       expect(sosButton, findsOneWidget);
+
+      // Pump past the 3-second GPS fix timeout to prevent pending timer error.
+      await tester.pump(const Duration(seconds: 4));
     });
 
     testWidgets('contains visual container elements', (tester) async {
@@ -66,6 +69,9 @@ void main() {
 
       // Button should still be present after long press.
       expect(sosButton, findsOneWidget);
+
+      // Pump past the 3-second GPS fix timeout to prevent pending timer error.
+      await tester.pump(const Duration(seconds: 4));
     });
   });
 }

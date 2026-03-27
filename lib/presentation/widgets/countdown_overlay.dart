@@ -16,15 +16,22 @@ class CountdownOverlay extends StatelessWidget {
 
   /// Show the overlay as a modal on top of the current screen.
   static Future<void> show(BuildContext context) {
-    context.read<SosCubit>().startCountdown();
+    final cubit = context.read<SosCubit>();
     return showDialog(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black87,
-      builder: (ctx) => BlocProvider.value(
-        value: context.read<SosCubit>(),
-        child: const CountdownOverlay(),
-      ),
+      builder: (ctx) {
+        // Start countdown AFTER the dialog is mounted so listeners
+        // are active when SosPreparing/SosPreflightFailed emit.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          cubit.startCountdown();
+        });
+        return BlocProvider.value(
+          value: cubit,
+          child: const CountdownOverlay(),
+        );
+      },
     );
   }
 
@@ -40,6 +47,25 @@ class CountdownOverlay extends StatelessWidget {
           }
         }
 
+        // Close dialog and show error when pre-flight fails.
+        if (state is SosPreflightFailed) {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+          // Show error in the parent context's scaffold.
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_localizeFailureReason(context, state.reason)),
+              backgroundColor: Colors.red.shade700,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+
         // Haptic feedback on each tick.
         if (state is SosCountdown) {
           HapticFeedback.lightImpact();
@@ -49,6 +75,73 @@ class CountdownOverlay extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        // Show pre-flight checklist while preparing.
+        if (state is SosPreparing) {
+          return PopScope(
+            canPop: false,
+            child: Dialog.fullscreen(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1A237E), Color(0xFF0D47A1)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // ↓ localized
+                      Text(
+                        l.sosPreparingTitle,
+                        style: AppTypography.headlineMedium.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 3,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l.sosPreflightChecks,
+                        style: AppTypography.bodyLarge.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      // Pre-flight checklist
+                      _PreflightCheckItem(
+                        label: l.preflightGps,
+                        ready: state.gpsReady,
+                      ),
+                      const SizedBox(height: 12),
+                      _PreflightCheckItem(
+                        label: l.preflightNetwork,
+                        ready: state.networkReady,
+                      ),
+                      const SizedBox(height: 12),
+                      _PreflightCheckItem(
+                        label: l.preflightContacts,
+                        ready: state.contactsReady,
+                      ),
+                      const SizedBox(height: 32),
+                      const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
         if (state is! SosCountdown) {
           return const SizedBox.shrink();
         }
@@ -144,6 +237,19 @@ class CountdownOverlay extends StatelessWidget {
       },
     );
   }
+
+  /// Map [SosFailureReason] enum to a localized string at display time.
+  static String _localizeFailureReason(
+    BuildContext context,
+    SosFailureReason reason,
+  ) {
+    final l = AppLocalizations.of(context)!;
+    return switch (reason) {
+      SosFailureReason.noContacts => l.preflightNoContacts,
+      SosFailureReason.noGps => l.preflightNoGps,
+      SosFailureReason.noNetwork => l.preflightNoNetwork,
+    };
+  }
 }
 
 /// Circular countdown timer widget.
@@ -235,4 +341,37 @@ class _CountdownPainter extends CustomPainter {
   @override
   bool shouldRepaint(_CountdownPainter oldDelegate) =>
       oldDelegate.progress != progress;
+}
+
+/// Single row in the pre-flight checklist (check/cross + label).
+class _PreflightCheckItem extends StatelessWidget {
+  const _PreflightCheckItem({
+    required this.label,
+    required this.ready,
+  });
+
+  final String label;
+  final bool ready;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          ready ? Icons.check_circle_rounded : Icons.cancel_rounded,
+          color: ready ? Colors.greenAccent : Colors.red.shade300,
+          size: 28,
+        ),
+        const SizedBox(width: 12),
+        Text(
+          label,
+          style: AppTypography.titleMedium.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
 }

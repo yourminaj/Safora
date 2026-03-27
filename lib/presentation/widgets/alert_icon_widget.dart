@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import '../../core/constants/alert_types.dart';
+import 'safora_animated_icons.dart';
 
-/// Animated alert icon widget that uses Lottie for critical categories
-/// and animated Material icons for others.
+/// Animated alert icon widget that uses CustomPainter for fully
+/// branded alert category icons. No Lottie dependency.
 ///
 /// Priority → animation mapping:
-/// - Critical: pulsing red with Lottie shield
+/// - Critical: pulsing red glow
 /// - High: breathing orange animation
 /// - Medium: gentle yellow pulse
 /// - Low: subtle green indicator
@@ -58,9 +58,10 @@ class _AlertIconWidgetState extends State<AlertIconWidget>
 
   Duration get _animationDuration => switch (widget.priority) {
     AlertPriority.critical => const Duration(milliseconds: 600),
-    AlertPriority.high => const Duration(milliseconds: 900),
-    AlertPriority.medium => const Duration(milliseconds: 1200),
-    AlertPriority.low => const Duration(milliseconds: 1500),
+    AlertPriority.danger => const Duration(milliseconds: 900),
+    AlertPriority.warning => const Duration(milliseconds: 1200),
+    AlertPriority.advisory => const Duration(milliseconds: 1500),
+    AlertPriority.info => const Duration(milliseconds: 1800),
   };
 
   @override
@@ -83,30 +84,58 @@ class _AlertIconWidgetState extends State<AlertIconWidget>
     AlertCategory.environmentalChemical => Icons.science_rounded,
     AlertCategory.digitalCyber => Icons.phone_android_rounded,
     AlertCategory.childElder => Icons.child_care_rounded,
+    AlertCategory.militaryDefense => Icons.military_tech_rounded,
+    AlertCategory.infrastructure => Icons.domain_rounded,
+    AlertCategory.spaceAstronomical => Icons.satellite_alt_rounded,
+    AlertCategory.maritimeAviation => Icons.flight_rounded,
   };
 
   /// Get the color for this alert priority.
   Color get _priorityColor => switch (widget.priority) {
     AlertPriority.critical => const Color(0xFFEF4444),
-    AlertPriority.high => const Color(0xFFF97316),
-    AlertPriority.medium => const Color(0xFFEAB308),
-    AlertPriority.low => const Color(0xFF22C55E),
+    AlertPriority.danger => const Color(0xFFF97316),
+    AlertPriority.warning => const Color(0xFFEAB308),
+    AlertPriority.advisory => const Color(0xFF22C55E),
+    AlertPriority.info => const Color(0xFF60A5FA),
   };
 
-  /// Lottie asset path if available for this category.
-  String? get _lottieAsset => switch (widget.category) {
-    AlertCategory.personalSafety => 'assets/lottie/shield_pulse.json',
-    AlertCategory.weatherEmergency => 'assets/lottie/warning_alert.json',
-    AlertCategory.naturalDisaster => 'assets/lottie/warning_alert.json',
-    AlertCategory.healthMedical => 'assets/lottie/sos_active.json',
-    AlertCategory.travelOutdoor => 'assets/lottie/location_tracking.json',
-    _ => null,
-  };
+  /// Returns a branded custom widget for specific categories,
+  /// falling back to Material icon for others.
+  Widget _buildCategoryIcon() {
+    final iconSize = widget.size * 0.52;
+    switch (widget.category) {
+      case AlertCategory.personalSafety:
+        return SaforaShieldPulse(
+          size: iconSize,
+          animated: widget.priority == AlertPriority.critical,
+        );
+      case AlertCategory.weatherEmergency:
+      case AlertCategory.naturalDisaster:
+        return SaforaWarningIcon(
+          size: iconSize,
+          color: _priorityColor,
+        );
+      case AlertCategory.healthMedical:
+        return SaforaMedicalIcon(
+          size: iconSize,
+          animated: widget.priority == AlertPriority.critical,
+        );
+      case AlertCategory.travelOutdoor:
+        return SaforaLocationIcon(
+          size: iconSize,
+          animated: false,
+        );
+      default:
+        return Icon(
+          _categoryIcon,
+          color: _priorityColor,
+          size: iconSize,
+        );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final lottieAsset = _lottieAsset;
-
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -130,23 +159,7 @@ class _AlertIconWidgetState extends State<AlertIconWidget>
                       ]
                     : null,
               ),
-              child: lottieAsset != null
-                  ? Lottie.asset(
-                      lottieAsset,
-                      width: widget.size * 0.55,
-                      height: widget.size * 0.55,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, _, _) => Icon(
-                        _categoryIcon,
-                        color: _priorityColor,
-                        size: widget.size * 0.52,
-                      ),
-                    )
-                  : Icon(
-                      _categoryIcon,
-                      color: _priorityColor,
-                      size: widget.size * 0.52,
-                    ),
+              child: Center(child: _buildCategoryIcon()),
             ),
           ),
         );

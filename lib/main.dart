@@ -10,17 +10,17 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
 import 'app.dart';
 import 'core/services/ad_service.dart';
 import 'core/services/app_lock_service.dart';
+import 'core/services/service_bootstrapper.dart';
 import 'presentation/blocs/theme/theme_cubit.dart';
 import 'core/services/app_logger.dart';
 import 'core/services/notification_service.dart';
-import 'core/services/shake_detection_service.dart';
 import 'core/services/sos_foreground_service.dart';
 import 'core/theme/app_theme.dart';
 import 'injection.dart';
-import 'presentation/blocs/sos/sos_cubit.dart';
 
 /// FCM background message handler — must be a top-level function.
 @pragma('vm:entry-point')
@@ -29,108 +29,106 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Background messages are handled by the system notification tray.
 }
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  // All initialization runs inside runZonedGuarded to ensure Flutter
+  // bindings are created in the same zone as runApp (fixes zone mismatch).
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  // ── Global Error Handling ──────────────────────────────
-  // Uses centralized AppLogger. When adding Firebase Crashlytics,
-  // call AppLogger.configureCrashReporting() after Firebase.initializeApp().
-  FlutterError.onError = AppLogger.handleFlutterError;
+      // ── Global Error Handling ──────────────────────────────
+      FlutterError.onError = AppLogger.handleFlutterError;
 
-  // Show a friendly error widget in production instead of the red error screen.
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    return MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                const SizedBox(height: 16),
-                const Text(
-                  'Something went wrong',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      // Show a friendly error widget in production instead of the red error screen.
+      ErrorWidget.builder = (FlutterErrorDetails details) {
+        return MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Something went wrong',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    if (kDebugMode)
+                      Text(
+                        details.exceptionAsString(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      )
+                    else
+                      const Text(
+                        'Please restart the app. If the problem persists, contact support.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                // Only show exception details in debug mode.
-                if (kDebugMode)
-                  Text(
-                    details.exceptionAsString(),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  )
-                else
-                  const Text(
-                    'Please restart the app. If the problem persists, contact support.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-              ],
+              ),
             ),
           ),
+        );
+      };
+
+      // Lock to portrait mode.
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+
+      // Set system UI overlay style.
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
         ),
-      ),
-    );
-  };
+      );
 
-  // Lock to portrait mode.
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+      // Initialize Hive for local storage.
+      await Hive.initFlutter();
 
-  // Set system UI overlay style.
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ),
-  );
+      // ── Firebase (must init before services that depend on FCM) ──
+      await Firebase.initializeApp();
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // Initialize Hive for local storage.
-  await Hive.initFlutter();
+      // Wire Crashlytics into AppLogger for production error tracking.
+      if (!kDebugMode) {
+        FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+        AppLogger.configureCrashReporting(
+          errorCallback: (msg, error, stack) =>
+              FirebaseCrashlytics.instance.recordError(error, stack, reason: msg),
+          flutterErrorCallback: (details) =>
+              FirebaseCrashlytics.instance.recordFlutterFatalError(details),
+        );
+      }
 
-  // ── Firebase (must init before services that depend on FCM) ──
-  await Firebase.initializeApp();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      // Initialize timezone data for scheduled notifications.
+      tz.initializeTimeZones();
 
-  // Wire Crashlytics into AppLogger for production error tracking.
-  if (!kDebugMode) {
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-    AppLogger.configureCrashReporting(
-      errorCallback: (msg, error, stack) =>
-          FirebaseCrashlytics.instance.recordError(error, stack, reason: msg),
-      flutterErrorCallback: (details) =>
-          FirebaseCrashlytics.instance.recordFlutterFatalError(details),
-    );
-  }
+      // Initialize dependency injection (opens Hive boxes).
+      await configureDependencies();
 
-  // Initialize dependency injection (opens Hive boxes).
-  await configureDependencies();
+      // Eagerly initialize notification channels + FCM.
+      await getIt<NotificationService>().init();
 
-  // Eagerly initialize notification channels + FCM.
-  await getIt<NotificationService>().init();
+      // Initialize SOS foreground service config.
+      SosForegroundService.instance.init();
 
-  // Initialize SOS foreground service config.
-  SosForegroundService.instance.init();
+      // Initialize Google Mobile Ads SDK.
+      await AdService.initialize();
 
-  // Initialize Google Mobile Ads SDK.
-  await AdService.initialize();
+      // ── Service Re-hydration ─────────────────────────────────
+      final appSettings = getIt<Box>(instanceName: 'app_settings');
+      await ServiceBootstrapper.bootstrap(sl: getIt, settings: appSettings);
 
-  // Auto-start shake detection if user previously enabled it.
-  final appSettings = getIt<Box>(instanceName: 'app_settings');
-  final shakeEnabled = appSettings.get('shake_enabled', defaultValue: false) as bool;
-  if (shakeEnabled) {
-    getIt<ShakeDetectionService>().startListening(
-      onShakeDetected: () => getIt<SosCubit>().startCountdown(),
-    );
-  }
-
-  // Catch all uncaught async errors in the zone.
-  runZonedGuarded(
-    () => runApp(const SaforaApp()),
+      runApp(const SaforaApp());
+    },
     AppLogger.handleUncaughtError,
   );
 }
@@ -148,11 +146,26 @@ class _SaforaAppState extends State<SaforaApp> {
   late final AppLifecycleListener _lifecycleListener;
   bool _lockScreenShowing = false;
 
+  /// Tracks whether the app was actually sent to background (hidden).
+  /// This prevents the lock from showing after dialogs, permissions,
+  /// keyboard events, or other non-background lifecycle transitions.
+  bool _wasInBackground = false;
+
+  /// Cooldown timestamp after a successful unlock to prevent the
+  /// lock screen from re-triggering immediately when the lifecycle
+  /// resumes after the lock route pops.
+  DateTime? _lastUnlockTime;
+
+  /// Minimum time after unlock before the lock can show again.
+  static const _unlockCooldown = Duration(seconds: 2);
+
   @override
   void initState() {
     super.initState();
     _router = createRouter();
     _lifecycleListener = AppLifecycleListener(
+      // Track when app actually enters background.
+      onHide: _onAppHidden,
       onResume: _onAppResumed,
     );
   }
@@ -163,15 +176,32 @@ class _SaforaAppState extends State<SaforaApp> {
     super.dispose();
   }
 
+  /// Called when the app is sent to background (task switcher, home button).
+  void _onAppHidden() {
+    _wasInBackground = true;
+  }
+
   void _onAppResumed() {
-    // Show lock screen if lock is enabled and not already showing.
+    // Only show lock if the app was genuinely in the background.
+    if (!_wasInBackground) return;
+    _wasInBackground = false;
+
+    // Don't re-trigger if we just unlocked (cooldown period).
+    if (_lastUnlockTime != null &&
+        DateTime.now().difference(_lastUnlockTime!) < _unlockCooldown) {
+      return;
+    }
+
+    // Don't stack lock screens.
     if (_lockScreenShowing) return;
+
     try {
       final lockService = getIt<AppLockService>();
       if (lockService.isLockEnabled) {
         _lockScreenShowing = true;
         _router.push(AppRoutes.lock).then((_) {
           _lockScreenShowing = false;
+          _lastUnlockTime = DateTime.now();
         });
       }
     } catch (_) {

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
 import 'app_logger.dart';
 
 /// Service for displaying local notifications.
@@ -205,5 +206,68 @@ class NotificationService {
   /// Cancel all notifications.
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
+  }
+
+  /// Schedule a recurring daily notification at [hour]:[minute].
+  ///
+  /// Uses [zonedSchedule] with [DateTimeComponents.time] so the notification
+  /// repeats every day at the specified time. If the time has already passed
+  /// today, it schedules for tomorrow.
+  Future<void> scheduleDaily({
+    required int notificationId,
+    required String title,
+    required String body,
+    required int hour,
+    required int minute,
+  }) async {
+    await init();
+
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
+    // If the time has already passed today, schedule for tomorrow.
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    const androidDetails = AndroidNotificationDetails(
+      'medicine_channel',
+      'Medicine Reminders',
+      channelDescription: 'Daily medicine reminder notifications',
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+
+    await _plugin.zonedSchedule(
+      id: notificationId,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+      notificationDetails: details,
+      matchDateTimeComponents: DateTimeComponents.time,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+
+    AppLogger.info(
+      '[NotificationService] Scheduled daily notification #$notificationId '
+      'at $hour:${minute.toString().padLeft(2, '0')}',
+    );
   }
 }
