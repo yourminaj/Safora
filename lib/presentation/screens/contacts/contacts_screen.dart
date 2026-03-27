@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/safora_animated_icons.dart';
+import '../shell/main_shell.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/colors.dart';
@@ -130,18 +131,21 @@ class _ContactsScreenState extends State<ContactsScreen> {
             ),
         ],
       ),
-      floatingActionButton: BlocBuilder<ContactsCubit, ContactsState>(
-        builder: (context, state) {
-          final isLimit = state is ContactsLoaded && state.isLimitReached;
-          return FloatingActionButton.extended(
-            onPressed: isLimit
-                ? () => _showLimitDialog(context)
-                : () => context.push('/contacts/add'),
-            icon: const Icon(Icons.person_add_rounded),
-            label: Text(l.addContact),
-            backgroundColor: isLimit ? AppColors.textDisabled : null,
-          );
-        },
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: saforaBottomInset(context) - 16),
+        child: BlocBuilder<ContactsCubit, ContactsState>(
+          builder: (context, state) {
+            final isLimit = state is ContactsLoaded && state.isLimitReached;
+            return FloatingActionButton.extended(
+              onPressed: isLimit
+                  ? () => _showLimitDialog(context)
+                  : () => context.push('/contacts/add'),
+              icon: const Icon(Icons.person_add_rounded),
+              label: Text(l.addContact),
+              backgroundColor: isLimit ? AppColors.textDisabled : null,
+            );
+          },
+        ),
       ),
       body: BlocConsumer<ContactsCubit, ContactsState>(
         listener: (context, state) {
@@ -166,11 +170,17 @@ class _ContactsScreenState extends State<ContactsScreen> {
           };
 
           if (contacts.isEmpty) {
-            return _EmptyState();
+            return Padding(
+              padding: EdgeInsets.only(bottom: saforaBottomInset(context)),
+              child: _EmptyState(),
+            );
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.only(
+              top: 8,
+              bottom: saforaBottomInset(context) + 60, // Clear FAB + nav bar
+            ),
             itemCount: contacts.length,
             itemBuilder: (context, index) {
               final contact = contacts[index];

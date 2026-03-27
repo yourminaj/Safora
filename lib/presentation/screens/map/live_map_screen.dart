@@ -8,6 +8,7 @@ import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/services/geofence_service.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/theme/colors.dart';
+import '../shell/main_shell.dart';
 
 /// Live tracking map screen.
 ///
@@ -238,7 +239,7 @@ class _LiveMapScreenState extends State<LiveMapScreen>
           // ── Bottom info card ─────────────────────────────────
           if (_userPosition != null && !_isLocating)
             Positioned(
-              bottom: 24,
+              bottom: saforaBottomInset(context) + 8,
               left: 16,
               right: 16,
               child: _LocationInfoCard(
@@ -250,13 +251,16 @@ class _LiveMapScreenState extends State<LiveMapScreen>
         ],
       ),
       floatingActionButton: _userPosition != null && !_followUser
-          ? FloatingActionButton.small(
-              heroTag: 'recenter',
-              onPressed: _recenterOnUser,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Icon(
-                Icons.my_location_rounded,
-                color: theme.colorScheme.onPrimaryContainer,
+          ? Padding(
+              padding: EdgeInsets.only(bottom: saforaBottomInset(context) - 16),
+              child: FloatingActionButton.small(
+                heroTag: 'recenter',
+                onPressed: _recenterOnUser,
+                backgroundColor: theme.colorScheme.primaryContainer,
+                child: Icon(
+                  Icons.my_location_rounded,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
               ),
             )
           : null,

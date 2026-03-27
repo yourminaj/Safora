@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/safora_animated_icons.dart';
+import '../shell/main_shell.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/constants/alert_types.dart';
@@ -238,7 +239,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                   onRefresh: () =>
                       context.read<AlertsCubit>().refreshAlerts(),
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
+                    padding: EdgeInsets.fromLTRB(16, 4, 16, saforaBottomInset(context) + 8),
                     itemCount: filtered.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 10),

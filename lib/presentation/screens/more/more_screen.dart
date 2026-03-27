@@ -4,6 +4,7 @@ import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../widgets/safora_animated_icons.dart';
+import '../shell/main_shell.dart';
 
 /// "More" tab screen -- a clean grid of secondary app features.
 ///
@@ -23,7 +24,7 @@ class MoreScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, saforaBottomInset(context) + 8),
         children: [
           // Account Section
           _SectionHeader(title: l.account),

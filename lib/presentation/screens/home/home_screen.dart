@@ -6,6 +6,7 @@ import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../widgets/safora_brand_mark.dart';
+import '../shell/main_shell.dart';
 import '../../../data/models/medicine_reminder.dart';
 import '../../../services/dead_man_switch_service.dart';
 import '../../../services/risk_score_engine.dart';
@@ -595,7 +596,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             // Extra bottom padding
-            const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
+            SliverPadding(padding: EdgeInsets.only(bottom: saforaBottomInset(context) + 8)),
           ],
         ),
       ),
