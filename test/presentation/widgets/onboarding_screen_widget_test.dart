@@ -26,7 +26,7 @@ void main() {
       await tester.pumpWidget(
         buildTestableWidget(child: const OnboardingScreen()),
       );
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.byType(OnboardingScreen), findsOneWidget);
     });
@@ -35,7 +35,7 @@ void main() {
       await tester.pumpWidget(
         buildTestableWidget(child: const OnboardingScreen()),
       );
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
 
       // Should have a button to proceed.
       expect(find.byType(ElevatedButton), findsAtLeast(1));
@@ -45,7 +45,7 @@ void main() {
       await tester.pumpWidget(
         buildTestableWidget(child: const OnboardingScreen()),
       );
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
 
       // OnboardingScreen uses PageView for 3 steps.
       expect(find.byType(PageView), findsOneWidget);
@@ -55,7 +55,7 @@ void main() {
       await tester.pumpWidget(
         buildTestableWidget(child: const OnboardingScreen()),
       );
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
 
       // Onboarding has 3 pages with indicator dots (AnimatedContainer).
       final dots = find.byType(AnimatedContainer);
@@ -67,7 +67,7 @@ void main() {
       await tester.pumpWidget(
         buildTestableWidget(child: const OnboardingScreen()),
       );
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
 
       // First page should be visible — look for the SOS overview content.
       // The onboarding items contain shield/safety related icons.
@@ -78,13 +78,13 @@ void main() {
       await tester.pumpWidget(
         buildTestableWidget(child: const OnboardingScreen()),
       );
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
 
       // Tap the next button.
       final nextBtn = find.byType(ElevatedButton);
       if (nextBtn.evaluate().isNotEmpty) {
         await tester.tap(nextBtn.first, warnIfMissed: false);
-        await tester.pumpAndSettle();
+        await tester.pump(const Duration(milliseconds: 500));
 
         // Screen should still be visible after navigation.
         expect(find.byType(OnboardingScreen), findsOneWidget);

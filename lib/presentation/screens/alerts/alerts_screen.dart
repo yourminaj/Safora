@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
+import 'package:intl/intl.dart';
 import '../../widgets/safora_animated_icons.dart';
 import '../shell/main_shell.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +11,7 @@ import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/constants/alert_types.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
+import '../../../data/models/alert_event.dart';
 import '../../../data/models/alert_preferences.dart';
 import '../../blocs/alerts/alerts_cubit.dart';
 import '../../blocs/alerts/alerts_state.dart';
@@ -239,13 +243,20 @@ class _AlertsScreenState extends State<AlertsScreen> {
                   onRefresh: () =>
                       context.read<AlertsCubit>().refreshAlerts(),
                   child: ListView.separated(
-                    padding: EdgeInsets.fromLTRB(16, 4, 16, saforaBottomInset(context) + 8),
+                    padding: EdgeInsets.fromLTRB(
+                        16, 4, 16, saforaBottomInset(context) + 8),
                     itemCount: filtered.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final alert = filtered[index];
-                      return AlertCard(alert: alert);
+                      return AlertCard(
+                        alert: alert,
+                        onTap: () =>
+                            _showTrustCenterDetail(context, alert),
+                        onReportFalse: () =>
+                            _showReportFalseAlert(context, alert),
+                      );
                     },
                   ),
                 ),
@@ -332,6 +343,474 @@ class _AlertsScreenState extends State<AlertsScreen> {
       ),
     );
   }
+
+  // ═══════════════════════════════════════════════════════════
+  //  TRUST CENTER DETAIL SHEET
+  // ═══════════════════════════════════════════════════════════
+
+  void _showTrustCenterDetail(BuildContext context, AlertEvent alert) {
+    HapticFeedback.lightImpact();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final timeStr = DateFormat('MMM d, yyyy – HH:mm').format(alert.timestamp);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.85,
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkBackground : AppColors.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textDisabled.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Row(
+                children: [
+                  Icon(Icons.verified_user_rounded,
+                      color: AppColors.primary, size: 28),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Trust Center',
+                      style: AppTypography.headlineSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Alert title
+                    Text(
+                      alert.title,
+                      style: AppTypography.titleLarge.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (alert.description != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        alert.description!,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+
+                    // ── Why this alert exists ──
+                    _TrustDetailSection(
+                      icon: Icons.info_outline_rounded,
+                      title: 'Why this alert exists',
+                      content: _buildWhyExplanation(alert),
+                    ),
+
+                    // ── Source ──
+                    _TrustDetailSection(
+                      icon: Icons.source_rounded,
+                      title: 'Source',
+                      content: alert.source ?? 'System-generated',
+                    ),
+
+                    // ── Confidence ──
+                    _TrustDetailSection(
+                      icon: Icons.verified_rounded,
+                      title: 'Confidence Score',
+                      content: alert.confidenceLevel != null
+                          ? '${(alert.confidenceLevel! * 100).toInt()}% — ${alert.confidenceLabel}'
+                          : 'Not yet verified',
+                    ),
+
+                    // ── Risk Score ──
+                    if (alert.riskScore != null)
+                      _TrustDetailSection(
+                        icon: Icons.speed_rounded,
+                        title: 'Risk Score',
+                        content:
+                            '${alert.riskScore}/100 — ${_riskLabel(alert.riskScore!)}',
+                      ),
+
+                    // ── Timing ──
+                    _TrustDetailSection(
+                      icon: Icons.access_time_rounded,
+                      title: 'Time of last update',
+                      content: timeStr,
+                    ),
+
+                    // ── Expiry ──
+                    if (alert.expiresAt != null)
+                      _TrustDetailSection(
+                        icon: Icons.timer_off_rounded,
+                        title: 'Expires',
+                        content: alert.isExpired
+                            ? 'Expired'
+                            : DateFormat('MMM d, HH:mm')
+                                .format(alert.expiresAt!),
+                      ),
+
+                    // ── Action Advice ──
+                    if (alert.actionAdvice != null &&
+                        alert.actionAdvice!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.safe.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.safe.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.tips_and_updates_rounded,
+                                size: 18, color: AppColors.safe),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                alert.actionAdvice!,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.safe,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 20),
+
+                    // ── Report False Alert action ──
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _showReportFalseAlert(context, alert);
+                        },
+                        icon: const Icon(Icons.flag_rounded, size: 18),
+                        label: const Text('Report as false alert'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _buildWhyExplanation(AlertEvent alert) {
+    final parts = <String>[];
+    parts.add(
+        'This ${alert.type.label} alert was triggered by ${alert.source ?? "the system monitoring pipeline"}.');
+    if (alert.distanceKm != null) {
+      parts.add(
+          'It was detected ${alert.distanceKm!.toStringAsFixed(1)} km from your location.');
+    }
+    if (alert.confidenceLevel != null) {
+      parts.add(
+          'The source has a confidence rating of ${(alert.confidenceLevel! * 100).toInt()}%.');
+    }
+    if (alert.riskScore != null) {
+      parts.add(
+          'Your personal risk score for this event is ${alert.riskScore}/100.');
+    }
+    return parts.join(' ');
+  }
+
+  String _riskLabel(int score) {
+    if (score >= 80) return 'Critical';
+    if (score >= 60) return 'High';
+    if (score >= 40) return 'Moderate';
+    if (score >= 20) return 'Low';
+    return 'Minimal';
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  REPORT FALSE ALERT SHEET
+  // ═══════════════════════════════════════════════════════════
+
+  void _showReportFalseAlert(BuildContext context, AlertEvent alert) {
+    HapticFeedback.mediumImpact();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _FalseAlertReportSheet(
+        alert: alert,
+        isDark: isDark,
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════
+//  PRIVATE WIDGETS
+// ═════════════════════════════════════════════════════════════
+
+/// Section row for Trust Center detail sheet.
+class _TrustDetailSection extends StatelessWidget {
+  const _TrustDetailSection({
+    required this.icon,
+    required this.title,
+    required this.content,
+  });
+
+  final IconData icon;
+  final String title;
+  final String content;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.labelMedium.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  content,
+                  style: AppTypography.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// False alert report bottom sheet with reason selection and Hive persistence.
+class _FalseAlertReportSheet extends StatefulWidget {
+  const _FalseAlertReportSheet({
+    required this.alert,
+    required this.isDark,
+  });
+
+  final AlertEvent alert;
+  final bool isDark;
+
+  @override
+  State<_FalseAlertReportSheet> createState() => _FalseAlertReportSheetState();
+}
+
+class _FalseAlertReportSheetState extends State<_FalseAlertReportSheet> {
+  String? _selectedReason;
+
+  static const _reasons = [
+    'Not happening at this location',
+    'Already resolved / outdated',
+    'Inaccurate severity level',
+    'Duplicate of another alert',
+    'Other / spam',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: widget.isDark ? AppColors.darkBackground : AppColors.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.textDisabled.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.flag_rounded, color: AppColors.warning, size: 24),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Report False Alert',
+                    style: AppTypography.titleLarge.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Help improve alert accuracy by reporting false alerts. Select a reason below.',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ..._reasons.map((reason) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Material(
+                    color: _selectedReason == reason
+                        ? AppColors.primary.withValues(alpha: 0.12)
+                        : (widget.isDark
+                            ? AppColors.darkSurfaceVariant
+                            : AppColors.surfaceVariant),
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedReason = reason),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _selectedReason == reason
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_off,
+                              color: _selectedReason == reason
+                                  ? AppColors.primary
+                                  : AppColors.textDisabled,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                reason,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  fontWeight: _selectedReason == reason
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _selectedReason == null ? null : _submitReport,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  disabledBackgroundColor:
+                      AppColors.textDisabled.withValues(alpha: 0.2),
+                ),
+                child: const Text('Submit Report'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitReport() async {
+    // Persist to Hive for analytics / future sync
+    final box = await Hive.openBox('false_alert_reports');
+    await box.add({
+      'alertId': widget.alert.id,
+      'alertTitle': widget.alert.title,
+      'alertType': widget.alert.type.name,
+      'reason': _selectedReason,
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+
+    if (!mounted) return;
+    Navigator.pop(context);
+    HapticFeedback.mediumImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+            '✅ Report submitted — thank you for improving alert accuracy'),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
 }
 
 class _FilterChip extends StatelessWidget {
@@ -349,31 +828,73 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final chipColor = color ?? Theme.of(context).colorScheme.primary;
 
-    return Material(
-      color: isSelected
-          ? chipColor.withValues(alpha: 0.15)
-          : Theme.of(context).colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isSelected
-                  ? chipColor.withValues(alpha: 0.5)
-                  : Colors.transparent,
-            ),
-          ),
-          child: Text(
-            label,
-            style: AppTypography.labelMedium.copyWith(
-              color: isSelected ? chipColor : AppColors.textSecondary,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        gradient: isSelected
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  chipColor.withValues(alpha: 0.18),
+                  chipColor.withValues(alpha: 0.08),
+                ],
+              )
+            : null,
+        color: isSelected
+            ? null
+            : isDark
+                ? AppColors.darkSurfaceVariant.withValues(alpha: 0.6)
+                : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: isSelected
+              ? chipColor.withValues(alpha: 0.4)
+              : isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.06),
+          width: 0.5,
+        ),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: chipColor.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.02),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(22),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: Text(
+              label,
+              style: AppTypography.labelMedium.copyWith(
+                color: isSelected
+                    ? chipColor
+                    : isDark
+                        ? Colors.white54
+                        : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 12.5,
+                letterSpacing: isSelected ? 0.1 : 0,
+              ),
             ),
           ),
         ),

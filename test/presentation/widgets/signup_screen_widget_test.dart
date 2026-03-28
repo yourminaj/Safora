@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/auth_service.dart';
 import 'package:safora/injection.dart';
 import 'package:safora/presentation/screens/auth/signup_screen.dart';
+import 'package:safora/presentation/widgets/safora_brand_mark.dart';
 import '../../helpers/widget_test_helpers.dart';
 
 class MockAuthService extends Mock implements AuthService {}
@@ -57,13 +58,13 @@ void main() {
       expect(find.text('Protect your family with Safora'), findsOneWidget);
     });
 
-    testWidgets('has shield logo icon', (tester) async {
+    testWidgets('has brand mark logo', (tester) async {
       await tester.pumpWidget(
         buildTestableWidget(child: const SignupScreen()),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.shield_rounded), findsOneWidget);
+      expect(find.byType(SaforaBrandMark), findsOneWidget);
     });
 
     testWidgets('has Sign In navigation link', (tester) async {

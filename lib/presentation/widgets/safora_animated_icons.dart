@@ -1065,3 +1065,846 @@ class _EmptyStatePainter extends CustomPainter {
   @override
   bool shouldRepaint(_EmptyStatePainter old) => old.progress != progress;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+//  9. SAFORA CONTACTS ICON — Shield with two people silhouettes
+//     Used: Onboarding page 2 ("Add Emergency Contacts")
+// ═══════════════════════════════════════════════════════════════════
+
+class SaforaContactsIcon extends StatefulWidget {
+  const SaforaContactsIcon({
+    super.key,
+    this.size = 120,
+    this.animated = true,
+  });
+
+  final double size;
+  final bool animated;
+
+  @override
+  State<SaforaContactsIcon> createState() => _SaforaContactsIconState();
+}
+
+class _SaforaContactsIconState extends State<SaforaContactsIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      duration: const Duration(milliseconds: 2500),
+      vsync: this,
+    );
+    if (widget.animated) _ctrl.repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        return CustomPaint(
+          size: Size(widget.size, widget.size),
+          painter: _ContactsIconPainter(progress: _ctrl.value),
+        );
+      },
+    );
+  }
+}
+
+class _ContactsIconPainter extends CustomPainter {
+  _ContactsIconPainter({required this.progress});
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+
+    // ── Shield background ──
+    final shield = Path()
+      ..moveTo(w * 0.5, h * 0.08)
+      ..cubicTo(w * 0.30, h * 0.08, w * 0.12, h * 0.14, w * 0.12, h * 0.30)
+      ..lineTo(w * 0.12, h * 0.52)
+      ..cubicTo(w * 0.12, h * 0.74, w * 0.30, h * 0.86, w * 0.50, h * 0.94)
+      ..cubicTo(w * 0.70, h * 0.86, w * 0.88, h * 0.74, w * 0.88, h * 0.52)
+      ..lineTo(w * 0.88, h * 0.30)
+      ..cubicTo(w * 0.88, h * 0.14, w * 0.70, h * 0.08, w * 0.50, h * 0.08)
+      ..close();
+
+    final pulseAlpha = 0.9 + 0.1 * math.sin(progress * 2 * math.pi);
+    canvas.drawPath(
+      shield,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _BrandPalette.infoBlue.withValues(alpha: pulseAlpha),
+            const Color(0xFF1565C0),
+          ],
+        ).createShader(Rect.fromLTWH(0, 0, w, h)),
+    );
+
+    // ── Shield border glow ──
+    canvas.drawPath(
+      shield,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.25)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.015,
+    );
+
+    // ── Left person (head + shoulders) ──
+    final personColor = Colors.white.withValues(alpha: 0.95);
+    // Head
+    canvas.drawCircle(
+      Offset(cx - w * 0.13, h * 0.34),
+      w * 0.065,
+      Paint()..color = personColor,
+    );
+    // Shoulders arc
+    canvas.drawArc(
+      Rect.fromCenter(
+        center: Offset(cx - w * 0.13, h * 0.52),
+        width: w * 0.20,
+        height: w * 0.14,
+      ),
+      math.pi,
+      math.pi,
+      false,
+      Paint()
+        ..color = personColor
+        ..style = PaintingStyle.fill,
+    );
+
+    // ── Right person (head + shoulders) ──
+    // Head
+    canvas.drawCircle(
+      Offset(cx + w * 0.13, h * 0.34),
+      w * 0.065,
+      Paint()..color = personColor,
+    );
+    // Shoulders arc
+    canvas.drawArc(
+      Rect.fromCenter(
+        center: Offset(cx + w * 0.13, h * 0.52),
+        width: w * 0.20,
+        height: w * 0.14,
+      ),
+      math.pi,
+      math.pi,
+      false,
+      Paint()
+        ..color = personColor
+        ..style = PaintingStyle.fill,
+    );
+
+    // ── Connecting bond line (animated pulse between people) ──
+    final bondProgress = (progress * 2 * math.pi);
+    final bondAlpha = 0.5 + 0.4 * math.sin(bondProgress);
+    final bondY = h * 0.42;
+
+    // Heart between them
+    final heartSize = w * 0.06 + w * 0.01 * math.sin(bondProgress);
+    final heartX = cx;
+    final heartY = bondY;
+
+    final heartPath = Path()
+      ..moveTo(heartX, heartY + heartSize * 0.35)
+      ..cubicTo(
+        heartX - heartSize * 0.5, heartY - heartSize * 0.1,
+        heartX - heartSize * 0.9, heartY - heartSize * 0.6,
+        heartX, heartY - heartSize * 0.25,
+      )
+      ..cubicTo(
+        heartX + heartSize * 0.9, heartY - heartSize * 0.6,
+        heartX + heartSize * 0.5, heartY - heartSize * 0.1,
+        heartX, heartY + heartSize * 0.35,
+      );
+
+    canvas.drawPath(
+      heartPath,
+      Paint()
+        ..color = _BrandPalette.shieldRed.withValues(alpha: bondAlpha)
+        ..style = PaintingStyle.fill,
+    );
+
+    // ── Connection lines from heart to each person ──
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: bondAlpha * 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.012
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawLine(
+      Offset(cx - w * 0.06, bondY),
+      Offset(cx - w * 0.13, h * 0.40),
+      linePaint,
+    );
+    canvas.drawLine(
+      Offset(cx + w * 0.06, bondY),
+      Offset(cx + w * 0.13, h * 0.40),
+      linePaint,
+    );
+
+    // ── Phone icon beneath (small) ──
+    final phoneY = h * 0.68;
+    final phoneW = w * 0.06;
+    final phoneH = w * 0.09;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(cx, phoneY),
+          width: phoneW,
+          height: phoneH,
+        ),
+        Radius.circular(w * 0.012),
+      ),
+      Paint()..color = Colors.white.withValues(alpha: 0.7),
+    );
+
+    // Phone screen
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(cx, phoneY - w * 0.005),
+          width: phoneW * 0.7,
+          height: phoneH * 0.6,
+        ),
+        Radius.circular(w * 0.005),
+      ),
+      Paint()..color = _BrandPalette.infoBlue.withValues(alpha: 0.5),
+    );
+
+    // ── Signal waves from phone (animated) ──
+    for (int i = 0; i < 2; i++) {
+      final waveProgress = (progress + i * 0.5) % 1.0;
+      final waveRadius = w * 0.04 + w * 0.06 * waveProgress;
+      final waveAlpha = (1.0 - waveProgress) * 0.4;
+      canvas.drawArc(
+        Rect.fromCircle(
+          center: Offset(cx, phoneY - w * 0.05),
+          radius: waveRadius,
+        ),
+        -math.pi * 0.8,
+        math.pi * 0.6,
+        false,
+        Paint()
+          ..color = Colors.white.withValues(alpha: waveAlpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * 0.01,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ContactsIconPainter old) => old.progress != progress;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 10. SAFORA FIRST AID ICON — Heart with cross overlay
+//     Used: Emergency Center — First Aid Steps
+// ═══════════════════════════════════════════════════════════════════
+
+class SaforaFirstAidIcon extends StatefulWidget {
+  const SaforaFirstAidIcon({
+    super.key,
+    this.size = 60,
+    this.animated = true,
+  });
+
+  final double size;
+  final bool animated;
+
+  @override
+  State<SaforaFirstAidIcon> createState() => _SaforaFirstAidIconState();
+}
+
+class _SaforaFirstAidIconState extends State<SaforaFirstAidIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      duration: const Duration(milliseconds: 1800),
+      vsync: this,
+    );
+    if (widget.animated) _ctrl.repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        return CustomPaint(
+          size: Size(widget.size, widget.size),
+          painter: _FirstAidIconPainter(progress: _ctrl.value),
+        );
+      },
+    );
+  }
+}
+
+class _FirstAidIconPainter extends CustomPainter {
+  _FirstAidIconPainter({required this.progress});
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+    final cy = h * 0.48;
+
+    // ── Heartbeat pulse scale ──
+    final pulse = 1.0 + 0.06 * math.sin(progress * 2 * math.pi);
+
+    canvas.save();
+    canvas.translate(cx, cy);
+    canvas.scale(pulse);
+    canvas.translate(-cx, -cy);
+
+    // ── Heart shape ──
+    final heartPath = Path()
+      ..moveTo(cx, h * 0.78)
+      ..cubicTo(w * 0.10, h * 0.55, w * 0.10, h * 0.22, cx, h * 0.32)
+      ..cubicTo(w * 0.90, h * 0.22, w * 0.90, h * 0.55, cx, h * 0.78)
+      ..close();
+
+    canvas.drawPath(
+      heartPath,
+      Paint()
+        ..shader = const RadialGradient(
+          center: Alignment(0, -0.3),
+          colors: [Color(0xFFEF5350), Color(0xFFC62828)],
+        ).createShader(Rect.fromLTWH(0, 0, w, h)),
+    );
+
+    // ── Heart highlight ──
+    canvas.drawPath(
+      heartPath,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.15)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.015,
+    );
+
+    // ── White cross on heart ──
+    final crossPaint = Paint()..color = Colors.white;
+    final armW = w * 0.07;
+    final armH = w * 0.20;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(cx, cy),
+          width: armW,
+          height: armH,
+        ),
+        Radius.circular(armW * 0.4),
+      ),
+      crossPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(cx, cy),
+          width: armH,
+          height: armW,
+        ),
+        Radius.circular(armW * 0.4),
+      ),
+      crossPaint,
+    );
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_FirstAidIconPainter old) => old.progress != progress;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 11. SAFORA SAFE PLACE ICON — Building with shield badge
+//     Used: Emergency Center — Nearest Safe Place
+// ═══════════════════════════════════════════════════════════════════
+
+class SaforaSafePlaceIcon extends StatefulWidget {
+  const SaforaSafePlaceIcon({
+    super.key,
+    this.size = 60,
+    this.animated = true,
+  });
+
+  final double size;
+  final bool animated;
+
+  @override
+  State<SaforaSafePlaceIcon> createState() => _SaforaSafePlaceIconState();
+}
+
+class _SaforaSafePlaceIconState extends State<SaforaSafePlaceIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      duration: const Duration(milliseconds: 3000),
+      vsync: this,
+    );
+    if (widget.animated) _ctrl.repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        return CustomPaint(
+          size: Size(widget.size, widget.size),
+          painter: _SafePlaceIconPainter(progress: _ctrl.value),
+        );
+      },
+    );
+  }
+}
+
+class _SafePlaceIconPainter extends CustomPainter {
+  _SafePlaceIconPainter({required this.progress});
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+
+    // ── Building body ──
+    final buildingPath = Path()
+      ..addRRect(RRect.fromRectAndCorners(
+        Rect.fromLTWH(w * 0.18, h * 0.20, w * 0.64, h * 0.65),
+        topLeft: Radius.circular(w * 0.04),
+        topRight: Radius.circular(w * 0.04),
+      ));
+
+    canvas.drawPath(
+      buildingPath,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF5C6BC0), Color(0xFF3949AB)],
+        ).createShader(Rect.fromLTWH(0, 0, w, h)),
+    );
+
+    // ── Building windows (2x3 grid) ──
+    final windowPaint = Paint();
+    for (int row = 0; row < 3; row++) {
+      for (int col = 0; col < 2; col++) {
+        final wx = w * 0.28 + col * w * 0.26;
+        final wy = h * 0.30 + row * h * 0.15;
+        final glowPhase = (progress * 2 * math.pi + (row + col) * 0.8);
+        final windowAlpha = 0.5 + 0.4 * math.sin(glowPhase).abs();
+
+        windowPaint.color = const Color(0xFFFFF9C4).withValues(alpha: windowAlpha);
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(wx, wy, w * 0.14, h * 0.09),
+            Radius.circular(w * 0.015),
+          ),
+          windowPaint,
+        );
+      }
+    }
+
+    // ── Door ──
+    canvas.drawRRect(
+      RRect.fromRectAndCorners(
+        Rect.fromLTWH(w * 0.40, h * 0.65, w * 0.20, h * 0.20),
+        topLeft: Radius.circular(w * 0.10),
+        topRight: Radius.circular(w * 0.10),
+      ),
+      Paint()..color = const Color(0xFF283593),
+    );
+
+    // ── Shield badge (top-right corner) ──
+    final shieldCx = w * 0.76;
+    final shieldCy = h * 0.18;
+    final ss = w * 0.14;
+
+    // Badge circle background
+    canvas.drawCircle(
+      Offset(shieldCx, shieldCy),
+      ss * 0.85,
+      Paint()..color = _BrandPalette.successGreen,
+    );
+
+    // Mini shield
+    final miniShield = Path()
+      ..moveTo(shieldCx, shieldCy - ss * 0.45)
+      ..cubicTo(shieldCx - ss * 0.35, shieldCy - ss * 0.45,
+          shieldCx - ss * 0.5, shieldCy - ss * 0.3,
+          shieldCx - ss * 0.5, shieldCy - ss * 0.1)
+      ..lineTo(shieldCx - ss * 0.5, shieldCy + ss * 0.1)
+      ..cubicTo(shieldCx - ss * 0.5, shieldCy + ss * 0.35,
+          shieldCx - ss * 0.2, shieldCy + ss * 0.45,
+          shieldCx, shieldCy + ss * 0.55)
+      ..cubicTo(shieldCx + ss * 0.2, shieldCy + ss * 0.45,
+          shieldCx + ss * 0.5, shieldCy + ss * 0.35,
+          shieldCx + ss * 0.5, shieldCy + ss * 0.1)
+      ..lineTo(shieldCx + ss * 0.5, shieldCy - ss * 0.1)
+      ..cubicTo(shieldCx + ss * 0.5, shieldCy - ss * 0.3,
+          shieldCx + ss * 0.35, shieldCy - ss * 0.45,
+          shieldCx, shieldCy - ss * 0.45)
+      ..close();
+
+    canvas.drawPath(miniShield, Paint()..color = Colors.white);
+
+    // Checkmark inside mini shield
+    final checkPaint = Paint()
+      ..color = _BrandPalette.successGreen
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.02
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    canvas.drawPath(
+      Path()
+        ..moveTo(shieldCx - ss * 0.18, shieldCy)
+        ..lineTo(shieldCx - ss * 0.05, shieldCy + ss * 0.15)
+        ..lineTo(shieldCx + ss * 0.22, shieldCy - ss * 0.12),
+      checkPaint,
+    );
+
+    // ── Pulsing safety ring around building ──
+    final ringPhase = progress * 2 * math.pi;
+    final ringAlpha = 0.15 + 0.1 * math.sin(ringPhase);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(cx, h * 0.52),
+          width: w * 0.78 + w * 0.04 * math.sin(ringPhase),
+          height: h * 0.78 + h * 0.04 * math.sin(ringPhase),
+        ),
+        Radius.circular(w * 0.08),
+      ),
+      Paint()
+        ..color = _BrandPalette.successGreen.withValues(alpha: ringAlpha)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.012,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SafePlaceIconPainter old) => old.progress != progress;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 12. SAFORA OFFLINE ICON — Shield with download/offline indicator
+//     Used: Emergency Center — Offline Survival Instructions
+// ═══════════════════════════════════════════════════════════════════
+
+class SaforaOfflineIcon extends StatefulWidget {
+  const SaforaOfflineIcon({
+    super.key,
+    this.size = 60,
+    this.animated = true,
+  });
+
+  final double size;
+  final bool animated;
+
+  @override
+  State<SaforaOfflineIcon> createState() => _SaforaOfflineIconState();
+}
+
+class _SaforaOfflineIconState extends State<SaforaOfflineIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      duration: const Duration(milliseconds: 2500),
+      vsync: this,
+    );
+    if (widget.animated) _ctrl.repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        return CustomPaint(
+          size: Size(widget.size, widget.size),
+          painter: _OfflineIconPainter(progress: _ctrl.value),
+        );
+      },
+    );
+  }
+}
+
+class _OfflineIconPainter extends CustomPainter {
+  _OfflineIconPainter({required this.progress});
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+
+    // ── Shield outline ──
+    final shield = Path()
+      ..moveTo(w * 0.5, h * 0.10)
+      ..cubicTo(w * 0.30, h * 0.10, w * 0.14, h * 0.16, w * 0.14, h * 0.32)
+      ..lineTo(w * 0.14, h * 0.52)
+      ..cubicTo(w * 0.14, h * 0.72, w * 0.30, h * 0.82, w * 0.50, h * 0.92)
+      ..cubicTo(w * 0.70, h * 0.82, w * 0.86, h * 0.72, w * 0.86, h * 0.52)
+      ..lineTo(w * 0.86, h * 0.32)
+      ..cubicTo(w * 0.86, h * 0.16, w * 0.70, h * 0.10, w * 0.50, h * 0.10)
+      ..close();
+
+    canvas.drawPath(
+      shield,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _BrandPalette.warningAmber,
+            const Color(0xFFF57C00),
+          ],
+        ).createShader(Rect.fromLTWH(0, 0, w, h)),
+    );
+
+    canvas.drawPath(
+      shield,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.2)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.015,
+    );
+
+    // ── Download arrow (animated bounce) ──
+    final bounce = math.sin(progress * 2 * math.pi) * w * 0.02;
+    final arrowPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.06
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // Vertical line
+    canvas.drawLine(
+      Offset(cx, h * 0.28 + bounce),
+      Offset(cx, h * 0.52 + bounce),
+      arrowPaint,
+    );
+
+    // Arrow head
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx - w * 0.10, h * 0.46 + bounce)
+        ..lineTo(cx, h * 0.56 + bounce)
+        ..lineTo(cx + w * 0.10, h * 0.46 + bounce),
+      arrowPaint,
+    );
+
+    // ── Base line (storage) ──
+    canvas.drawLine(
+      Offset(w * 0.30, h * 0.68),
+      Offset(w * 0.70, h * 0.68),
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.8)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.04
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // ── "NO WIFI" crossed circle ──
+    final nwCx = w * 0.78;
+    final nwCy = h * 0.22;
+    final nwR = w * 0.08;
+
+    canvas.drawCircle(
+      Offset(nwCx, nwCy),
+      nwR,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.7)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.015,
+    );
+    canvas.drawLine(
+      Offset(nwCx - nwR * 0.7, nwCy - nwR * 0.7),
+      Offset(nwCx + nwR * 0.7, nwCy + nwR * 0.7),
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.7)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.015
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_OfflineIconPainter old) => old.progress != progress;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 13. SAFORA LIVE LOCATION ICON — Pulsing radar with person dot
+//     Used: Emergency Center — Share Live Location
+// ═══════════════════════════════════════════════════════════════════
+
+class SaforaLiveLocationIcon extends StatefulWidget {
+  const SaforaLiveLocationIcon({
+    super.key,
+    this.size = 60,
+    this.animated = true,
+  });
+
+  final double size;
+  final bool animated;
+
+  @override
+  State<SaforaLiveLocationIcon> createState() => _SaforaLiveLocationIconState();
+}
+
+class _SaforaLiveLocationIconState extends State<SaforaLiveLocationIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+    if (widget.animated) _ctrl.repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        return CustomPaint(
+          size: Size(widget.size, widget.size),
+          painter: _LiveLocationIconPainter(progress: _ctrl.value),
+        );
+      },
+    );
+  }
+}
+
+class _LiveLocationIconPainter extends CustomPainter {
+  _LiveLocationIconPainter({required this.progress});
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final cx = w / 2;
+    final cy = w / 2;
+
+    // ── Expanding pulse rings ──
+    for (int i = 0; i < 3; i++) {
+      final ringAt = (progress + i * 0.33) % 1.0;
+      final radius = w * 0.08 + w * 0.38 * ringAt;
+      final alpha = (1.0 - ringAt) * 0.4;
+      canvas.drawCircle(
+        Offset(cx, cy),
+        radius,
+        Paint()
+          ..color = _BrandPalette.successGreen.withValues(alpha: alpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * 0.015,
+      );
+    }
+
+    // ── Center person dot ──
+    canvas.drawCircle(
+      Offset(cx, cy - w * 0.04),
+      w * 0.055,
+      Paint()..color = _BrandPalette.successGreen,
+    );
+
+    // Person body
+    canvas.drawArc(
+      Rect.fromCenter(
+        center: Offset(cx, cy + w * 0.07),
+        width: w * 0.16,
+        height: w * 0.10,
+      ),
+      math.pi,
+      math.pi,
+      false,
+      Paint()
+        ..color = _BrandPalette.successGreen
+        ..style = PaintingStyle.fill,
+    );
+
+    // ── Arrow pointing outward (broadcasting) ──
+    final arrowPaint = Paint()
+      ..color = _BrandPalette.successGreen.withValues(alpha: 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.025
+      ..strokeCap = StrokeCap.round;
+
+    // Top-right arrow
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx + w * 0.14, cy - w * 0.14)
+        ..lineTo(cx + w * 0.24, cy - w * 0.24)
+        ..moveTo(cx + w * 0.24, cy - w * 0.24)
+        ..lineTo(cx + w * 0.16, cy - w * 0.24)
+        ..moveTo(cx + w * 0.24, cy - w * 0.24)
+        ..lineTo(cx + w * 0.24, cy - w * 0.16),
+      arrowPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_LiveLocationIconPainter old) => old.progress != progress;
+}

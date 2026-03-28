@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:safora/core/constants/alert_types.dart';
 import 'package:safora/core/services/auth_service.dart';
 import 'package:safora/core/services/audio_service.dart';
 import 'package:safora/core/services/location_service.dart';
@@ -16,6 +17,7 @@ import 'package:safora/data/repositories/contacts_repository.dart';
 import 'package:safora/data/repositories/profile_repository.dart';
 import 'package:safora/data/repositories/reminders_repository.dart';
 import 'package:safora/domain/usecases/trigger_sos_usecase.dart';
+import 'package:safora/services/dead_man_switch_service.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import 'package:safora/presentation/blocs/alerts/alerts_cubit.dart';
 import 'package:safora/presentation/blocs/contacts/contacts_cubit.dart';
@@ -60,6 +62,7 @@ Widget buildTestableWidget({
   RemindersCubit? remindersCubit,
 }) {
   // Register fallback values for mocktail.
+  registerFallbackValue(AlertType.earthquake);
   registerFallbackValue(SosHistoryEntry(
     timestamp: DateTime(2020),
     contactsNotified: 0,
@@ -86,6 +89,24 @@ Widget buildTestableWidget({
   }
   if (!getIt.isRegistered<ContactsCloudSync>()) {
     getIt.registerSingleton<ContactsCloudSync>(MockContactsCloudSync());
+  }
+  if (!getIt.isRegistered<DeadManSwitchService>()) {
+    getIt.registerSingleton<DeadManSwitchService>(DeadManSwitchService(
+      onTrigger: () {},
+      checkInInterval: const Duration(hours: 1),
+    ));
+  }
+  if (!getIt.isRegistered<AlertPreferences>()) {
+    final mockAlertPrefs = MockAlertPreferences();
+    when(() => mockAlertPrefs.isEnabled(any())).thenReturn(true);
+    when(() => mockAlertPrefs.shouldReceive(any())).thenReturn(true);
+    when(() => mockAlertPrefs.totalEnabled).thenReturn(AlertType.values.length);
+    when(() => mockAlertPrefs.totalAlerts).thenReturn(AlertType.values.length);
+    when(() => mockAlertPrefs.minimumSeverity).thenReturn(AlertPriority.info);
+    when(() => mockAlertPrefs.enabledAlerts).thenReturn(AlertType.values.toSet());
+    when(() => mockAlertPrefs.enabledCountByCategory()).thenReturn({});
+    when(() => mockAlertPrefs.groupedByCategory()).thenReturn({});
+    getIt.registerSingleton<AlertPreferences>(mockAlertPrefs);
   }
 
   // Stub commonly-called methods.
@@ -115,6 +136,7 @@ Widget buildTestableWidget({
 
   final mockPrefs = MockAlertPreferences();
     when(() => mockPrefs.isEnabled(any())).thenReturn(true);
+    when(() => mockPrefs.shouldReceive(any())).thenReturn(true);
 
     return MultiBlocProvider(
     providers: [

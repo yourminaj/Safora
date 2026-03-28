@@ -34,13 +34,13 @@ void main() {
       expect(service.isRunning, false);
     });
 
-    test('isRunning becomes true after start', () {
-      service.start();
+    test('isRunning becomes true after start', () async {
+      await service.start();
       expect(service.isRunning, true);
     });
 
-    test('isRunning becomes false after stop', () {
-      service.start();
+    test('isRunning becomes false after stop', () async {
+      await service.start();
       service.stop();
       expect(service.isRunning, false);
     });
@@ -66,7 +66,7 @@ void main() {
   });
 
   group('CrashFallDetectionService — Custom Engine', () {
-    test('accepts custom engine configuration', () {
+    test('accepts custom engine configuration', () async {
       final customEngine = CrashFallDetectionEngine(
         fallThresholdG: 2.0,
         crashThresholdG: 3.0,
@@ -75,7 +75,7 @@ void main() {
       final customService = CrashFallDetectionService(engine: customEngine);
       expect(customService.isRunning, false);
 
-      customService.start();
+      await customService.start();
       expect(customService.isRunning, true);
 
       customService.dispose();

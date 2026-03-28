@@ -353,13 +353,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       gradient: isSafe
                           ? AppColors.safeGradient
                           : AppColors.dangerGradient,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        width: 0.5,
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: (isSafe ? AppColors.safe : AppColors.danger)
-                              .withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
+                              .withValues(alpha: 0.25),
+                          blurRadius: 20,
+                          offset: const Offset(0, 6),
+                          spreadRadius: -2,
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
@@ -443,8 +453,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l.quickActions, style: AppTypography.titleMedium),
-                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          l.quickActions,
+                          style: AppTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
                     GridView.count(
                       crossAxisCount: 3,
                       shrinkWrap: true,
@@ -535,14 +564,39 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(l.recentAlerts, style: AppTypography.titleMedium),
-                        TextButton(
+                        Row(
+                          children: [
+                            Container(
+                              width: 4,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                color: AppColors.warning,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              l.recentAlerts,
+                              style: AppTypography.titleMedium.copyWith(
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                        TextButton.icon(
                           onPressed: () => context.push('/alerts'),
-                          child: Text(l.seeAll),
+                          icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                          label: Text(l.seeAll),
+                          style: TextButton.styleFrom(
+                            textStyle: AppTypography.labelMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     BlocBuilder<AlertsCubit, AlertsState>(
                       builder: (context, state) {
                         if (state is AlertsLoaded && state.alerts.isNotEmpty) {
@@ -621,27 +675,81 @@ class _QuickAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: color.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: AppTypography.labelMedium.copyWith(
-                color: color,
-                fontWeight: FontWeight.w600,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppColors.darkSurfaceVariant.withValues(alpha: 0.7)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark
+              ? color.withValues(alpha: 0.12)
+              : color.withValues(alpha: 0.08),
+          width: 0.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: isDark ? 0.08 : 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          borderRadius: BorderRadius.circular(18),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Gradient icon container
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.15),
+                      color.withValues(alpha: 0.06),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.1),
+                    width: 0.5,
+                  ),
+                ),
+                child: Icon(icon, color: color, size: 22),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  label,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: isDark ? Colors.white70 : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10.5,
+                    height: 1.2,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

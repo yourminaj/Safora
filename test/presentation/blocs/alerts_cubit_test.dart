@@ -20,6 +20,10 @@ void main() {
   late MockNotificationService mockNotifs;
   late MockAlertPreferences mockPrefs;
 
+  setUpAll(() {
+    registerFallbackValue(AlertType.earthquake);
+  });
+
   setUp(() {
     mockRepo = MockAlertsRepository();
     mockNotifs = MockNotificationService();
@@ -39,6 +43,7 @@ void main() {
 
     // By default, all alerts are enabled.
     when(() => mockPrefs.isEnabled(any())).thenReturn(true);
+    when(() => mockPrefs.shouldReceive(any())).thenReturn(true);
 
     cubit = AlertsCubit(
       alertsRepository: mockRepo,

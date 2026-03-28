@@ -1,16 +1,62 @@
 import 'package:hive/hive.dart';
 import '../../core/constants/alert_types.dart';
 
-/// Persisted alert preferences — tracks which alerts are enabled/disabled.
+/// Persisted alert preferences — tracks which alerts are enabled/disabled
+/// and the user's minimum severity threshold.
 ///
 /// Stored in a Hive box. Key = [AlertType.name], value = bool (enabled).
 /// Default: all free alerts enabled, all premium alerts disabled.
+///
+/// Severity threshold: stored as `_severity_threshold` key.
+/// 0 = info (show everything), 4 = critical (only critical alerts).
 class AlertPreferences {
   AlertPreferences(this._box);
 
   static const String boxName = 'alert_preferences';
+  static const String _severityKey = '_severity_threshold';
 
   final Box _box;
+
+  // ─── Severity Threshold ────────────────────────────────
+
+  /// Priority index mapping (higher = more severe).
+  static const _priorityIndex = {
+    AlertPriority.info: 0,
+    AlertPriority.advisory: 1,
+    AlertPriority.warning: 2,
+    AlertPriority.danger: 3,
+    AlertPriority.critical: 4,
+  };
+
+  /// Ordered priority list for UI display (low → high).
+  static const priorityLevels = [
+    AlertPriority.info,
+    AlertPriority.advisory,
+    AlertPriority.warning,
+    AlertPriority.danger,
+    AlertPriority.critical,
+  ];
+
+  /// Get the current minimum severity threshold.
+  /// Default: info (0) — show everything.
+  AlertPriority get minimumSeverity {
+    final idx = _box.get(_severityKey, defaultValue: 0) as int;
+    return priorityLevels[idx.clamp(0, 4)];
+  }
+
+  /// Set the minimum severity threshold.
+  Future<void> setMinimumSeverity(AlertPriority priority) async {
+    await _box.put(_severityKey, _priorityIndex[priority] ?? 0);
+  }
+
+  /// Check if an alert's priority meets the severity threshold.
+  bool isAllowedBySeverity(AlertPriority priority) {
+    final threshold = _priorityIndex[minimumSeverity] ?? 0;
+    final alertLevel = _priorityIndex[priority] ?? 0;
+    return alertLevel >= threshold;
+  }
+
+  // ─── Type Enable/Disable ───────────────────────────────
 
   /// Check if a specific alert type is enabled.
   ///
@@ -30,6 +76,15 @@ class AlertPreferences {
     await setEnabled(type, newValue);
     return newValue;
   }
+
+  // ─── Combined Check ────────────────────────────────────
+
+  /// Full filter: alert type must be enabled AND priority must meet threshold.
+  bool shouldReceive(AlertType type) {
+    return isEnabled(type) && isAllowedBySeverity(type.priority);
+  }
+
+  // ─── Computed Sets ─────────────────────────────────────
 
   /// Get all currently enabled alert types.
   Set<AlertType> get enabledAlerts {

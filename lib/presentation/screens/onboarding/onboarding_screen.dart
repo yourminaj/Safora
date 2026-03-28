@@ -93,7 +93,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         backgroundColor: const Color(0xFFFFF3F0),
       ),
       _OnboardingPage(
-        iconBuilder: (size) => SaforaLocationIcon(size: size, animated: true),
+        iconBuilder: (size) => SaforaContactsIcon(size: size, animated: true),
         title: l.onboardingTitle2,
         description: l.onboardingDesc2,
         backgroundColor: const Color(0xFFF0F7FF),

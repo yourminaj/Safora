@@ -52,6 +52,14 @@ class MoreScreen extends StatelessWidget {
           _SectionHeader(title: l.safetyTools),
           const SizedBox(height: 8),
           _MoreTile(
+            icon: Icons.emergency_rounded,
+            color: AppColors.primary,
+            label: 'Emergency Center',
+            subtitle: 'SOS, first aid, safe places & more',
+            onTap: () => context.push('/emergency-center'),
+            isDark: isDark,
+          ),
+          _MoreTile(
             icon: Icons.phone_in_talk_rounded,
             color: AppColors.info,
             label: l.decoyCall,
@@ -176,12 +184,30 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title.toUpperCase(),
-      style: AppTypography.labelSmall.copyWith(
-        color: AppColors.textSecondary,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.2,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title.toUpperCase(),
+            style: AppTypography.labelSmall.copyWith(
+              color: isDark ? Colors.white38 : AppColors.textSecondary,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.5,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -207,53 +233,100 @@ class _MoreTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Material(
-        color: isDark ? AppColors.darkSurfaceVariant : AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, color: color, size: 22),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: AppTypography.titleSmall.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.darkSurfaceVariant.withValues(alpha: 0.6)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.04)
+                : Colors.black.withValues(alpha: 0.04),
+            width: 0.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              child: Row(
+                children: [
+                  // Gradient icon container
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          color.withValues(alpha: 0.15),
+                          color.withValues(alpha: 0.05),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(
+                        color: color.withValues(alpha: 0.1),
+                        width: 0.5,
                       ),
-                    ],
+                    ),
+                    child: Icon(icon, color: color, size: 22),
                   ),
-                ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textDisabled,
-                  size: 20,
-                ),
-              ],
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: AppTypography.titleSmall.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          subtitle,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: isDark
+                                ? Colors.white38
+                                : AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.04)
+                          : Colors.black.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      color: isDark ? Colors.white24 : AppColors.textDisabled,
+                      size: 18,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

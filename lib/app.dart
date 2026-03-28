@@ -31,6 +31,7 @@ import 'presentation/screens/lock/lock_screen.dart';
 import 'presentation/screens/map/live_map_screen.dart';
 import 'presentation/screens/settings/alert_preferences_screen.dart';
 import 'presentation/screens/more/more_screen.dart';
+import 'presentation/screens/emergency/emergency_center_screen.dart';
 import 'presentation/screens/shell/main_shell.dart';
 
 /// Named route paths.
@@ -54,6 +55,7 @@ abstract final class AppRoutes {
   static const String liveMap = '/live-map';
   static const String more = '/more';
   static const String alertPreferences = '/alert-preferences';
+  static const String emergencyCenter = '/emergency-center';
 }
 
 // Navigation keys for the shell branches.
@@ -180,6 +182,11 @@ GoRouter createRouter() {
             value: getIt<AlertPreferencesCubit>(),
             child: const AlertPreferencesScreen(),
           ),
+        ),
+        GoRoute(
+          parentNavigatorKey: _rootKey,
+          path: AppRoutes.emergencyCenter,
+          builder: (context, state) => const EmergencyCenterScreen(),
         ),
 
         // ─── Shell Route: 5-Tab Bottom Navigation ──────

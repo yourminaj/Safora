@@ -24,11 +24,12 @@ class EmergencyPoi {
     EmergencyPoiType type,
   ) {
     final tags = (element['tags'] as Map<String, dynamic>?) ?? {};
+    final center = element['center'] as Map<String, dynamic>?;
     final lat = (element['lat'] as num?)?.toDouble() ??
-        (element['center']?['lat'] as num?)?.toDouble() ??
+        (center?['lat'] as num?)?.toDouble() ??
         0.0;
     final lon = (element['lon'] as num?)?.toDouble() ??
-        (element['center']?['lon'] as num?)?.toDouble() ??
+        (center?['lon'] as num?)?.toDouble() ??
         0.0;
 
     return EmergencyPoi(

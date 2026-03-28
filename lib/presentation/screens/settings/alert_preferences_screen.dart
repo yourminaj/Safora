@@ -96,6 +96,11 @@ class _AlertPreferencesScreenState extends State<AlertPreferencesScreen> {
                 child: _QuickActions(isDark: isDark),
               ),
 
+              // ─── Severity Threshold ──────────────────────────
+              SliverToBoxAdapter(
+                child: _SeverityThresholdSelector(isDark: isDark),
+              ),
+
               // ─── Category Sections ──────────────────────────
               if (categories.isEmpty)
                 SliverFillRemaining(
@@ -454,6 +459,167 @@ class _QuickActionChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// =====================================================================
+// Severity Threshold Selector
+// =====================================================================
+
+class _SeverityThresholdSelector extends StatelessWidget {
+  const _SeverityThresholdSelector({required this.isDark});
+
+  final bool isDark;
+
+  static const _labels = ['Info', 'Advisory', 'Warning', 'Danger', 'Critical'];
+  static const _emojis = ['ℹ️', '📋', '⚠️', '🔥', '🚨'];
+  static const _descriptions = [
+    'Receive all alerts including informational updates',
+    'Skip informational, show advisory and above',
+    'Only warnings, danger, and critical alerts',
+    'Only dangerous and critical emergencies',
+    'Only life-threatening critical alerts',
+  ];
+
+  Color _sliderColor(int idx) {
+    return switch (idx) {
+      0 => AppColors.textSecondary,
+      1 => AppColors.info,
+      2 => AppColors.warning,
+      3 => Colors.deepOrange,
+      _ => AppColors.danger,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AlertPreferencesCubit, AlertPreferencesState>(
+      builder: (context, state) {
+        final cubit = context.read<AlertPreferencesCubit>();
+        final currentIdx =
+            AlertPreferences.priorityLevels.indexOf(state.severityThreshold);
+        final color = _sliderColor(currentIdx);
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkSurfaceVariant.withValues(alpha: 0.7)
+                  : Colors.white.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : color.withValues(alpha: 0.15),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            color.withValues(alpha: 0.2),
+                            color.withValues(alpha: 0.08),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.tune_rounded, color: color, size: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Minimum Severity',
+                            style: AppTypography.titleSmall.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${_emojis[currentIdx]} ${_labels[currentIdx]}',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: color,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                // Step slider
+                SliderTheme(
+                  data: SliderThemeData(
+                    activeTrackColor: color,
+                    inactiveTrackColor: color.withValues(alpha: 0.15),
+                    thumbColor: color,
+                    overlayColor: color.withValues(alpha: 0.12),
+                    trackHeight: 4,
+                    thumbShape:
+                        const RoundSliderThumbShape(enabledThumbRadius: 8),
+                  ),
+                  child: Slider(
+                    value: currentIdx.toDouble(),
+                    min: 0,
+                    max: 4,
+                    divisions: 4,
+                    onChanged: (val) {
+                      cubit.setSeverity(
+                          AlertPreferences.priorityLevels[val.round()]);
+                    },
+                  ),
+                ),
+                // Labels row
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(5, (i) {
+                      final isActive = i == currentIdx;
+                      return Text(
+                        _emojis[i],
+                        style: TextStyle(
+                          fontSize: isActive ? 16 : 12,
+                          color: isActive
+                              ? null
+                              : AppColors.textDisabled,
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _descriptions[currentIdx],
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

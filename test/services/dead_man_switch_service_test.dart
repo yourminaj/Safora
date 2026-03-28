@@ -37,23 +37,21 @@ void main() {
       expect(service.nextDeadline, isNull);
     });
 
-    test('checkIn resets the timer without stopping', () {
+    test('checkIn resets the timer without stopping', () async {
       service.start();
       final firstDeadline = service.nextDeadline;
 
       // Wait a bit then check in.
-      Future<void>.delayed(const Duration(milliseconds: 500), () {
-        service.checkIn();
-      });
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      service.checkIn();
 
       // After checkIn, deadline should be updated.
-      Future<void>.delayed(const Duration(milliseconds: 600), () {
-        expect(service.isActive, isTrue);
-        expect(service.nextDeadline, isNotNull);
-        if (firstDeadline != null) {
-          expect(service.nextDeadline!.isAfter(firstDeadline), isTrue);
-        }
-      });
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(service.isActive, isTrue);
+      expect(service.nextDeadline, isNotNull);
+      if (firstDeadline != null) {
+        expect(service.nextDeadline!.isAfter(firstDeadline), isTrue);
+      }
     });
 
     test('remainingTime returns a non-null duration when active', () {
