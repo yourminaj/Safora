@@ -1,18 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:safora/core/services/premium_manager.dart';
 import 'package:safora/data/datasources/contacts_local_datasource.dart';
 import 'package:safora/data/models/emergency_contact.dart';
 
 class MockBox extends Mock implements Box {}
+class MockPremiumManager extends Mock implements PremiumManager {}
 
 void main() {
   late MockBox mockBox;
+  late MockPremiumManager mockPremiumManager;
   late ContactsLocalDataSource datasource;
 
   setUp(() {
     mockBox = MockBox();
-    datasource = ContactsLocalDataSource(mockBox);
+    mockPremiumManager = MockPremiumManager();
+    // Stub the contact limit; free tier allows 3 contacts.
+    when(() => mockPremiumManager.contactLimit).thenReturn(3);
+    datasource = ContactsLocalDataSource(mockBox, mockPremiumManager);
   });
 
   group('ContactsLocalDataSource', () {

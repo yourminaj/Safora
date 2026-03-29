@@ -249,6 +249,8 @@ class CountdownOverlay extends StatelessWidget {
       SosFailureReason.noContacts => l.preflightNoContacts,
       SosFailureReason.noGps => l.preflightNoGps,
       SosFailureReason.noNetwork => l.preflightNoNetwork,
+      SosFailureReason.smsPermissionDenied =>
+        'SMS permission required. Please grant it in Settings to send SOS alerts.',
     };
   }
 }

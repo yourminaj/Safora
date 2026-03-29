@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:safora/data/datasources/contacts_cloud_sync.dart';
 import 'package:safora/data/datasources/contacts_local_datasource.dart';
 import 'package:safora/data/models/emergency_contact.dart';
 import 'package:safora/data/repositories/contacts_repository.dart';
@@ -7,6 +8,7 @@ import 'package:safora/presentation/blocs/contacts/contacts_cubit.dart';
 import 'package:safora/presentation/blocs/contacts/contacts_state.dart';
 
 class MockContactsRepository extends Mock implements ContactsRepository {}
+class MockContactsCloudSync extends Mock implements ContactsCloudSync {}
 
 void main() {
   late ContactsCubit cubit;
@@ -82,8 +84,8 @@ void main() {
       );
 
       verify(() => mockRepo.add(any())).called(1);
-      // Should call loadContacts after add.
-      verify(() => mockRepo.getAll()).called(1);
+      // getAll() called once on startup (cloud-sync guard) + once after add = 2.
+      verify(() => mockRepo.getAll()).called(2);
     });
 
     test('addContact emits ContactsLimitReached when limit exceeded', () async {
@@ -107,7 +109,8 @@ void main() {
       await cubit.deleteContact('2');
 
       verify(() => mockRepo.delete('2')).called(1);
-      verify(() => mockRepo.getAll()).called(1);
+      // getAll() called once on startup (cloud-sync guard) + once after delete = 2.
+      verify(() => mockRepo.getAll()).called(2);
     });
 
     test('updateContact delegates to repository', () async {
@@ -142,6 +145,78 @@ void main() {
       expect(error.message, contains('Failed to load contacts'));
 
       await sub.cancel();
+    });
+  });
+
+  // ── Startup Cloud Sync (reinstall recovery) ────────────────────────────────
+  group('ContactsCubit — startup cloud sync', () {
+    late MockContactsCloudSync mockSync;
+
+    setUp(() {
+      mockSync = MockContactsCloudSync();
+    });
+
+    test('pulls from cloud when local store is empty on reinstall', () async {
+      var callCount = 0;
+      when(() => mockRepo.getAll()).thenAnswer((_) {
+        callCount++;
+        return callCount == 1 ? [] : [testContacts.first];
+      });
+      when(() => mockSync.syncFromCloud())
+          .thenAnswer((_) async => [testContacts.first]);
+      when(() => mockRepo.add(any())).thenAnswer((_) async => '');
+      when(() => mockRepo.isLimitReached).thenReturn(false);
+
+      final c = ContactsCubit(mockRepo, cloudSync: mockSync);
+      final states = <ContactsState>[];
+      final sub = c.stream.listen(states.add);
+
+      c.loadContacts();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(states.last, isA<ContactsLoaded>());
+      verify(() => mockSync.syncFromCloud()).called(1);
+      verify(() => mockRepo.add(any())).called(1);
+
+      await sub.cancel();
+      await c.close();
+    });
+
+    test('does NOT call syncFromCloud when local store already has contacts',
+        () async {
+      when(() => mockRepo.getAll()).thenReturn(testContacts);
+      when(() => mockRepo.isLimitReached).thenReturn(false);
+
+      final c = ContactsCubit(mockRepo, cloudSync: mockSync);
+      final states = <ContactsState>[];
+      final sub = c.stream.listen(states.add);
+
+      c.loadContacts();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(states.last, isA<ContactsLoaded>());
+      verifyNever(() => mockSync.syncFromCloud());
+
+      await sub.cancel();
+      await c.close();
+    });
+
+    test('does NOT call syncFromCloud when no cloudSync injected', () async {
+      when(() => mockRepo.getAll()).thenReturn([]);
+      when(() => mockRepo.isLimitReached).thenReturn(false);
+
+      final c = ContactsCubit(mockRepo); // no cloudSync
+      final states = <ContactsState>[];
+      final sub = c.stream.listen(states.add);
+
+      c.loadContacts();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(states.last, isA<ContactsLoaded>());
+      verifyNever(() => mockSync.syncFromCloud());
+
+      await sub.cancel();
+      await c.close();
     });
   });
 }

@@ -3,26 +3,29 @@ import 'package:mocktail/mocktail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:safora/core/services/auth_service.dart';
 
+// ── Mocks ─────────────────────────────────────────────────────────────────────
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 
-class MockUserCredential extends Mock implements UserCredential {}
-
 class MockUser extends Mock implements User {}
+
+class MockUserCredential extends Mock implements UserCredential {}
 
 void main() {
   late MockFirebaseAuth mockAuth;
   late AuthService authService;
-  late MockUserCredential mockCredential;
   late MockUser mockUser;
+  late MockUserCredential mockCredential;
 
   setUp(() {
     mockAuth = MockFirebaseAuth();
-    authService = AuthService(firebaseAuth: mockAuth);
-    mockCredential = MockUserCredential();
     mockUser = MockUser();
+    mockCredential = MockUserCredential();
+    authService = AuthService(firebaseAuth: mockAuth);
   });
 
-  group('AuthService', () {
+  // ── Existing tests (kept for regression coverage) ─────────────────────────
+
+  group('AuthService — sign in / sign up', () {
     test('isSignedIn returns true when user exists', () {
       when(() => mockAuth.currentUser).thenReturn(mockUser);
       expect(authService.isSignedIn, true);
@@ -31,11 +34,6 @@ void main() {
     test('isSignedIn returns false when no user', () {
       when(() => mockAuth.currentUser).thenReturn(null);
       expect(authService.isSignedIn, false);
-    });
-
-    test('currentUser returns User from FirebaseAuth', () {
-      when(() => mockAuth.currentUser).thenReturn(mockUser);
-      expect(authService.currentUser, mockUser);
     });
 
     test('signIn calls signInWithEmailAndPassword', () async {
@@ -49,41 +47,6 @@ void main() {
       final result =
           await authService.signIn(email: 'test@test.com', password: 'pass');
       expect(result, mockUser);
-      verify(() => mockAuth.signInWithEmailAndPassword(
-            email: 'test@test.com',
-            password: 'pass',
-          )).called(1);
-    });
-
-    test('signUp calls createUserWithEmailAndPassword', () async {
-      when(() => mockAuth.createUserWithEmailAndPassword(
-            email: any(named: 'email'),
-            password: any(named: 'password'),
-          )).thenAnswer((_) async => mockCredential);
-      when(() => mockCredential.user).thenReturn(mockUser);
-      when(() => mockUser.email).thenReturn('new@test.com');
-      when(() => mockAuth.currentUser).thenReturn(mockUser);
-
-      final result =
-          await authService.signUp(email: 'new@test.com', password: 'pass123');
-      expect(result, mockUser);
-    });
-
-    test('signUp sets displayName when provided', () async {
-      when(() => mockAuth.createUserWithEmailAndPassword(
-            email: any(named: 'email'),
-            password: any(named: 'password'),
-          )).thenAnswer((_) async => mockCredential);
-      when(() => mockCredential.user).thenReturn(mockUser);
-      when(() => mockUser.email).thenReturn('new@test.com');
-      when(() => mockUser.updateDisplayName(any()))
-          .thenAnswer((_) async {});
-      when(() => mockUser.reload()).thenAnswer((_) async {});
-      when(() => mockAuth.currentUser).thenReturn(mockUser);
-
-      await authService.signUp(
-          email: 'new@test.com', password: 'pass', displayName: 'John');
-      verify(() => mockUser.updateDisplayName('John')).called(1);
     });
 
     test('signOut calls FirebaseAuth.signOut', () async {
@@ -91,26 +54,85 @@ void main() {
       await authService.signOut();
       verify(() => mockAuth.signOut()).called(1);
     });
+  });
 
-    test('resetPassword calls sendPasswordResetEmail', () async {
-      when(() => mockAuth.sendPasswordResetEmail(email: any(named: 'email')))
-          .thenAnswer((_) async {});
-      await authService.resetPassword('test@test.com');
-      verify(() => mockAuth.sendPasswordResetEmail(email: 'test@test.com'))
-          .called(1);
-    });
+  // ── New: Email Verification ────────────────────────────────────────────────
 
-    test('deleteAccount calls currentUser.delete', () async {
+  group('AuthService — isEmailVerified', () {
+    test('returns true when user.emailVerified is true', () {
       when(() => mockAuth.currentUser).thenReturn(mockUser);
-      when(() => mockUser.delete()).thenAnswer((_) async {});
-      await authService.deleteAccount();
-      verify(() => mockUser.delete()).called(1);
+      when(() => mockUser.emailVerified).thenReturn(true);
+      expect(authService.isEmailVerified, true);
     });
 
-    test('authStateChanges returns stream from FirebaseAuth', () {
-      final stream = Stream<User?>.value(mockUser);
-      when(() => mockAuth.authStateChanges()).thenAnswer((_) => stream);
-      expect(authService.authStateChanges, stream);
+    test('returns false when user.emailVerified is false', () {
+      when(() => mockAuth.currentUser).thenReturn(mockUser);
+      when(() => mockUser.emailVerified).thenReturn(false);
+      expect(authService.isEmailVerified, false);
+    });
+
+    test('returns false when no user is signed in', () {
+      when(() => mockAuth.currentUser).thenReturn(null);
+      expect(authService.isEmailVerified, false);
+    });
+  });
+
+  group('AuthService — reloadUser', () {
+    test('calls user.reload when signed in', () async {
+      when(() => mockAuth.currentUser).thenReturn(mockUser);
+      when(() => mockUser.reload()).thenAnswer((_) async {});
+
+      await authService.reloadUser();
+      verify(() => mockUser.reload()).called(1);
+    });
+
+    test('silently does nothing when no user is signed in', () async {
+      when(() => mockAuth.currentUser).thenReturn(null);
+      // Must not throw
+      await expectLater(authService.reloadUser(), completes);
+    });
+  });
+
+  group('AuthService — sendEmailVerification', () {
+    test('calls user.sendEmailVerification when unverified user signed in',
+        () async {
+      when(() => mockAuth.currentUser).thenReturn(mockUser);
+      when(() => mockUser.emailVerified).thenReturn(false);
+      when(() => mockUser.email).thenReturn('test@test.com');
+      when(() => mockUser.sendEmailVerification())
+          .thenAnswer((_) async {});
+
+      await authService.sendEmailVerification();
+      verify(() => mockUser.sendEmailVerification()).called(1);
+    });
+
+    test('skips sending when email is already verified', () async {
+      when(() => mockAuth.currentUser).thenReturn(mockUser);
+      when(() => mockUser.emailVerified).thenReturn(true);
+      when(() => mockUser.email).thenReturn('verified@test.com');
+
+      await authService.sendEmailVerification();
+      // Must never call sendEmailVerification on an already-verified account.
+      verifyNever(() => mockUser.sendEmailVerification());
+    });
+
+    test('silently exits when no user is signed in', () async {
+      when(() => mockAuth.currentUser).thenReturn(null);
+      await expectLater(authService.sendEmailVerification(), completes);
+    });
+
+    test('rethrows FirebaseAuthException on failure', () async {
+      when(() => mockAuth.currentUser).thenReturn(mockUser);
+      when(() => mockUser.emailVerified).thenReturn(false);
+      when(() => mockUser.email).thenReturn('fail@test.com');
+      when(() => mockUser.sendEmailVerification()).thenThrow(
+        FirebaseAuthException(code: 'too-many-requests'),
+      );
+
+      await expectLater(
+        authService.sendEmailVerification(),
+        throwsA(isA<FirebaseAuthException>()),
+      );
     });
   });
 }

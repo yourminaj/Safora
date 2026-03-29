@@ -15,6 +15,10 @@ import '../services/weather_feed_service.dart';
 import '../services/app_logger.dart';
 import '../services/sos_foreground_service.dart';
 import '../../services/dead_man_switch_service.dart';
+import '../../core/services/voice_distress_service.dart';
+import '../../core/services/anomaly_movement_service.dart';
+import '../../core/services/road_condition_service.dart';
+import '../../core/services/sos_contact_alert_listener.dart';
 import '../../presentation/blocs/alerts/alerts_cubit.dart';
 import '../../presentation/blocs/battery/battery_cubit.dart';
 import '../../presentation/blocs/sos/sos_cubit.dart';
@@ -57,6 +61,14 @@ class ServiceBootstrapper {
       AppLogger.info('[ServiceBootstrapper] ConnectivityService started');
     } catch (e) {
       AppLogger.warning('[ServiceBootstrapper] ConnectivityService failed: $e');
+    }
+
+    // ── SOS Contact Alert Listener (free push, no Cloud Functions) ────
+    try {
+      await sl<SosContactAlertListener>().startListening();
+      AppLogger.info('[ServiceBootstrapper] SosContactAlertListener started');
+    } catch (e) {
+      AppLogger.warning('[ServiceBootstrapper] SosContactAlertListener failed: $e');
     }
 
     // Helper to get current GPS coordinates.
@@ -196,8 +208,10 @@ class ServiceBootstrapper {
           // Cross-service wiring: feed live speed into crash/fall detector
           // so it can differentiate vehicle crash (high speed) from
           // pedestrian fall (walking speed).
+          // Also feed into road condition classifier for context-aware detection.
           onSpeedUpdate: (speedKmh) {
             crashService.currentSpeedKmh = speedKmh;
+            sl<RoadConditionService>().updateSpeed(speedKmh);
           },
         );
         AppLogger.info('[ServiceBootstrapper] SpeedAlert re-hydrated (+ crash feed)');
@@ -246,6 +260,94 @@ class ServiceBootstrapper {
       }
     }
 
+    // ── Voice Distress Detection ────────────────────────────────
+    if (_isEnabled(settings, 'voice_distress_enabled')) {
+      try {
+        final voiceService = sl<VoiceDistressService>();
+        await voiceService.start();
+        voiceService.onDistressDetected.listen((event) {
+          final alertEvent = AlertEvent(
+            id: 'voice_distress_${DateTime.now().millisecondsSinceEpoch}',
+            type: event.alertType,
+            title: 'Voice Distress Detected',
+            description:
+                'A distress vocalization was detected '
+                '(confidence: ${(event.confidence * 100).toStringAsFixed(0)}%). '
+                'SOS countdown started.',
+            latitude: lastLat(),
+            longitude: lastLon(),
+            timestamp: event.detectedAt,
+            source: 'On-Device Microphone',
+            magnitude: event.confidence,
+          );
+          sl<AlertsCubit>().addLocalAlert(alertEvent);
+          sl<SosCubit>().startCountdown();
+        });
+        AppLogger.info('[ServiceBootstrapper] VoiceDistress re-hydrated');
+      } catch (e) {
+        AppLogger.warning('[ServiceBootstrapper] VoiceDistress failed: $e');
+      }
+    }
+
+    // ── Anomaly Movement Detection ─────────────────────────────
+    if (_isEnabled(settings, 'anomaly_movement_enabled')) {
+      try {
+        final movService = sl<AnomalyMovementService>();
+        await movService.start();
+        movService.onAnomalyDetected.listen((event) {
+          final alertEvent = AlertEvent(
+            id: 'anomaly_mov_${DateTime.now().millisecondsSinceEpoch}',
+            type: event.alertType,
+            title: 'Suspicious Movement: ${event.result.predictedClass.name}',
+            description:
+                'Anomalous movement pattern detected '
+                '(${event.result.predictedClass.name}, '
+                'confidence: ${(event.result.confidence * 100).toStringAsFixed(0)}%). '
+                'SOS countdown started.',
+            latitude: lastLat(),
+            longitude: lastLon(),
+            timestamp: event.detectedAt,
+            source: 'On-Device Accelerometer',
+            magnitude: event.result.confidence,
+          );
+          sl<AlertsCubit>().addLocalAlert(alertEvent);
+          sl<SosCubit>().startCountdown();
+        });
+        AppLogger.info('[ServiceBootstrapper] AnomalyMovement re-hydrated');
+      } catch (e) {
+        AppLogger.warning('[ServiceBootstrapper] AnomalyMovement failed: $e');
+      }
+    }
+
+    // ── Road Condition Detection ───────────────────────────────
+    if (_isEnabled(settings, 'road_condition_enabled')) {
+      try {
+        final roadService = sl<RoadConditionService>();
+        await roadService.start();
+        roadService.onHazardDetected.listen((event) {
+          final alertEvent = AlertEvent(
+            id: 'road_${event.result.condition.name}_${DateTime.now().millisecondsSinceEpoch}',
+            type: event.alertType,
+            title: 'Road Hazard: ${event.result.condition.name}',
+            description:
+                'A road hazard was detected at '
+                '${event.result.speedKmh.toStringAsFixed(0)} km/h '
+                '(${event.result.condition.name}, '
+                'confidence: ${(event.result.confidence * 100).toStringAsFixed(0)}%).',
+            latitude: lastLat(),
+            longitude: lastLon(),
+            timestamp: event.detectedAt,
+            source: 'On-Device Accelerometer + GPS',
+            magnitude: event.result.confidence,
+          );
+          sl<AlertsCubit>().addLocalAlert(alertEvent);
+        });
+        AppLogger.info('[ServiceBootstrapper] RoadCondition re-hydrated');
+      } catch (e) {
+        AppLogger.warning('[ServiceBootstrapper] RoadCondition failed: $e');
+      }
+    }
+
     // ── Battery Monitoring → Alerts + SMS to Contacts ─────
     try {
       sl<BatteryCubit>().startMonitoring();
@@ -290,6 +392,9 @@ class ServiceBootstrapper {
       'speed_alert_enabled',
       'context_alert_enabled',
       'dead_man_switch_enabled',
+      'voice_distress_enabled',
+      'anomaly_movement_enabled',
+      'road_condition_enabled',
     ];
     return keys.where((k) => _isEnabled(settings, k)).length;
   }

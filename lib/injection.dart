@@ -11,6 +11,7 @@ import 'core/services/decoy_call_service.dart';
 import 'core/services/geofence_service.dart';
 import 'core/services/location_service.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/sos_contact_alert_listener.dart';
 import 'core/services/shake_detection_service.dart';
 import 'core/services/snatch_detection_service.dart';
 import 'core/services/sms_service.dart';
@@ -23,6 +24,9 @@ import 'core/services/alert_permission_gate.dart';
 import 'data/models/alert_preferences.dart';
 import 'detection/ml/crash_fall_detection_service.dart';
 import 'detection/ml/crash_fall_detection_engine.dart';
+import 'core/services/voice_distress_service.dart';
+import 'core/services/anomaly_movement_service.dart';
+import 'core/services/road_condition_service.dart';
 import 'presentation/blocs/theme/theme_cubit.dart';
 import 'data/datasources/alerts_local_datasource.dart';
 import 'data/datasources/contacts_cloud_sync.dart';
@@ -75,6 +79,10 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
   getIt.registerLazySingleton<BatteryService>(() => BatteryService());
   getIt.registerLazySingleton<NotificationService>(() => NotificationService());
+  getIt.registerLazySingleton<SosContactAlertListener>(
+    () => SosContactAlertListener(),
+    dispose: (s) => s.stopListening(),
+  );
   getIt.registerLazySingleton<ShakeDetectionService>(
     () => ShakeDetectionService(),
   );
@@ -107,7 +115,7 @@ Future<void> configureDependencies() async {
   // ── Data Sources (with corruption recovery) ────────────
   final contactsBox = await _openBoxSafe(ContactsLocalDataSource.boxName);
   getIt.registerLazySingleton<ContactsLocalDataSource>(
-    () => ContactsLocalDataSource(contactsBox),
+    () => ContactsLocalDataSource(contactsBox, getIt<PremiumManager>()),
   );
 
   final alertsBox = await _openBoxSafe(AlertsLocalDataSource.boxName);
@@ -122,7 +130,7 @@ Future<void> configureDependencies() async {
 
   final remindersBox = await _openBoxSafe(RemindersLocalDataSource.boxName);
   getIt.registerLazySingleton<RemindersLocalDataSource>(
-    () => RemindersLocalDataSource(remindersBox),
+    () => RemindersLocalDataSource(remindersBox, getIt<PremiumManager>()),
   );
 
   final sosHistoryBox = await _openBoxSafe(SosHistoryDatasource.boxName);
@@ -165,6 +173,20 @@ Future<void> configureDependencies() async {
         minConfidence: savedMinConf,
       ),
     ),
+    dispose: (s) => s.dispose(),
+  );
+
+  // ── ML Detection Services ───────────────────────────────────────
+  getIt.registerLazySingleton<VoiceDistressService>(
+    () => VoiceDistressService(),
+    dispose: (s) => s.dispose(),
+  );
+  getIt.registerLazySingleton<AnomalyMovementService>(
+    () => AnomalyMovementService(),
+    dispose: (s) => s.dispose(),
+  );
+  getIt.registerLazySingleton<RoadConditionService>(
+    () => RoadConditionService(),
     dispose: (s) => s.dispose(),
   );
 

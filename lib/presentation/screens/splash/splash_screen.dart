@@ -32,7 +32,6 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
 
-    // Use centralized DI box instead of opening a duplicate.
     final settingsBox = getIt<Box>(instanceName: 'app_settings');
     final onboardingDone =
         settingsBox.get('onboarding_completed', defaultValue: false) as bool;
@@ -40,10 +39,17 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (onboardingDone) {
-      // Check if user is signed in.
-      final isSignedIn = getIt<AuthService>().isSignedIn;
-      if (isSignedIn) {
-        context.go('/home');
+      final authService = getIt<AuthService>();
+      if (authService.isSignedIn) {
+        // Reload to ensure emailVerified flag is fresh from Firebase.
+        await authService.reloadUser();
+        if (!mounted) return;
+        if (authService.isEmailVerified) {
+          context.go('/home');
+        } else {
+          // Signed in but email not verified — block access.
+          context.go('/verify-email');
+        }
       } else {
         context.go('/login');
       }

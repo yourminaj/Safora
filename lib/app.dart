@@ -17,6 +17,7 @@ import 'presentation/screens/settings/sos_history_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/signup_screen.dart';
+import 'presentation/screens/auth/verify_email_screen.dart';
 import 'presentation/screens/home/home_screen.dart';
 import 'presentation/screens/contacts/contacts_screen.dart';
 import 'presentation/screens/contacts/add_contact_screen.dart';
@@ -41,6 +42,7 @@ abstract final class AppRoutes {
   static const String onboarding = '/onboarding';
   static const String login = '/login';
   static const String signup = '/signup';
+  static const String verifyEmail = '/verify-email';
   static const String home = '/home';
   static const String contacts = '/contacts';
   static const String addContact = '/contacts/add';
@@ -108,25 +110,56 @@ GoRouter createRouter() {
       },
       routes: [
         // ─── Top-Level Routes (no bottom nav) ──────────
+        // All use pageBuilder with unique ValueKeys to prevent
+        // duplicate key assertions when coexisting with StatefulShellRoute.
         GoRoute(
           path: AppRoutes.splash,
-          builder: (context, state) => const SplashScreen(),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-splash'),
+            name: '/',
+            child: SplashScreen(),
+          ),
         ),
         GoRoute(
           path: AppRoutes.onboarding,
-          builder: (context, state) => const OnboardingScreen(),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-onboarding'),
+            name: '/onboarding',
+            child: OnboardingScreen(),
+          ),
         ),
         GoRoute(
           path: AppRoutes.login,
-          builder: (context, state) => const LoginScreen(),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-login'),
+            name: '/login',
+            child: LoginScreen(),
+          ),
         ),
         GoRoute(
           path: AppRoutes.signup,
-          builder: (context, state) => const SignupScreen(),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-signup'),
+            name: '/signup',
+            child: SignupScreen(),
+          ),
         ),
         GoRoute(
+          path: AppRoutes.verifyEmail,
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-verify-email'),
+            name: '/verify-email',
+            child: VerifyEmailScreen(),
+          ),
+        ),
+        GoRoute(
+          parentNavigatorKey: _rootKey,
           path: AppRoutes.lock,
-          builder: (context, state) => const LockScreen(),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-lock'),
+            name: '/lock',
+            child: LockScreen(),
+          ),
         ),
 
         // ─── Sub-routes that push on top of the shell ──
@@ -137,10 +170,10 @@ GoRouter createRouter() {
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.addContact,
-          pageBuilder: (context, state) => MaterialPage(
-            key: const ValueKey('page-add-contact'),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-add-contact'),
             name: AppRoutes.addContact,
-            child: const AddContactScreen(),
+            child: AddContactScreen(),
           ),
         ),
         GoRoute(
@@ -172,46 +205,46 @@ GoRouter createRouter() {
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.profile,
-          pageBuilder: (context, state) => MaterialPage(
-            key: const ValueKey('page-profile'),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-profile'),
             name: AppRoutes.profile,
-            child: const ProfileScreen(),
+            child: ProfileScreen(),
           ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.settings,
-          pageBuilder: (context, state) => MaterialPage(
-            key: const ValueKey('page-settings'),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-settings'),
             name: AppRoutes.settings,
-            child: const SettingsScreen(),
+            child: SettingsScreen(),
           ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.decoyCall,
-          pageBuilder: (context, state) => MaterialPage(
-            key: const ValueKey('page-decoy-call'),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-decoy-call'),
             name: AppRoutes.decoyCall,
-            child: const DecoyCallScreen(),
+            child: DecoyCallScreen(),
           ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.alertMap,
-          pageBuilder: (context, state) => MaterialPage(
-            key: const ValueKey('page-alert-map'),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-alert-map'),
             name: AppRoutes.alertMap,
-            child: const AlertMapScreen(),
+            child: AlertMapScreen(),
           ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.sosHistory,
-          pageBuilder: (context, state) => MaterialPage(
-            key: const ValueKey('page-sos-history'),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-sos-history'),
             name: AppRoutes.sosHistory,
-            child: const SosHistoryScreen(),
+            child: SosHistoryScreen(),
           ),
         ),
         GoRoute(
@@ -229,19 +262,19 @@ GoRouter createRouter() {
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.emergencyCenter,
-          pageBuilder: (context, state) => MaterialPage(
-            key: const ValueKey('page-emergency-center'),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-emergency-center'),
             name: AppRoutes.emergencyCenter,
-            child: const EmergencyCenterScreen(),
+            child: EmergencyCenterScreen(),
           ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.paywall,
-          pageBuilder: (context, state) => MaterialPage(
-            key: const ValueKey('page-paywall'),
+          pageBuilder: (context, state) => const MaterialPage(
+            key: ValueKey('page-paywall'),
             name: AppRoutes.paywall,
-            child: const PaywallScreen(),
+            child: PaywallScreen(),
           ),
         ),
 

@@ -319,7 +319,7 @@ class MilitaryAlertClient {
       return AlertType.activeShooter;
     }
     if (lower.contains('evacuation')) {
-      return AlertType.bombThreat;
+      return AlertType.evacuation;
     }
     if (lower.contains('law enforcement')) {
       return AlertType.activeShooter;

@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:telephony/telephony.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../../core/services/location_service.dart';
@@ -83,6 +85,28 @@ class SosCubit extends Cubit<SosState> {
         if (!isClosed) emit(const SosIdle());
       });
       return;
+    }
+
+    // ── Android SMS permission check ──────────────────────
+    // On Android, direct background SMS requires SEND_SMS permission.
+    // If it's denied, emit a non-fatal failure so the UI can direct the
+    // user to grant it.  iOS uses url_launcher fallback — no check needed.
+    if (Platform.isAndroid) {
+      final telephony = Telephony.instance;
+      final hasPermission =
+          await telephony.requestPhoneAndSmsPermissions ?? false;
+      if (!hasPermission) {
+        AppLogger.warning(
+          '[SOS] Pre-flight: SEND_SMS permission denied — blocking SOS',
+        );
+        emit(const SosPreflightFailed(
+          reason: SosFailureReason.smsPermissionDenied,
+        ));
+        Future.delayed(const Duration(seconds: 3), () {
+          if (!isClosed) emit(const SosIdle());
+        });
+        return;
+      }
     }
 
     // If GPS not ready, attempt a quick fix (non-blocking).

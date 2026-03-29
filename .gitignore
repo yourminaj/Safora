@@ -48,3 +48,6 @@ app.*.map.json
 android/key.properties
 android/app/*.jks
 android/app/*.keystore
+
+# Production secrets (NEVER commit these)
+dart-define.json

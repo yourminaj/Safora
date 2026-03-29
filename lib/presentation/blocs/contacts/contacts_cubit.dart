@@ -32,10 +32,29 @@ class ContactsCubit extends Cubit<ContactsState> {
     }
   }
 
-  /// Load all contacts from storage.
-  void loadContacts() {
+  /// Load all contacts from storage, pulling from cloud first if local is empty.
+  ///
+  /// On a fresh install or after clearing app data, the local Hive box is
+  /// empty while contacts may still exist in Firestore.  We perform a
+  /// one-shot cloud pull when the local store is empty so the user's contacts
+  /// are restored without any manual action.
+  Future<void> loadContacts() async {
     emit(const ContactsLoading());
     try {
+      // If local storage is empty (e.g. reinstall), pull from cloud first.
+      final sync = _cloudSync;
+      if (_repository.getAll().isEmpty && sync != null) {
+        AppLogger.info('[ContactsCubit] Local contacts empty — syncing from cloud');
+        final cloudContacts = await sync.syncFromCloud();
+        for (final c in cloudContacts) {
+          try {
+            await _repository.add(c);
+          } catch (_) {
+            // ContactLimitException can fire for free users — safe to skip.
+          }
+        }
+      }
+
       final contacts = _repository.getAll();
       emit(ContactsLoaded(
         contacts: contacts,

@@ -16,14 +16,10 @@ class AlertCard extends StatelessWidget {
     super.key,
     required this.alert,
     this.onTap,
-    this.onReportFalse,
   });
 
   final AlertEvent alert;
   final VoidCallback? onTap;
-
-  /// Callback when user taps "Report False Alert".
-  final VoidCallback? onReportFalse;
 
   Color get _priorityColor => switch (alert.type.priority) {
     AlertPriority.critical => AppColors.danger,
@@ -229,39 +225,6 @@ class AlertCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ),
-                ),
-              ],
-
-              // ── Report false alert ──
-              if (onReportFalse != null) ...[
-                const SizedBox(height: 6),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
-                    onTap: onReportFalse,
-                    borderRadius: BorderRadius.circular(6),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.flag_rounded,
-                            size: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Report false alert',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
               ],

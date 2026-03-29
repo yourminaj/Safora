@@ -27,7 +27,13 @@ class ContactsCloudSync {
     return _firestore.collection('users').doc(uid).collection('emergency_contacts');
   }
 
-  /// Upload all local contacts to Firestore (overwrite cloud).
+  /// Upload all local contacts to Firestore using an atomic upsert strategy.
+  ///
+  /// Unlike the old delete-then-write approach, this never destroys data
+  /// mid-operation. Each contact is written with [SetOptions.merge] so that
+  /// only fields present in [localContacts] are updated.  Contacts that no
+  /// longer exist locally are explicitly deleted in the same batch so the
+  /// cloud state remains in sync.
   Future<void> syncToCloud(List<EmergencyContact> localContacts) async {
     if (!_canSync) {
       AppLogger.warning('[CloudSync] Not authenticated, skipping upload');
@@ -38,26 +44,40 @@ class ContactsCloudSync {
     if (ref == null) return;
 
     try {
-      // Use a batch write for atomicity.
+      // Build a map of local contacts by their stable Firestore doc ID.
+      final localById = <String, EmergencyContact>{
+        for (final c in localContacts) (c.id ?? c.phone): c,
+      };
+
+      // Fetch existing cloud doc IDs so we can identify stale ones.
+      final existing = await ref.get();
+      final cloudIds = existing.docs.map((d) => d.id).toSet();
+
       final batch = _firestore.batch();
 
-      // Delete all existing cloud contacts first.
-      final existing = await ref.get();
-      for (final doc in existing.docs) {
-        batch.delete(doc.reference);
+      // Upsert every local contact — merge:true means we never blank a
+      // contact that may have been updated on another device mid-sync.
+      for (final entry in localById.entries) {
+        batch.set(
+          ref.doc(entry.key),
+          {
+            ...entry.value.toMap(),
+            'syncedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
       }
 
-      // Write all local contacts.
-      for (final contact in localContacts) {
-        final docRef = ref.doc(contact.id ?? contact.phone);
-        batch.set(docRef, {
-          ...contact.toMap(),
-          'syncedAt': FieldValue.serverTimestamp(),
-        });
+      // Delete cloud contacts that were removed locally.
+      for (final cloudId in cloudIds) {
+        if (!localById.containsKey(cloudId)) {
+          batch.delete(ref.doc(cloudId));
+        }
       }
 
       await batch.commit();
-      AppLogger.info('[CloudSync] Uploaded ${localContacts.length} contacts');
+      AppLogger.info('[CloudSync] Upserted ${localById.length} contacts '
+          '(removed ${cloudIds.difference(localById.keys.toSet()).length})');
     } catch (e) {
       AppLogger.error('[CloudSync] Upload failed: $e');
     }
@@ -71,7 +91,9 @@ class ContactsCloudSync {
     if (ref == null) return [];
 
     try {
-      final snapshot = await ref.orderBy('syncedAt').get();
+      // No orderBy — 'syncedAt' may not exist on first write and would
+      // throw an index error.  Local ordering is handled by the Hive layer.
+      final snapshot = await ref.get();
       final contacts = snapshot.docs.map((doc) {
         return EmergencyContact.fromMap(doc.data(), id: doc.id);
       }).toList();

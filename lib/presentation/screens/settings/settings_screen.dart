@@ -936,7 +936,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     iconColor: AppColors.secondary,
                     title: l.emergencyContacts,
                     subtitle: l.nContactsAdded(count),
-                    onTap: () => context.push('/contacts'),
+                    onTap: () => context.go('/contacts'),
                   );
                 },
               ),

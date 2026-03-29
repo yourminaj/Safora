@@ -71,7 +71,9 @@ void main() {
         final line = lines[i];
         // Skip comments and imports
         if (line.trimLeft().startsWith('//') ||
-            line.trimLeft().startsWith('import')) continue;
+            line.trimLeft().startsWith('import')) {
+          continue;
+        }
         if (rawColorPattern.hasMatch(line)) {
           violations.add('Line ${i + 1}: ${line.trim()}');
         }

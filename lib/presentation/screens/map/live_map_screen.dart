@@ -248,22 +248,49 @@ class _LiveMapScreenState extends State<LiveMapScreen>
                 safeZoneCount: _geofence.zones.length,
               ),
             ),
-        ],
-      ),
-      floatingActionButton: _userPosition != null && !_followUser
-          ? Padding(
-              padding: EdgeInsets.only(bottom: saforaBottomInset(context) - 16),
-              child: FloatingActionButton.small(
-                heroTag: 'recenter',
-                onPressed: _recenterOnUser,
-                backgroundColor: theme.colorScheme.primaryContainer,
-                child: Icon(
-                  Icons.my_location_rounded,
-                  color: theme.colorScheme.onPrimaryContainer,
+          // ── Premium re-center button — bottom-right ───────
+          if (_userPosition != null && !_followUser)
+            Positioned(
+              bottom: saforaBottomInset(context) + 12,
+              right: 20,
+              child: GestureDetector(
+                onTap: _recenterOnUser,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFFFF5252),
+                        Color(0xFFC62828),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 3,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.my_location_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
-            )
-          : null,
+            ),
+        ],
+      ),
     );
   }
 }

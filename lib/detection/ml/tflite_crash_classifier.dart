@@ -1,3 +1,4 @@
+import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
 import 'dart:typed_data';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import '../../core/services/app_logger.dart';
@@ -52,26 +53,87 @@ class ClassificationResult {
 /// - **Input**: `[1, 12]` Float32 tensor (from [MlFeatureExtractor])
 /// - **Output**: `[1, 3]` Float32 tensor → `[normal, fall, crash]` probabilities
 ///
+/// ## M4: Dynamic Model Loading via Firebase ML
+///
+/// Loading priority (highest to lowest):
+/// 1. **Firebase ML** (`loadFromFirebaseML`) — downloads the latest
+///    `crash_fall_classifier` model from Firebase Console → Machine Learning.
+///    The model is cached on-device and served offline after first download.
+/// 2. **Bundled asset fallback** (`loadModel`) — uses the `.tflite` file
+///    inside `assets/ml_models/`.  Useful for local dev and CI.
+/// 3. **Threshold-only mode** — if both fail, `classify` returns `null`
+///    and `CrashFallDetectionEngine` uses its threshold algorithm exclusively.
+///
 /// ## Lifecycle
 ///
-/// 1. Call [loadModel] at app startup (or lazily on first inference).
+/// 1. Call [loadFromFirebaseML] at app startup (managed by ServiceBootstrapper).
 /// 2. Call [classify] with a 12-element feature vector.
 /// 3. Call [dispose] when done.
-///
-/// If the model file is missing or corrupt, [isModelLoaded] returns `false`
-/// and [classify] returns `null` — the engine falls back to threshold-only.
-///
-/// > **Important**: The bundled model is a placeholder skeleton. A production
-/// > model requires training on annotated accelerometer datasets
-/// > (e.g., SisFall, MobiAct, or proprietary vehicle crash data).
 class TfliteCrashClassifier {
   Interpreter? _interpreter;
+  _ModelSource _activeSource = _ModelSource.none;
 
-  /// Path to the bundled TFLite model asset.
+  /// Firebase ML model name published in the Firebase Console.
+  static const String _kFirebaseModelName = 'crash_fall_classifier';
+
+  /// Path to the bundled TFLite model asset (fallback).
   static const String modelAssetPath = 'assets/ml_models/crash_fall_model.tflite';
 
   /// Whether the model has been loaded successfully.
   bool get isModelLoaded => _interpreter != null;
+
+  /// Which source the active model was loaded from.
+  String get activeModelSource => _activeSource.name;
+
+  // ──────────────────────────────────────────────────────────────────
+  // M4: PRIMARY — Firebase ML dynamic model download
+  // ──────────────────────────────────────────────────────────────────
+
+  /// Attempts to load the latest model from Firebase ML.
+  ///
+  /// If the device has never downloaded the model, it fetches it over the
+  /// network (WiFi or cellular, depending on [conditions]).
+  /// If the download fails, falls back to [loadModel] (bundled asset).
+  ///
+  /// Returns `true` if any model source succeeded.
+  Future<bool> loadFromFirebaseML() async {
+    try {
+      AppLogger.info('[TfliteCrashClassifier] Attempting Firebase ML download...');
+
+      final conditions = FirebaseModelDownloadConditions(
+        androidChargingRequired: false,
+        androidWifiRequired: false,
+        iosAllowsCellularAccess: true,
+        iosAllowsBackgroundDownloading: false,
+      );
+
+      final downloadedModel = await FirebaseModelDownloader.instance.getModel(
+        _kFirebaseModelName,
+        FirebaseModelDownloadType.latestModel,
+        conditions,
+      );
+
+      _interpreter = Interpreter.fromFile(downloadedModel.file);
+      _activeSource = _ModelSource.firebaseML;
+
+      AppLogger.info(
+        '[TfliteCrashClassifier] ✅ Firebase ML model loaded '
+        'from ${downloadedModel.file.path} — '
+        'input=${_interpreter!.getInputTensor(0).shape}, '
+        'output=${_interpreter!.getOutputTensor(0).shape}',
+      );
+      return true;
+    } catch (e) {
+      AppLogger.warning(
+        '[TfliteCrashClassifier] Firebase ML unavailable — falling back to bundled asset: $e',
+      );
+      return loadModel();
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // FALLBACK — Bundled asset model
+  // ──────────────────────────────────────────────────────────────────
 
   /// Load the TFLite model from bundled assets.
   ///
@@ -80,22 +142,44 @@ class TfliteCrashClassifier {
   Future<bool> loadModel() async {
     try {
       _interpreter = await Interpreter.fromAsset(modelAssetPath);
+      _activeSource = _ModelSource.bundledAsset;
       AppLogger.info(
-        '[TfliteCrashClassifier] Model loaded: '
+        '[TfliteCrashClassifier] ⚠️ Bundled model loaded (placeholder — threshold-only mode for ML): '
         'input=${_interpreter!.getInputTensor(0).shape}, '
         'output=${_interpreter!.getOutputTensor(0).shape}',
       );
       return true;
     } catch (e) {
       AppLogger.warning(
-        '[TfliteCrashClassifier] Model not loaded (threshold-only mode): $e',
+        '[TfliteCrashClassifier] No model available — running in threshold-only mode: $e',
       );
       _interpreter = null;
+      _activeSource = _ModelSource.none;
       return false;
     }
   }
 
+  // ──────────────────────────────────────────────────────────────────
+  // INFERENCE
+  // ──────────────────────────────────────────────────────────────────
+
   /// Classify a 12-element feature vector.
+  ///
+  /// Feature vector index contract (must match training pipeline):
+  /// ```
+  /// [0]  smv              — Signal Magnitude Vector
+  /// [1]  gForce           — Converted to G from m/s²
+  /// [2]  jerk             — Rate of change of SMV
+  /// [3]  sma              — Signal Magnitude Area
+  /// [4]  smvVariance      — Variance of SMV in window
+  /// [5]  freefallFlag     — 1.0 if freefall detected in window
+  /// [6]  postImpactStillness — 1.0 if stillness detected post-impact
+  /// [7]  axMean           — Mean X-axis acceleration
+  /// [8]  ayMean           — Mean Y-axis acceleration
+  /// [9]  azMean           — Mean Z-axis acceleration
+  /// [10] axStd            — Std deviation of X-axis
+  /// [11] azStd            — Std deviation of Z-axis
+  /// ```
   ///
   /// Returns `null` if the model is not loaded or inference fails.
   ClassificationResult? classify(List<double> features) {
@@ -131,5 +215,16 @@ class TfliteCrashClassifier {
   void dispose() {
     _interpreter?.close();
     _interpreter = null;
+    _activeSource = _ModelSource.none;
   }
+}
+
+/// Internal enum tracking where the active model was loaded from.
+enum _ModelSource {
+  /// No model loaded — threshold-only mode.
+  none,
+  /// Loaded from Firebase ML (production model).
+  firebaseML,
+  /// Loaded from bundled assets (placeholder/dev model).
+  bundledAsset,
 }

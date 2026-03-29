@@ -1,19 +1,19 @@
 import 'package:hive/hive.dart';
-import 'package:get_it/get_it.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/services/premium_manager.dart';
 import '../models/emergency_contact.dart';
 
 /// Local data source for emergency contacts using Hive.
 class ContactsLocalDataSource {
-  ContactsLocalDataSource(this._box);
+  ContactsLocalDataSource(this._box, this._premiumManager);
 
   final Box _box;
+  final PremiumManager _premiumManager;
 
   static const String boxName = 'emergency_contacts';
 
   /// Contact limit from PremiumManager (3 free, 999 pro).
-  int get maxFreeContacts => GetIt.instance<PremiumManager>().contactLimit;
+  int get maxFreeContacts => _premiumManager.contactLimit;
 
   /// Get all saved emergency contacts.
   List<EmergencyContact> getAll() {

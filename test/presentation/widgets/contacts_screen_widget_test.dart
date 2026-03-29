@@ -31,8 +31,8 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 500));
 
+      // The FAB is a custom circular GestureDetector with an Icon only — no text label.
       expect(find.byIcon(Icons.person_add_rounded), findsOneWidget);
-      expect(find.text('Add Contact'), findsOneWidget);
     });
 
     testWidgets('shows empty state when no contacts', (tester) async {

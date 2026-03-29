@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:http/http.dart' as http;
 import '../../core/constants/alert_types.dart';
 import '../../core/constants/api_endpoints.dart';
@@ -11,12 +12,44 @@ import '../models/alert_event.dart';
 /// - USGS: Earthquakes (GeoJSON)
 /// - GDACS: Cyclones, floods, earthquakes (JSON)
 /// - Open-Meteo: Flood risk (river discharge)
+///
+/// ## L1 — Adaptive Flood Threshold
+/// The flood discharge threshold is read from Firebase Remote Config
+/// (`flood_threshold_m3s`, default 500.0 m³/s).  Operators can update this
+/// in the Firebase Console without shipping an app update, allowing regional
+/// tuning (e.g., 150 for Bangladesh low-altitude rivers, 2000 for Himalayan
+/// rivers).
 class DisasterApiClient {
   DisasterApiClient({http.Client? client})
       : _client = client ?? http.Client();
 
   final http.Client _client;
   static const Duration _timeout = Duration(seconds: 15);
+
+  /// Remote Config key for the flood discharge threshold.
+  static const String _kFloodThresholdKey = 'flood_threshold_m3s';
+
+  /// Fallback threshold when Remote Config is unavailable.
+  /// Value: 500.0 m³/s — matches GDACS moderate flood-risk baseline.
+  static const double _kFloodThresholdFallback = 500.0;
+
+  /// Returns the current flood discharge threshold from Remote Config.
+  ///
+  /// Falls back to [_kFloodThresholdFallback] if Remote Config is not
+  /// initialized or the key has no value.  This is deliberately non-
+  /// throwing so a misconfigured Remote Config can never suppress alerts.
+  double get _floodThresholdM3s {
+    try {
+      final remoteValue = FirebaseRemoteConfig.instance.getDouble(_kFloodThresholdKey);
+      // getDouble returns 0.0 when key is absent — treat as fallback.
+      if (remoteValue <= 0) return _kFloodThresholdFallback;
+      AppLogger.info('[DisasterAPI] Flood threshold from Remote Config: ${remoteValue}m³/s');
+      return remoteValue;
+    } catch (_) {
+      // Remote Config SDK not initialized at call time — use fallback.
+      return _kFloodThresholdFallback;
+    }
+  }
 
   // ─── USGS Earthquakes ────────────────────────────────────
 
@@ -213,7 +246,7 @@ class DisasterApiClient {
         final discharge = (discharges[i] as num?)?.toDouble() ?? 0;
 
         // High discharge threshold — rough heuristic for flood risk.
-        if (discharge > 500) {
+        if (discharge > _floodThresholdM3s) {
           alerts.add(AlertEvent(
             id: 'flood_${times[i]}',
             type: AlertType.flood,
@@ -559,11 +592,24 @@ class DisasterApiClient {
     double radiusKm = 100,
   }) async {
     try {
-      // NASA FIRMS provides fire data via map key.
-      // Use the open CSV endpoint for VIIRS data.
+        // NASA FIRMS provides fire data via map key.
+      // Injected at build time — never hardcoded in source:
+      //   flutter build appbundle --dart-define=NASA_FIRMS_KEY=<your_key>
+      // If missing, _firmsKey is empty and the request returns an empty list.
+      const firmsKey = String.fromEnvironment('NASA_FIRMS_KEY');
+      if (firmsKey.isEmpty) return [];
+
+      // NASA FIRMS area/csv expects a bounding box: west,south,east,north.
+      // Convert radiusKm to degrees (approx: 1 km ≈ 0.009°).
+      final delta = radiusKm * 0.009;
+      final west  = (longitude - delta).toStringAsFixed(4);
+      final south = (latitude  - delta).toStringAsFixed(4);
+      final east  = (longitude + delta).toStringAsFixed(4);
+      final north = (latitude  + delta).toStringAsFixed(4);
+
       final uri = Uri.parse(
         'https://firms.modaps.eosdis.nasa.gov/api/area/csv/'
-        'b26b696f584a2b6cf8638c11b3e48612/VIIRS_SNPP_NRT/$latitude,$longitude,$radiusKm/1',
+        '$firmsKey/VIIRS_SNPP_NRT/$west,$south,$east,$north/1',
       );
 
       final response = await _client.get(uri).timeout(_timeout);

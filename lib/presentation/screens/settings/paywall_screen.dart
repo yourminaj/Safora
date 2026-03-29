@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/app_logger.dart';
-import '../../../core/services/premium_manager.dart';
 import '../../../core/services/subscription_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../injection.dart';
@@ -311,7 +310,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
                   ),
@@ -319,7 +318,7 @@ class _PaywallScreenState extends State<PaywallScreen>
               ],
             ),
           ),
-          Icon(Icons.check_circle, size: 20, color: AppColors.success),
+          const Icon(Icons.check_circle, size: 20, color: AppColors.success),
         ],
       ),
     );
@@ -496,7 +495,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                 ),
                 Text(
                   plan.period,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
                   ),
@@ -524,17 +523,17 @@ class _PaywallScreenState extends State<PaywallScreen>
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, size: 18, color: AppColors.error),
+          const Icon(Icons.error_outline, size: 18, color: AppColors.error),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               _errorMessage!,
-              style: TextStyle(color: AppColors.error, fontSize: 13),
+              style: const TextStyle(color: AppColors.error, fontSize: 13),
             ),
           ),
           GestureDetector(
             onTap: () => setState(() => _errorMessage = null),
-            child: Icon(Icons.close, size: 16, color: AppColors.error),
+            child: const Icon(Icons.close, size: 16, color: AppColors.error),
           ),
         ],
       ),
@@ -603,7 +602,7 @@ class _PaywallScreenState extends State<PaywallScreen>
           ),
         ),
         const SizedBox(height: 8),
-        Text(
+        const Text(
           'Subscriptions auto-renew unless cancelled at least 24 hours'
           ' before the end of the current period. Cancel anytime in'
           ' Google Play Store settings.',

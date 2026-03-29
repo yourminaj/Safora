@@ -1,18 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:safora/core/services/premium_manager.dart';
 import 'package:safora/data/datasources/reminders_local_datasource.dart';
 import 'package:safora/data/models/medicine_reminder.dart';
 
 class MockBox extends Mock implements Box {}
+class MockPremiumManager extends Mock implements PremiumManager {}
 
 void main() {
   late MockBox mockBox;
+  late MockPremiumManager mockPremiumManager;
   late RemindersLocalDataSource datasource;
 
   setUp(() {
     mockBox = MockBox();
-    datasource = RemindersLocalDataSource(mockBox);
+    mockPremiumManager = MockPremiumManager();
+    // Stub the reminder limit; free tier allows 2 reminders.
+    when(() => mockPremiumManager.reminderLimit).thenReturn(2);
+    datasource = RemindersLocalDataSource(mockBox, mockPremiumManager);
   });
 
   group('RemindersLocalDataSource', () {

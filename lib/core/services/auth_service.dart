@@ -17,6 +17,41 @@ class AuthService {
   /// Whether a user is currently signed in.
   bool get isSignedIn => _auth.currentUser != null;
 
+  /// Whether the currently signed-in user has verified their email.
+  ///
+  /// NOTE: Firebase caches the verification flag locally.  Always call
+  /// [reloadUser] before reading this in a routing guard to ensure freshness.
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
+
+  /// Force-refreshes the Firebase [User] token so [isEmailVerified] is current.
+  Future<void> reloadUser() async {
+    try {
+      await _auth.currentUser?.reload();
+    } catch (e) {
+      AppLogger.warning('[Auth] reloadUser failed: $e');
+    }
+  }
+
+  /// Sends a verification email to the current user.
+  Future<void> sendEmailVerification() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      AppLogger.warning('[Auth] sendEmailVerification: no current user');
+      return;
+    }
+    if (user.emailVerified) {
+      AppLogger.info('[Auth] Email already verified — skipping send');
+      return;
+    }
+    try {
+      await user.sendEmailVerification();
+      AppLogger.info('[Auth] Verification email sent to ${user.email}');
+    } on FirebaseAuthException catch (e) {
+      AppLogger.error('[Auth] sendEmailVerification failed: ${e.code}');
+      rethrow;
+    }
+  }
+
   /// Stream of auth state changes (sign-in / sign-out).
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 

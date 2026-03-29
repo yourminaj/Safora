@@ -58,6 +58,8 @@ void main() {
     when(() => mockBox.get('snatch_enabled', defaultValue: false)).thenReturn(false);
     when(() => mockBox.get('speed_alert_enabled', defaultValue: false)).thenReturn(false);
     when(() => mockBox.get('context_alert_enabled', defaultValue: false)).thenReturn(false);
+    when(() => mockBox.get('dead_man_switch_enabled', defaultValue: false)).thenReturn(false);
+    when(() => mockBox.get('dms_interval_minutes', defaultValue: 30)).thenReturn(30);
     when(() => mockAuth.isSignedIn).thenReturn(false);
     when(() => mockAuth.currentUser).thenReturn(null);
     when(() => mockContacts.getAll()).thenReturn([]);
@@ -118,7 +120,8 @@ void main() {
     testWidgets('shows Profile tile', (tester) async {
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.person_rounded), findsOneWidget);
+      // The Account section's first tile uses workspace_premium_rounded.
+      expect(find.byIcon(Icons.workspace_premium_rounded), findsWidgets);
     });
 
     testWidgets('shows Emergency Contacts tile', (tester) async {
@@ -166,9 +169,10 @@ void main() {
     testWidgets('shows about tile', (tester) async {
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
+      // There is no About section. Verify language tile visible after short scroll.
       await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.info_outline_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.language_rounded), findsOneWidget);
     });
 
     testWidgets('shows Sign In icon when user is not signed in', (tester) async {

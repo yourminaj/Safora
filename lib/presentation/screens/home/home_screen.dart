@@ -184,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.medication_outlined,
                                   size: 48,
                                   color: AppColors.textDisabled,
@@ -293,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.notifications_outlined),
-                  onPressed: () => context.push('/alerts'),
+                  onPressed: () => context.go('/alerts'),
                 ),
                 IconButton(
                   icon: const Icon(Icons.settings_outlined),
@@ -558,7 +558,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icons.contacts_rounded,
                           label: l.contacts,
                           color: AppColors.accent,
-                          onTap: () => context.push('/contacts'),
+                          onTap: () => context.go('/contacts'),
                         ),
                         _QuickAction(
                           icon: Icons.person_rounded,
@@ -570,7 +570,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icons.my_location_rounded,
                           label: l.liveMap,
                           color: AppColors.secondaryDark,
-                          onTap: () => context.push('/live-map'),
+                          onTap: () => context.go('/live-map'),
                         ),
                         _QuickAction(
                           icon: Icons.medication_rounded,
@@ -625,7 +625,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         TextButton.icon(
-                          onPressed: () => context.push('/alerts'),
+                          onPressed: () => context.go('/alerts'),
                           icon: const Icon(Icons.arrow_forward_rounded, size: 16),
                           label: Text(l.seeAll),
                           style: TextButton.styleFrom(

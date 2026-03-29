@@ -163,4 +163,67 @@ void main() {
       await sub.cancel();
     });
   });
+
+  // ── SMS Pre-Flight Permission Guard ─────────────────────────────────────────
+  // NOTE: SosCubit uses Telephony.instance directly (not injectable), so
+  // the smsPermissionDenied path can only be verified on real Android hardware
+  // or via integration tests.  These unit tests cover what IS mockable:
+  // the noContacts pre-flight gate and state shape.
+  group('SosCubit — SMS pre-flight — noContacts gate (testable)', () {
+    test(
+        'emits SosPreflightFailed(noContacts) when contact list is empty',
+        () async {
+      when(() => mockContacts.getAll()).thenReturn([]);
+      final states = <SosState>[];
+      final sub = cubit.stream.listen(states.add);
+
+      cubit.startCountdown();
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+
+      // Pre-flight must block with noContacts before reaching countdown.
+      expect(
+        states.whereType<SosPreflightFailed>().any(
+              (f) => f.reason == SosFailureReason.noContacts,
+            ),
+        isTrue,
+        reason: 'Expected SosPreflightFailed.noContacts when contact list empty',
+      );
+      // Must NOT have started countdown.
+      expect(states.any((s) => s is SosCountdown), isFalse);
+
+      await sub.cancel();
+    });
+
+    test(
+        'emits SosPreparing then SosCountdown when contacts exist (happy path)',
+        () async {
+      // Contacts are already stubbed in setUp — one contact present.
+      final states = <SosState>[];
+      final sub = cubit.stream.listen(states.add);
+
+      cubit.startCountdown();
+      await Future<void>.delayed(Duration.zero);
+
+      // Must pass contacts check and emit SosPreparing.
+      expect(states.any((s) => s is SosPreparing), isTrue);
+      // On non-Android (test host is macOS/Linux), SMS check is skipped;
+      // countdown starts immediately after pre-flight.
+      expect(states.any((s) => s is SosCountdown), isTrue);
+
+      await sub.cancel();
+    });
+
+    test('SosPreflightFailed auto-resets to SosIdle after 3 seconds', () async {
+      when(() => mockContacts.getAll()).thenReturn([]);
+      final states = <SosState>[];
+      final sub = cubit.stream.listen(states.add);
+
+      cubit.startCountdown();
+      await Future<void>.delayed(const Duration(seconds: 4));
+
+      expect(cubit.state, const SosIdle());
+
+      await sub.cancel();
+    });
+  });
 }

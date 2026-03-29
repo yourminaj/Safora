@@ -42,6 +42,8 @@ enum SosFailureReason {
   noContacts,
   noGps,
   noNetwork,
+  /// Android SEND_SMS permission was denied — SOS SMS will not be sent.
+  smsPermissionDenied,
 }
 
 /// Pre-flight failed — SOS cannot proceed (e.g., no contacts).

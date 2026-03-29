@@ -854,6 +854,12 @@ enum AlertType {
     priority: AlertPriority.danger,
     isFree: true,
   ),
+  evacuation(
+    label: 'Evacuation Order',
+    category: AlertCategory.militaryDefense,
+    priority: AlertPriority.critical,
+    isFree: true,
+  ),
 
   // ── Group 14: Infrastructure ───────────────────────────
   powerOutage(
@@ -981,6 +987,26 @@ enum AlertType {
     category: AlertCategory.personalSafety,
     priority: AlertPriority.critical,
     isFree: true,
+  ),
+
+  // ── ML Detection Alerts ───────────────────────────────────────
+  voiceDistressSos(
+    label: 'Voice Distress Detected',
+    category: AlertCategory.personalSafety,
+    priority: AlertPriority.critical,
+    isFree: false,
+  ),
+  suspiciousMovementSos(
+    label: 'Suspicious Movement Detected',
+    category: AlertCategory.personalSafety,
+    priority: AlertPriority.danger,
+    isFree: false,
+  ),
+  roadHazardAlert(
+    label: 'Road Hazard Detected',
+    category: AlertCategory.naturalDisaster,
+    priority: AlertPriority.warning,
+    isFree: false,
   );
 
   const AlertType({

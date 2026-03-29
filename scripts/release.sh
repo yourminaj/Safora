@@ -83,18 +83,33 @@ write_version() {
   log "Updated $PUBSPEC"
 }
 
+# ── Check dart-define secrets file ─────────────────────────
+check_dart_defines() {
+  local define_file="dart-define.json"
+  if [[ ! -f "$define_file" ]]; then
+    warn "dart-define.json not found — building WITHOUT secrets (NASA FIRMS etc. will be disabled)"
+    DART_DEFINES=""
+  else
+    log "Found dart-define.json — secrets will be baked into build"
+    DART_DEFINES="--dart-define-from-file=${define_file}"
+  fi
+}
+
 # ── Build ───────────────────────────────────────────────────
 build_release() {
   mkdir -p "$OUTPUT_DIR"
+  check_dart_defines
   
   echo ""
   info "Building App Bundle (AAB) for Play Store..."
-  flutter build appbundle --release
+  # shellcheck disable=SC2086
+  flutter build appbundle --release $DART_DEFINES
   log "AAB built successfully"
   
   echo ""
   info "Building split APKs for direct distribution..."
-  flutter build apk --release --split-per-abi
+  # shellcheck disable=SC2086
+  flutter build apk --release --split-per-abi $DART_DEFINES
   log "Split APKs built successfully"
   
   # Copy to PlayStore directory with versioned names

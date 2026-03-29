@@ -47,8 +47,11 @@ class _SignupScreenState extends State<SignupScreen> {
         password: _passwordController.text,
         displayName: _nameController.text.trim(),
       );
+      // Also send verification email immediately after sign-up.
+      await getIt<AuthService>().sendEmailVerification();
       if (!mounted) return;
-      context.go('/home');
+      // Route to verify-email — gate home access until email is confirmed.
+      context.go('/verify-email');
     } catch (e) {
       setState(() {
         _errorMessage = _friendlyError(e.toString());

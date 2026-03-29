@@ -104,7 +104,7 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.history_rounded,
                     size: 64,
                     color: AppColors.textDisabled,

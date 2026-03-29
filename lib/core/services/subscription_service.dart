@@ -55,17 +55,52 @@ class SubscriptionService {
       _offerings?.current?.availablePackages ?? [];
 
   /// Get a specific package by type from the current offering.
+  ///
+  /// First tries RevenueCat's typed accessors (requires reserved package
+  /// identifiers like `$rc_monthly`). Falls back to searching
+  /// [availablePackages] by [PackageType] or product identifier.
   Package? getPackage(PackageType type) {
+    final current = _offerings?.current;
+    if (current == null) return null;
+
+    // 1. Try RevenueCat's typed accessors (works with reserved identifiers)
     switch (type) {
       case PackageType.monthly:
-        return _offerings?.current?.monthly;
+        if (current.monthly != null) return current.monthly;
+        break;
       case PackageType.annual:
-        return _offerings?.current?.annual;
+        if (current.annual != null) return current.annual;
+        break;
       case PackageType.lifetime:
-        return _offerings?.current?.lifetime;
+        if (current.lifetime != null) return current.lifetime;
+        break;
       default:
-        return null;
+        break;
     }
+
+    // 2. Fallback: search availablePackages by packageType
+    for (final pkg in current.availablePackages) {
+      if (pkg.packageType == type) return pkg;
+    }
+
+    // 3. Fallback: search by product identifier substring
+    final idHints = <PackageType, List<String>>{
+      PackageType.monthly: ['monthly', 'month', 'mo'],
+      PackageType.annual: ['yearly', 'annual', 'year', 'yr'],
+      PackageType.lifetime: ['lifetime', 'forever', 'once'],
+    };
+    final hints = idHints[type];
+    if (hints != null) {
+      for (final pkg in current.availablePackages) {
+        final id = pkg.identifier.toLowerCase();
+        final productId = pkg.storeProduct.identifier.toLowerCase();
+        for (final hint in hints) {
+          if (id.contains(hint) || productId.contains(hint)) return pkg;
+        }
+      }
+    }
+
+    return null;
   }
 
   /// Get pricing string for a specific tier.
@@ -279,13 +314,27 @@ class SubscriptionService {
   Future<void> _fetchOfferings() async {
     try {
       _offerings = await Purchases.getOfferings();
-      if (_offerings?.current != null) {
-        final pkgCount = _offerings!.current!.availablePackages.length;
-        AppLogger.info(
-          '[Subscription] Offering loaded: '
-          '${_offerings!.current!.identifier} ($pkgCount packages)',
-        );
+
+      if (_offerings == null) {
+        AppLogger.warning('[Subscription] Offerings is null — '
+            'check RevenueCat Dashboard products & offerings');
+        return;
       }
+
+      final current = _offerings!.current;
+      if (current == null) {
+        AppLogger.warning('[Subscription] No current offering — '
+            'make sure one offering is marked "Current" in Dashboard');
+        return;
+      }
+
+      AppLogger.info(
+        '[Subscription] Offering "${current.identifier}" loaded '
+        '(${current.availablePackages.length} packages) — '
+        'monthly=${monthlyPriceString ?? "--"}, '
+        'yearly=${yearlyPriceString ?? "--"}, '
+        'lifetime=${lifetimePriceString ?? "--"}',
+      );
     } catch (e) {
       AppLogger.warning('[Subscription] Fetch offerings failed: $e');
     }

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get_it/get_it.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/constants/alert_types.dart';
 import 'package:safora/core/services/auth_service.dart';
 import 'package:safora/core/services/audio_service.dart';
 import 'package:safora/core/services/location_service.dart';
 import 'package:safora/core/services/notification_service.dart';
+import 'package:safora/core/services/premium_manager.dart';
 import 'package:safora/data/datasources/contacts_cloud_sync.dart';
 import 'package:safora/data/datasources/sos_history_datasource.dart';
 import 'package:safora/data/models/alert_preferences.dart';
@@ -27,6 +29,7 @@ import 'package:safora/presentation/blocs/sos/sos_cubit.dart';
 
 // ─── Mocks ────────────────────────────────────────────────────
 class MockAudioService extends Mock implements AudioService {}
+class MockBox extends Mock implements Box {}
 
 class MockTriggerSosUseCase extends Mock implements TriggerSosUseCase {}
 
@@ -107,6 +110,20 @@ Widget buildTestableWidget({
     when(() => mockAlertPrefs.enabledCountByCategory()).thenReturn({});
     when(() => mockAlertPrefs.groupedByCategory()).thenReturn({});
     getIt.registerSingleton<AlertPreferences>(mockAlertPrefs);
+  }
+  if (!getIt.isRegistered<Box>(instanceName: 'app_settings')) {
+    final mockSettingsBox = MockBox();
+    // Return false for all boolean settings (e.g. dead_man_switch_enabled)
+    // so the HomeScreen renders without any DMS widget.
+    when(
+      () => mockSettingsBox.get(any(), defaultValue: any(named: 'defaultValue')),
+    ).thenReturn(false);
+    getIt.registerSingleton<Box>(mockSettingsBox, instanceName: 'app_settings');
+  }
+  if (!getIt.isRegistered<PremiumManager>()) {
+    // Register the real singleton — it reads from Hive but gracefully
+    // falls back to in-memory defaults when Hive isn't initialized in tests.
+    getIt.registerSingleton<PremiumManager>(PremiumManager.instance);
   }
 
   // Stub commonly-called methods.

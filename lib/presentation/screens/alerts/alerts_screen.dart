@@ -295,8 +295,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
                         alert: alert,
                         onTap: () =>
                             _showTrustCenterDetail(context, alert),
-                        onReportFalse: () =>
-                            _showReportFalseAlert(context, alert),
                       );
                     },
                   ),
@@ -396,6 +394,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
@@ -621,6 +620,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _FalseAlertReportSheet(
