@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../app.dart';
 import '../../widgets/safora_animated_icons.dart';
 import '../shell/main_shell.dart';
+
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/colors.dart';
@@ -10,8 +12,10 @@ import '../../../core/theme/typography.dart';
 import '../../../data/datasources/contacts_cloud_sync.dart';
 import '../../../data/models/emergency_contact.dart';
 import '../../../injection.dart';
+import '../../../core/services/ad_service.dart';
 import '../../blocs/contacts/contacts_cubit.dart';
 import '../../blocs/contacts/contacts_state.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 
 /// Emergency contacts list screen with CRUD operations.
@@ -50,7 +54,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         if (ctx.mounted) Navigator.pop(ctx);
         messenger.showSnackBar(
           SnackBar(
-            content: Text('${contacts.length} contacts backed up ✓'),
+            content: Text('${contacts.length} contacts backed up successfully'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -77,7 +81,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
           }
           messenger.showSnackBar(
             SnackBar(
-              content: Text('${cloudContacts.length} contacts restored ✓'),
+              content: Text('${cloudContacts.length} contacts restored successfully'),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -147,56 +151,64 @@ class _ContactsScreenState extends State<ContactsScreen> {
           },
         ),
       ),
-      body: BlocConsumer<ContactsCubit, ContactsState>(
-        listener: (context, state) {
-          if (state is ContactsLimitReached) {
-            _showLimitDialog(context);
-          }
-          if (state is ContactsError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
-          }
-        },
-        builder: (context, state) {
-          if (state is ContactsLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          Expanded(
+            child: BlocConsumer<ContactsCubit, ContactsState>(
+              listener: (context, state) {
+                if (state is ContactsLimitReached) {
+                  _showLimitDialog(context);
+                }
+                if (state is ContactsError) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(state.message)));
+                }
+              },
+              builder: (context, state) {
+                if (state is ContactsLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          final contacts = switch (state) {
-            final ContactsLoaded s => s.contacts,
-            final ContactsLimitReached s => s.contacts,
-            _ => <EmergencyContact>[],
-          };
+                final contacts = switch (state) {
+                  final ContactsLoaded s => s.contacts,
+                  final ContactsLimitReached s => s.contacts,
+                  _ => <EmergencyContact>[],
+                };
 
-          if (contacts.isEmpty) {
-            return Padding(
-              padding: EdgeInsets.only(bottom: saforaBottomInset(context)),
-              child: _EmptyState(),
-            );
-          }
+                if (contacts.isEmpty) {
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: saforaBottomInset(context)),
+                    child: _EmptyState(),
+                  );
+                }
 
-          return ListView.builder(
-            padding: EdgeInsets.only(
-              top: 8,
-              bottom: saforaBottomInset(context) + 60, // Clear FAB + nav bar
+                return ListView.builder(
+                  padding: EdgeInsets.only(
+                    top: 8,
+                    bottom: saforaBottomInset(context) + 60, // Clear FAB + nav bar
+                  ),
+                  itemCount: contacts.length,
+                  itemBuilder: (context, index) {
+                    final contact = contacts[index];
+                    return _ContactCard(
+                      contact: contact,
+                      onEdit: () => context.push('/contacts/edit', extra: contact),
+                      onDelete: () => _confirmDelete(context, contact),
+                      onSetPrimary: () {
+                        if (contact.id != null) {
+                          context.read<ContactsCubit>().setPrimary(contact.id!);
+                        }
+                      },
+                    );
+                  },
+                );
+              },
             ),
-            itemCount: contacts.length,
-            itemBuilder: (context, index) {
-              final contact = contacts[index];
-              return _ContactCard(
-                contact: contact,
-                onEdit: () => context.push('/contacts/edit', extra: contact),
-                onDelete: () => _confirmDelete(context, contact),
-                onSetPrimary: () {
-                  if (contact.id != null) {
-                    context.read<ContactsCubit>().setPrimary(contact.id!);
-                  }
-                },
-              );
-            },
-          );
-        },
+          ),
+          // Banner ad at bottom.
+          AdBanner(adUnitId: AdService.bannerContacts),
+        ],
       ),
     );
   }
@@ -213,13 +225,53 @@ class _ContactsScreenState extends State<ContactsScreen> {
           children: [
             Text(l.contactLimitMessage),
             const SizedBox(height: 12),
-            Text(
-              l.premiumRoadmap,
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.workspace_premium,
+                      color: AppColors.primary, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l.proFeatureTitle,
+                          style: AppTypography.titleSmall.copyWith(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        Text(
+                          l.proFeatureMessage,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
         actions: [
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.push(AppRoutes.paywall);
+            },
+            icon: const Icon(Icons.workspace_premium),
+            label: Text(l.upgradeToPro),
+          ),
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.ok)),
         ],
       ),

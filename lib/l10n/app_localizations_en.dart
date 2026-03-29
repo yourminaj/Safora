@@ -753,9 +753,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'AI-powered alerts for heat, drowsy driving, and more';
 
   @override
-  String get watchAd => 'Watch Ad';
-
-  @override
   String get signOut => 'Sign Out';
 
   @override
@@ -971,4 +968,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get remindersAccessedFromHome =>
       'Reminders can be accessed from the Home screen';
+
+  @override
+  String get proFeatureTitle => 'Pro Feature';
+
+  @override
+  String get proFeatureMessage =>
+      'This feature requires Safora Pro. Upgrade to unlock advanced detection, unlimited contacts, and ad-free experience.';
+
+  @override
+  String get upgradeToPro => 'Upgrade to Pro';
+
+  @override
+  String get sosHistoryFreeNote =>
+      'Showing last 7 days. Upgrade to Pro for full history.';
 }

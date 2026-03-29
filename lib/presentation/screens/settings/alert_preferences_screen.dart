@@ -341,7 +341,7 @@ class _SearchBar extends StatelessWidget {
           hintStyle: AppTypography.bodyMedium.copyWith(
             color: AppColors.textDisabled,
           ),
-          prefixIcon: Icon(
+          prefixIcon: const Icon(
             Icons.search_rounded,
             color: AppColors.textSecondary,
             size: 20,
@@ -473,7 +473,7 @@ class _SeverityThresholdSelector extends StatelessWidget {
   final bool isDark;
 
   static const _labels = ['Info', 'Advisory', 'Warning', 'Danger', 'Critical'];
-  static const _emojis = ['ℹ️', '📋', '⚠️', '🔥', '🚨'];
+  static const _severityIcons = [Icons.info_outline_rounded, Icons.assignment_outlined, Icons.warning_amber_rounded, Icons.local_fire_department_rounded, Icons.crisis_alert_rounded];
   static const _descriptions = [
     'Receive all alerts including informational updates',
     'Skip informational, show advisory and above',
@@ -487,7 +487,7 @@ class _SeverityThresholdSelector extends StatelessWidget {
       0 => AppColors.textSecondary,
       1 => AppColors.info,
       2 => AppColors.warning,
-      3 => Colors.deepOrange,
+      3 => AppColors.high,
       _ => AppColors.danger,
     };
   }
@@ -555,7 +555,7 @@ class _SeverityThresholdSelector extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${_emojis[currentIdx]} ${_labels[currentIdx]}',
+                            _labels[currentIdx],
                             style: AppTypography.labelMedium.copyWith(
                               color: color,
                               fontWeight: FontWeight.w600,
@@ -596,14 +596,12 @@ class _SeverityThresholdSelector extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(5, (i) {
                       final isActive = i == currentIdx;
-                      return Text(
-                        _emojis[i],
-                        style: TextStyle(
-                          fontSize: isActive ? 16 : 12,
-                          color: isActive
-                              ? null
-                              : AppColors.textDisabled,
-                        ),
+                      return Icon(
+                        _severityIcons[i],
+                        size: isActive ? 20 : 14,
+                        color: isActive
+                            ? _sliderColor(i)
+                            : AppColors.textDisabled,
                       );
                     }),
                   ),
@@ -826,7 +824,7 @@ class _PremiumCategoryCardState extends State<_PremiumCategoryCard> {
                           AnimatedRotation(
                             turns: _expanded ? 0.5 : 0,
                             duration: const Duration(milliseconds: 200),
-                            child: Icon(
+                            child: const Icon(
                               Icons.expand_more_rounded,
                               color: AppColors.textSecondary,
                               size: 22,
@@ -986,7 +984,7 @@ class _PremiumAlertTile extends StatelessWidget {
   Color _priorityColor(AlertPriority p) {
     return switch (p) {
       AlertPriority.critical => AppColors.danger,
-      AlertPriority.danger => Colors.deepOrange,
+      AlertPriority.danger => AppColors.high,
       AlertPriority.warning => AppColors.warning,
       AlertPriority.advisory => AppColors.info,
       AlertPriority.info => AppColors.textSecondary,

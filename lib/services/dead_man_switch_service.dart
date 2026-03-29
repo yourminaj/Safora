@@ -27,8 +27,8 @@ class DeadManSwitchService {
   /// Callback fired when the user fails to check in.
   final VoidCallback onTrigger;
 
-  /// How often the user must check in.
-  final Duration checkInInterval;
+  /// How often the user must check in (mutable for runtime updates).
+  Duration checkInInterval;
 
   /// Seconds before deadline to fire a warning.
   final int warningBeforeSeconds;
@@ -62,6 +62,12 @@ class DeadManSwitchService {
     stop();
     _isActive = true;
     _resetTimer();
+  }
+
+  /// Start with a custom interval. Updates [checkInInterval] then starts.
+  void startWithInterval(Duration interval) {
+    checkInInterval = interval;
+    start();
   }
 
   /// User confirms they are safe. Resets the countdown.

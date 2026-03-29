@@ -211,7 +211,7 @@ class AlertCard extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.tips_and_updates_rounded,
                         size: 16,
                         color: AppColors.safe,
@@ -247,7 +247,7 @@ class AlertCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.flag_rounded,
                             size: 14,
                             color: AppColors.textSecondary,

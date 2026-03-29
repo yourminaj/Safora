@@ -28,7 +28,7 @@ void main() {
 
     test('isLimitReached returns true at max', () {
       when(() => mockBox.length)
-          .thenReturn(ContactsLocalDataSource.maxFreeContacts);
+          .thenReturn(datasource.maxFreeContacts);
       expect(datasource.isLimitReached, true);
     });
 
@@ -39,7 +39,7 @@ void main() {
 
     test('add throws ContactLimitException when limit reached', () {
       when(() => mockBox.length)
-          .thenReturn(ContactsLocalDataSource.maxFreeContacts);
+          .thenReturn(datasource.maxFreeContacts);
       const contact = EmergencyContact(
         name: 'Test',
         phone: '+1234567890',

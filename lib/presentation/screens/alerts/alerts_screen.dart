@@ -9,13 +9,16 @@ import '../shell/main_shell.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/constants/alert_types.dart';
+import '../../../core/services/ad_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../data/models/alert_event.dart';
 import '../../../data/models/alert_preferences.dart';
 import '../../blocs/alerts/alerts_cubit.dart';
 import '../../blocs/alerts/alerts_state.dart';
+import '../../widgets/ad_banner_widget.dart';
 import '../../widgets/alert_card.dart';
+import '../../widgets/native_ad_widget.dart';
 
 /// Alert list screen with filtering by category and priority.
 class AlertsScreen extends StatefulWidget {
@@ -30,6 +33,29 @@ class _AlertsScreenState extends State<AlertsScreen> {
   void initState() {
     super.initState();
     context.read<AlertsCubit>().loadAlerts();
+  }
+
+  // ── Native ad slot helpers ───────────────────────────
+  /// Insert a native ad after every 5th real alert.
+  static const _nativeAdInterval = 5;
+
+  /// Whether the list index is a native ad slot.
+  bool _isNativeAdSlot(int index) {
+    if (index == 0) return false; // Never first item.
+    return (index + 1) % (_nativeAdInterval + 1) == 0;
+  }
+
+  /// Total items including native ad slots.
+  int _itemCountWithNativeAds(int alertCount) {
+    if (alertCount == 0) return 0;
+    final adCount = alertCount ~/ _nativeAdInterval;
+    return alertCount + adCount;
+  }
+
+  /// Convert a list index to the real alert index.
+  int _alertIndexFromListIndex(int index) {
+    final adsBefore = index ~/ (_nativeAdInterval + 1);
+    return index - adsBefore;
   }
 
   @override
@@ -51,24 +77,32 @@ class _AlertsScreenState extends State<AlertsScreen> {
           ),
         ],
       ),
-      body: BlocBuilder<AlertsCubit, AlertsState>(
-        builder: (context, state) {
-          if (state is AlertsLoading) {
-            return const Center(
-              child: SaforaLoadingSpinner(size: 48),
-            );
-          }
+      body: Column(
+        children: [
+          Expanded(
+            child: BlocBuilder<AlertsCubit, AlertsState>(
+              builder: (context, state) {
+                if (state is AlertsLoading) {
+                  return const Center(
+                    child: SaforaLoadingSpinner(size: 48),
+                  );
+                }
 
-          if (state is AlertsError) {
-            return _buildError(context, state.message);
-          }
+                if (state is AlertsError) {
+                  return _buildError(context, state.message);
+                }
 
-          if (state is AlertsLoaded) {
-            return _buildLoaded(context, state);
-          }
+                if (state is AlertsLoaded) {
+                  return _buildLoaded(context, state);
+                }
 
-          return _buildEmpty(context);
-        },
+                return _buildEmpty(context);
+              },
+            ),
+          ),
+          // Banner ad at bottom of alerts screen.
+          AdBanner(adUnitId: AdService.bannerAlerts),
+        ],
       ),
     );
   }
@@ -104,7 +138,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               _FilterChip(
                 label: l.filterHigh,
                 isSelected: state.filterPriority == AlertPriority.danger,
-                color: Colors.deepOrange,
+                color: AppColors.high,
                 onTap: () => context
                     .read<AlertsCubit>()
                     .filterByPriority(AlertPriority.danger),
@@ -152,7 +186,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 label: l.filterWater,
                 isSelected:
                     state.filterCategory == AlertCategory.waterMarine,
-                color: const Color(0xFF42A5F5),
+                color: AppColors.secondaryLight,
                 onTap: () => context
                     .read<AlertsCubit>()
                     .filterByCategory(AlertCategory.waterMarine),
@@ -162,7 +196,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 label: l.filterSafety,
                 isSelected:
                     state.filterCategory == AlertCategory.personalSafety,
-                color: const Color(0xFF7E57C2),
+                color: AppColors.secondary,
                 onTap: () => context
                     .read<AlertsCubit>()
                     .filterByCategory(AlertCategory.personalSafety),
@@ -172,7 +206,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 label: l.filterHealth,
                 isSelected:
                     state.filterCategory == AlertCategory.healthMedical,
-                color: const Color(0xFFEF5350),
+                color: AppColors.danger,
                 onTap: () => context
                     .read<AlertsCubit>()
                     .filterByCategory(AlertCategory.healthMedical),
@@ -182,7 +216,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 label: l.filterVehicle,
                 isSelected:
                     state.filterCategory == AlertCategory.vehicleTransport,
-                color: const Color(0xFF78909C),
+                color: AppColors.textSecondary,
                 onTap: () => context
                     .read<AlertsCubit>()
                     .filterByCategory(AlertCategory.vehicleTransport),
@@ -192,7 +226,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 label: l.filterEnvironmental,
                 isSelected:
                     state.filterCategory == AlertCategory.environmentalChemical,
-                color: const Color(0xFFFF8F00),
+                color: AppColors.accent,
                 onTap: () => context
                     .read<AlertsCubit>()
                     .filterByCategory(AlertCategory.environmentalChemical),
@@ -245,11 +279,18 @@ class _AlertsScreenState extends State<AlertsScreen> {
                   child: ListView.separated(
                     padding: EdgeInsets.fromLTRB(
                         16, 4, 16, saforaBottomInset(context) + 8),
-                    itemCount: filtered.length,
+                    itemCount: _itemCountWithNativeAds(filtered.length),
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 10),
                     itemBuilder: (context, index) {
-                      final alert = filtered[index];
+                      // Insert a native ad every 5th slot.
+                      if (_isNativeAdSlot(index)) {
+                        return NativeAdCard(
+                          adUnitId: AdService.nativeAlertsFeed,
+                        );
+                      }
+                      final alertIndex = _alertIndexFromListIndex(index);
+                      final alert = filtered[alertIndex];
                       return AlertCard(
                         alert: alert,
                         onTap: () =>
@@ -385,7 +426,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
               child: Row(
                 children: [
-                  Icon(Icons.verified_user_rounded,
+                  const Icon(Icons.verified_user_rounded,
                       color: AppColors.primary, size: 28),
                   const SizedBox(width: 10),
                   Expanded(
@@ -496,7 +537,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.tips_and_updates_rounded,
+                            const Icon(Icons.tips_and_updates_rounded,
                                 size: 18, color: AppColors.safe),
                             const SizedBox(width: 10),
                             Expanded(
@@ -697,7 +738,7 @@ class _FalseAlertReportSheetState extends State<_FalseAlertReportSheet> {
             const SizedBox(height: 16),
             Row(
               children: [
-                Icon(Icons.flag_rounded, color: AppColors.warning, size: 24),
+                const Icon(Icons.flag_rounded, color: AppColors.warning, size: 24),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -805,7 +846,7 @@ class _FalseAlertReportSheetState extends State<_FalseAlertReportSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text(
-            '✅ Report submitted — thank you for improving alert accuracy'),
+            'Report submitted — thank you for improving alert accuracy'),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),

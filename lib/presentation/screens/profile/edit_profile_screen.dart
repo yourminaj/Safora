@@ -102,132 +102,150 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         title: Text(widget.existingProfile != null
             ? l.editMedicalProfile
             : l.createMedicalProfile),
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: Text(l.save),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Full name.
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: '${l.fullName} *',
+                      prefixIcon: const Icon(Icons.person_rounded),
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? l.nameRequired : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Blood type dropdown.
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedBloodType,
+                    decoration: InputDecoration(
+                      labelText: l.bloodType,
+                      prefixIcon: const Icon(Icons.bloodtype_rounded),
+                    ),
+                    items: _bloodTypes
+                        .map((bt) => DropdownMenuItem(value: bt, child: Text(bt)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _selectedBloodType = v),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Weight & Height in a row.
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _weightController,
+                          decoration: InputDecoration(
+                            labelText: l.weight,
+                            prefixIcon: const Icon(Icons.monitor_weight_outlined),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _heightController,
+                          decoration: InputDecoration(
+                            labelText: l.height,
+                            prefixIcon: const Icon(Icons.height_rounded),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Allergies.
+                  TextFormField(
+                    controller: _allergiesController,
+                    decoration: InputDecoration(
+                      labelText: l.allergies,
+                      helperText: l.separateWithCommas,
+                      prefixIcon: const Icon(Icons.warning_amber_rounded),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Medical conditions.
+                  TextFormField(
+                    controller: _conditionsController,
+                    decoration: InputDecoration(
+                      labelText: l.medicalConditions,
+                      helperText: l.separateWithCommas,
+                      prefixIcon: const Icon(Icons.medical_services_rounded),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Medications.
+                  TextFormField(
+                    controller: _medicationsController,
+                    decoration: InputDecoration(
+                      labelText: l.medications,
+                      helperText: l.separateWithCommas,
+                      prefixIcon: const Icon(Icons.medication_rounded),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Emergency notes.
+                  TextFormField(
+                    controller: _notesController,
+                    decoration: InputDecoration(
+                      labelText: l.emergencyNotes,
+                      prefixIcon: const Icon(Icons.note_rounded),
+                    ),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Organ donor toggle.
+                  SwitchListTile(
+                    title: Text(l.organDonor),
+                    subtitle: Text(l.shareWithFirstResponders),
+                    value: _organDonor,
+                    onChanged: (v) => setState(() => _organDonor = v),
+                    secondary: const Icon(Icons.favorite_rounded),
+                  ),
+
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+          // ─── Prominent Save Button ────────────────────────────────
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton.icon(
+                  onPressed: _save,
+                  icon: const Icon(Icons.save_rounded),
+                  label: Text(
+                    l.save,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Full name.
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: '${l.fullName} *',
-                prefixIcon: const Icon(Icons.person_rounded),
-              ),
-              textCapitalization: TextCapitalization.words,
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? l.nameRequired : null,
-            ),
-            const SizedBox(height: 16),
-
-            // Blood type dropdown.
-            DropdownButtonFormField<String>(
-              initialValue: _selectedBloodType,
-              decoration: InputDecoration(
-                labelText: l.bloodType,
-                prefixIcon: const Icon(Icons.bloodtype_rounded),
-              ),
-              items: _bloodTypes
-                  .map((bt) => DropdownMenuItem(value: bt, child: Text(bt)))
-                  .toList(),
-              onChanged: (v) => setState(() => _selectedBloodType = v),
-            ),
-            const SizedBox(height: 16),
-
-            // Weight & Height in a row.
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _weightController,
-                    decoration: InputDecoration(
-                      labelText: l.weight,
-                      prefixIcon: const Icon(Icons.monitor_weight_outlined),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _heightController,
-                    decoration: InputDecoration(
-                      labelText: l.height,
-                      prefixIcon: const Icon(Icons.height_rounded),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Allergies.
-            TextFormField(
-              controller: _allergiesController,
-              decoration: InputDecoration(
-                labelText: l.allergies,
-                helperText: l.separateWithCommas,
-                prefixIcon: const Icon(Icons.warning_amber_rounded),
-              ),
-              maxLines: 2,
-            ),
-            const SizedBox(height: 16),
-
-            // Medical conditions.
-            TextFormField(
-              controller: _conditionsController,
-              decoration: InputDecoration(
-                labelText: l.medicalConditions,
-                helperText: l.separateWithCommas,
-                prefixIcon: const Icon(Icons.medical_services_rounded),
-              ),
-              maxLines: 2,
-            ),
-            const SizedBox(height: 16),
-
-            // Medications.
-            TextFormField(
-              controller: _medicationsController,
-              decoration: InputDecoration(
-                labelText: l.medications,
-                helperText: l.separateWithCommas,
-                prefixIcon: const Icon(Icons.medication_rounded),
-              ),
-              maxLines: 2,
-            ),
-            const SizedBox(height: 16),
-
-            // Emergency notes.
-            TextFormField(
-              controller: _notesController,
-              decoration: InputDecoration(
-                labelText: l.emergencyNotes,
-                prefixIcon: const Icon(Icons.note_rounded),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-
-            // Organ donor toggle.
-            SwitchListTile(
-              title: Text(l.organDonor),
-              subtitle: Text(l.shareWithFirstResponders),
-              value: _organDonor,
-              onChanged: (v) => setState(() => _organDonor = v),
-              secondary: const Icon(Icons.favorite_rounded),
-            ),
-
-            const SizedBox(height: 32),
-          ],
-        ),
       ),
     );
   }

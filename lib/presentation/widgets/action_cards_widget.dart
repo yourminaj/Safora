@@ -58,7 +58,7 @@ class _ActionCardTileState extends State<_ActionCardTile> {
     return switch (widget.card.urgency) {
       ActionUrgency.immediate => AppColors.danger,
       ActionUrgency.followUp => AppColors.warning,
-      ActionUrgency.preparatory => Colors.blue,
+      ActionUrgency.preparatory => AppColors.secondary,
     };
   }
 

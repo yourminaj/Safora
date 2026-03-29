@@ -15,6 +15,8 @@ import 'core/services/shake_detection_service.dart';
 import 'core/services/snatch_detection_service.dart';
 import 'core/services/sms_service.dart';
 import 'core/services/speed_alert_service.dart';
+import 'core/services/subscription_service.dart';
+import 'core/services/premium_manager.dart';
 import 'services/dead_man_switch_service.dart';
 import 'core/services/weather_feed_service.dart';
 import 'core/services/alert_permission_gate.dart';
@@ -98,6 +100,10 @@ Future<void> configureDependencies() async {
     () => ContextAlertService(),
     dispose: (s) => s.dispose(),
   );
+  // ── Subscription / Premium ─────────────────────────────
+  getIt.registerSingleton<PremiumManager>(PremiumManager.instance);
+  getIt.registerSingleton<SubscriptionService>(SubscriptionService.instance);
+
   // ── Data Sources (with corruption recovery) ────────────
   final contactsBox = await _openBoxSafe(ContactsLocalDataSource.boxName);
   getIt.registerLazySingleton<ContactsLocalDataSource>(
@@ -225,7 +231,10 @@ Future<void> configureDependencies() async {
 
   // ── BLoCs / Cubits ─────────────────────────────────────
   getIt.registerLazySingleton<ContactsCubit>(
-    () => ContactsCubit(getIt<ContactsRepository>()),
+    () => ContactsCubit(
+      getIt<ContactsRepository>(),
+      cloudSync: getIt<ContactsCloudSync>(),
+    ),
   );
   getIt.registerLazySingleton<SosCubit>(
     () => SosCubit(

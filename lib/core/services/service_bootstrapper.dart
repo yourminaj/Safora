@@ -14,6 +14,7 @@ import '../services/speed_alert_service.dart';
 import '../services/weather_feed_service.dart';
 import '../services/app_logger.dart';
 import '../services/sos_foreground_service.dart';
+import '../../services/dead_man_switch_service.dart';
 import '../../presentation/blocs/alerts/alerts_cubit.dart';
 import '../../presentation/blocs/battery/battery_cubit.dart';
 import '../../presentation/blocs/sos/sos_cubit.dart';
@@ -231,6 +232,20 @@ class ServiceBootstrapper {
       }
     }
 
+    // ── Dead Man's Switch re-hydration ────────────────────
+    if (_isEnabled(settings, 'dead_man_switch_enabled')) {
+      try {
+        final intervalMinutes =
+            settings.get('dms_interval_minutes', defaultValue: 30) as int;
+        sl<DeadManSwitchService>()
+            .startWithInterval(Duration(minutes: intervalMinutes));
+        AppLogger.info(
+            '[ServiceBootstrapper] DeadManSwitch re-hydrated (${intervalMinutes}min)');
+      } catch (e) {
+        AppLogger.warning('[ServiceBootstrapper] DeadManSwitch failed: $e');
+      }
+    }
+
     // ── Battery Monitoring → Alerts + SMS to Contacts ─────
     try {
       sl<BatteryCubit>().startMonitoring();
@@ -274,6 +289,7 @@ class ServiceBootstrapper {
       'snatch_enabled',
       'speed_alert_enabled',
       'context_alert_enabled',
+      'dead_man_switch_enabled',
     ];
     return keys.where((k) => _isEnabled(settings, k)).length;
   }

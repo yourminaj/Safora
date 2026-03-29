@@ -1466,12 +1466,6 @@ abstract class AppLocalizations {
   /// **'AI-powered alerts for heat, drowsy driving, and more'**
   String get contextAlertDesc;
 
-  /// No description provided for @watchAd.
-  ///
-  /// In en, this message translates to:
-  /// **'Watch Ad'**
-  String get watchAd;
-
   /// No description provided for @signOut.
   ///
   /// In en, this message translates to:
@@ -1855,6 +1849,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reminders can be accessed from the Home screen'**
   String get remindersAccessedFromHome;
+
+  /// No description provided for @proFeatureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro Feature'**
+  String get proFeatureTitle;
+
+  /// No description provided for @proFeatureMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This feature requires Safora Pro. Upgrade to unlock advanced detection, unlimited contacts, and ad-free experience.'**
+  String get proFeatureMessage;
+
+  /// No description provided for @upgradeToPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Pro'**
+  String get upgradeToPro;
+
+  /// No description provided for @sosHistoryFreeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing last 7 days. Upgrade to Pro for full history.'**
+  String get sosHistoryFreeNote;
 }
 
 class _AppLocalizationsDelegate

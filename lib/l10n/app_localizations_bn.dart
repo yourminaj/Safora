@@ -736,9 +736,6 @@ class AppLocalizationsBn extends AppLocalizations {
       'তাপ, তন্দ্রাচ্ছন্ন ড্রাইভিং এবং আরও অনেক কিছুর জন্য AI-চালিত সতর্কতা';
 
   @override
-  String get watchAd => 'বিজ্ঞাপন দেখুন';
-
-  @override
   String get signOut => 'সাইন আউট';
 
   @override
@@ -954,4 +951,18 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get remindersAccessedFromHome =>
       'রিমাইন্ডার হোম স্ক্রিন থেকে অ্যাক্সেস করা যায়';
+
+  @override
+  String get proFeatureTitle => 'প্রো ফিচার';
+
+  @override
+  String get proFeatureMessage =>
+      'এই ফিচারটি সাফোরা প্রো প্রয়োজন। উন্নত সনাক্তকরণ, সীমাহীন যোগাযোগ এবং বিজ্ঞাপনমুক্ত অভিজ্ঞতা আনলক করতে আপগ্রেড করুন।';
+
+  @override
+  String get upgradeToPro => 'প্রো-তে আপগ্রেড করুন';
+
+  @override
+  String get sosHistoryFreeNote =>
+      'শেষ ৭ দিন দেখানো হচ্ছে। সম্পূর্ণ ইতিহাসের জন্য প্রো-তে আপগ্রেড করুন।';
 }

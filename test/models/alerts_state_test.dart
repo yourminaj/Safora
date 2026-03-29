@@ -97,7 +97,7 @@ void main() {
     });
 
     test('updates preferencesApplied flag', () {
-      final original = AlertsLoaded(alerts: []);
+      const original = AlertsLoaded(alerts: []);
       expect(original.preferencesApplied, isFalse);
       final updated = original.copyWith(preferencesApplied: true);
       expect(updated.preferencesApplied, isTrue);

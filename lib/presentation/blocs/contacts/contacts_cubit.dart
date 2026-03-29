@@ -1,14 +1,36 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/services/app_logger.dart';
+import '../../../data/datasources/contacts_cloud_sync.dart';
 import '../../../data/datasources/contacts_local_datasource.dart';
 import '../../../data/models/emergency_contact.dart';
 import '../../../data/repositories/contacts_repository.dart';
 import 'contacts_state.dart';
 
 /// Cubit managing emergency contacts CRUD operations.
+///
+/// When [_cloudSync] is provided, every mutation (add/update/delete/setPrimary)
+/// triggers a fire-and-forget sync to Cloud Firestore.
 class ContactsCubit extends Cubit<ContactsState> {
-  ContactsCubit(this._repository) : super(const ContactsInitial());
+  ContactsCubit(this._repository, {ContactsCloudSync? cloudSync})
+      : _cloudSync = cloudSync,
+        super(const ContactsInitial());
 
   final ContactsRepository _repository;
+  final ContactsCloudSync? _cloudSync;
+
+  /// Fire-and-forget sync to cloud after any local mutation.
+  void _syncToCloud() {
+    final sync = _cloudSync;
+    if (sync == null) return;
+    try {
+      final all = _repository.getAll();
+      sync.syncToCloud(all).catchError((e) {
+        AppLogger.warning('[ContactsCubit] Cloud sync failed: $e');
+      });
+    } catch (e) {
+      AppLogger.warning('[ContactsCubit] Cloud sync prep failed: $e');
+    }
+  }
 
   /// Load all contacts from storage.
   void loadContacts() {
@@ -41,6 +63,7 @@ class ContactsCubit extends Cubit<ContactsState> {
       );
       await _repository.add(contact);
       loadContacts(); // Reload list
+      _syncToCloud();
     } on ContactLimitException {
       final contacts = _repository.getAll();
       emit(ContactsLimitReached(contacts: contacts));
@@ -54,6 +77,7 @@ class ContactsCubit extends Cubit<ContactsState> {
     try {
       await _repository.update(contact);
       loadContacts();
+      _syncToCloud();
     } catch (e) {
       emit(ContactsError('Failed to update contact: $e'));
     }
@@ -64,6 +88,7 @@ class ContactsCubit extends Cubit<ContactsState> {
     try {
       await _repository.delete(id);
       loadContacts();
+      _syncToCloud();
     } catch (e) {
       emit(ContactsError('Failed to delete contact: $e'));
     }
@@ -81,8 +106,10 @@ class ContactsCubit extends Cubit<ContactsState> {
         }
       }
       loadContacts();
+      _syncToCloud();
     } catch (e) {
       emit(ContactsError('Failed to set primary contact: $e'));
     }
   }
 }
+

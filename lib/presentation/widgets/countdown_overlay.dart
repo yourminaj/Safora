@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:safora/l10n/app_localizations.dart';
+import '../../core/theme/colors.dart';
 import '../../core/theme/typography.dart';
 import '../blocs/sos/sos_cubit.dart';
 import '../blocs/sos/sos_state.dart';
@@ -360,7 +361,7 @@ class _PreflightCheckItem extends StatelessWidget {
       children: [
         Icon(
           ready ? Icons.check_circle_rounded : Icons.cancel_rounded,
-          color: ready ? Colors.greenAccent : Colors.red.shade300,
+          color: ready ? AppColors.safe : AppColors.danger,
           size: 28,
         ),
         const SizedBox(width: 12),

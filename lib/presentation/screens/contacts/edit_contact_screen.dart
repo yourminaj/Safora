@@ -69,86 +69,107 @@ class _EditContactScreenState extends State<EditContactScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.editContact),
-        actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _saveContact,
-            child: _isSaving
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l.save),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l.contactDetails, style: AppTypography.titleMedium),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: l.fullName,
+                        prefixIcon: const Icon(Icons.person_rounded),
+                      ),
+                      textCapitalization: TextCapitalization.words,
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                              ? l.enterName
+                              : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _phoneController,
+                      decoration: InputDecoration(
+                        labelText: l.phoneNumber,
+                        prefixIcon: const Icon(Icons.phone_rounded),
+                        hintText: '+880...',
+                      ),
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return l.enterPhone;
+                        }
+                        // Strip spaces, dashes, and parens for validation.
+                        final cleaned = value.trim().replaceAll(RegExp(r'[\s\-\(\)]'), '');
+                        if (cleaned.length < 7 || cleaned.length > 15) {
+                          return l.enterValidPhone;
+                        }
+                        // Must start with + or digit, contain only digits after optional +.
+                        if (!RegExp(r'^\+?\d{7,15}$').hasMatch(cleaned)) {
+                          return l.enterValidPhone;
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _relationController,
+                      decoration: InputDecoration(
+                        labelText: l.relationship,
+                        prefixIcon: const Icon(Icons.family_restroom_rounded),
+                        hintText: l.relationshipHint,
+                      ),
+                      textCapitalization: TextCapitalization.words,
+                    ),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      value: _isPrimary,
+                      onChanged: (val) => setState(() => _isPrimary = val),
+                      title: Text(l.setAsPrimaryContact),
+                      subtitle: Text(l.primaryContactNotify),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // ─── Prominent Save Button ────────────────────────────────
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton.icon(
+                  onPressed: _isSaving ? null : _saveContact,
+                  icon: _isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.save_rounded),
+                  label: Text(
+                    l.save,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l.contactDetails, style: AppTypography.titleMedium),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: l.fullName,
-                  prefixIcon: const Icon(Icons.person_rounded),
-                ),
-                textCapitalization: TextCapitalization.words,
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty)
-                        ? l.enterName
-                        : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _phoneController,
-                decoration: InputDecoration(
-                  labelText: l.phoneNumber,
-                  prefixIcon: const Icon(Icons.phone_rounded),
-                  hintText: '+880...',
-                ),
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return l.enterPhone;
-                  }
-                  // Strip spaces, dashes, and parens for validation.
-                  final cleaned = value.trim().replaceAll(RegExp(r'[\s\-\(\)]'), '');
-                  if (cleaned.length < 7 || cleaned.length > 15) {
-                    return l.enterValidPhone;
-                  }
-                  // Must start with + or digit, contain only digits after optional +.
-                  if (!RegExp(r'^\+?\d{7,15}$').hasMatch(cleaned)) {
-                    return l.enterValidPhone;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _relationController,
-                decoration: InputDecoration(
-                  labelText: l.relationship,
-                  prefixIcon: const Icon(Icons.family_restroom_rounded),
-                  hintText: l.relationshipHint,
-                ),
-                textCapitalization: TextCapitalization.words,
-              ),
-              const SizedBox(height: 16),
-              SwitchListTile(
-                value: _isPrimary,
-                onChanged: (val) => setState(() => _isPrimary = val),
-                title: Text(l.setAsPrimaryContact),
-                subtitle: Text(l.primaryContactNotify),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

@@ -1703,12 +1703,12 @@ class _OfflineIconPainter extends CustomPainter {
     canvas.drawPath(
       shield,
       Paint()
-        ..shader = LinearGradient(
+        ..shader = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
             _BrandPalette.warningAmber,
-            const Color(0xFFF57C00),
+            Color(0xFFF57C00),
           ],
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );

@@ -450,10 +450,10 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
   Color _priorityColor(AlertPriority priority) {
     return switch (priority) {
       AlertPriority.critical => AppColors.error,
-      AlertPriority.danger => Colors.deepOrange,
+      AlertPriority.danger => AppColors.high,
       AlertPriority.warning => AppColors.warning,
       AlertPriority.advisory => AppColors.success,
-      AlertPriority.info => const Color(0xFF60A5FA),
+      AlertPriority.info => AppColors.secondaryLight,
     };
   }
 
@@ -551,14 +551,13 @@ class _DetailChip extends StatelessWidget {
         children: [
           Text(
             '$label: ',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade600,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),
           Flexible(
-            child: Text(value, style: const TextStyle(fontSize: 13)),
+            child: Text(value, style: AppTypography.bodySmall),
           ),
         ],
       ),

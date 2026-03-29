@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../app.dart';
 import '../../../core/constants/alert_types.dart';
 import '../../../data/models/alert_event.dart';
-import '../../../core/services/ad_service.dart';
+import '../../../core/services/premium_manager.dart';
+import '../../../core/services/subscription_service.dart';
 import '../../../core/services/app_lock_service.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/context_alert_service.dart';
@@ -22,6 +24,7 @@ import '../../../detection/ml/crash_fall_detection_service.dart';
 import '../../../detection/ml/crash_fall_detection_engine.dart';
 import '../../../core/services/weather_feed_service.dart';
 import '../../../injection.dart';
+import '../../../services/dead_man_switch_service.dart';
 import '../../blocs/contacts/contacts_cubit.dart';
 import '../../blocs/contacts/contacts_state.dart';
 import '../../blocs/alerts/alerts_cubit.dart';
@@ -43,7 +46,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// Current GPS coordinates from the cached LocationService position.
   /// Falls back to 0.0 only when no position has ever been acquired.
   double get _lastLat => getIt<LocationService>().lastPosition?.latitude ?? 0.0;
-  double get _lastLon => getIt<LocationService>().lastPosition?.longitude ?? 0.0;
+  double get _lastLon =>
+      getIt<LocationService>().lastPosition?.longitude ?? 0.0;
 
   bool _shakeEnabled = false;
   bool _lockEnabled = false;
@@ -52,9 +56,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _snatchEnabled = false;
   bool _speedAlertEnabled = false;
   bool _contextAlertEnabled = false;
+  bool _dmsEnabled = false;
+  int _dmsIntervalMinutes = 30;
   late final ShakeDetectionService _shakeService;
   late final AppLockService _lockService;
   late final Box _appSettings;
+  String _appVersion = '';
 
   @override
   void initState() {
@@ -63,13 +70,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _lockService = getIt<AppLockService>();
     _appSettings = getIt<Box>(instanceName: 'app_settings');
     // Restore persisted state.
-    _shakeEnabled = _appSettings.get('shake_enabled', defaultValue: false) as bool;
+    _shakeEnabled =
+        _appSettings.get('shake_enabled', defaultValue: false) as bool;
     _lockEnabled = _lockService.isLockEnabled;
-    _crashFallEnabled = _appSettings.get('crash_fall_enabled', defaultValue: false) as bool;
-    _geofenceEnabled = _appSettings.get('geofence_enabled', defaultValue: false) as bool;
-    _snatchEnabled = _appSettings.get('snatch_enabled', defaultValue: false) as bool;
-    _speedAlertEnabled = _appSettings.get('speed_alert_enabled', defaultValue: false) as bool;
-    _contextAlertEnabled = _appSettings.get('context_alert_enabled', defaultValue: false) as bool;
+    _crashFallEnabled =
+        _appSettings.get('crash_fall_enabled', defaultValue: false) as bool;
+    _geofenceEnabled =
+        _appSettings.get('geofence_enabled', defaultValue: false) as bool;
+    _snatchEnabled =
+        _appSettings.get('snatch_enabled', defaultValue: false) as bool;
+    _speedAlertEnabled =
+        _appSettings.get('speed_alert_enabled', defaultValue: false) as bool;
+    _contextAlertEnabled =
+        _appSettings.get('context_alert_enabled', defaultValue: false) as bool;
+    _dmsEnabled =
+        _appSettings.get('dead_man_switch_enabled', defaultValue: false) as bool;
+    _dmsIntervalMinutes =
+        _appSettings.get('dms_interval_minutes', defaultValue: 30) as int;
+    // Load version from pubspec (single source of truth).
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) {
+        setState(() => _appVersion = 'v${info.version}+${info.buildNumber}');
+      }
+    });
   }
 
   @override
@@ -104,9 +127,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await _lockService.enableLock();
         setState(() => _lockEnabled = true);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l.lockEnabled)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l.lockEnabled)));
         }
       }
     } else {
@@ -116,9 +139,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await _lockService.disableLock();
         setState(() => _lockEnabled = false);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l.lockDisabled)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l.lockDisabled)));
         }
       }
     }
@@ -135,16 +158,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (newPin != null && mounted) {
       await _lockService.setPin(newPin);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.changePinSuccess)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.changePinSuccess)));
       }
     }
   }
 
   StreamSubscription<DetectionAlert>? _crashSubscription;
 
+  /// Small PRO badge widget for premium-gated features.
+  Widget _proBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      margin: const EdgeInsets.only(right: 4),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: const Text(
+        'PRO',
+        style: TextStyle(
+          color: AppColors.primary,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
   void _toggleCrashFall(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(
+          ProFeature.crashFallDetection,
+        )) {
+      _showUpgradeDialog();
+      return;
+    }
     setState(() => _crashFallEnabled = enabled);
     _appSettings.put('crash_fall_enabled', enabled);
     final service = getIt<CrashFallDetectionService>();
@@ -196,9 +247,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// Show crash/fall sensitivity settings bottom sheet.
   void _showSensitivitySettings() {
     final l = AppLocalizations.of(context)!;
-    double fallG = _appSettings.get('fall_threshold_g', defaultValue: 3.0) as double;
-    double crashG = _appSettings.get('crash_threshold_g', defaultValue: 4.0) as double;
-    double minConf = _appSettings.get('min_confidence', defaultValue: 0.5) as double;
+    double fallG =
+        _appSettings.get('fall_threshold_g', defaultValue: 3.0) as double;
+    double crashG =
+        _appSettings.get('crash_threshold_g', defaultValue: 4.0) as double;
+    double minConf =
+        _appSettings.get('min_confidence', defaultValue: 0.5) as double;
 
     showModalBottomSheet(
       context: context,
@@ -211,7 +265,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           builder: (ctx, setSheetState) {
             return Padding(
               padding: EdgeInsets.fromLTRB(
-                24, 20, 24, MediaQuery.of(ctx).viewInsets.bottom + 24,
+                24,
+                20,
+                24,
+                MediaQuery.of(ctx).viewInsets.bottom + 24,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -222,8 +279,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       const Icon(Icons.tune_rounded, color: AppColors.primary),
                       const SizedBox(width: 8),
-                      Text(l.sensitivitySettings,
-                          style: AppTypography.titleMedium),
+                      Text(
+                        l.sensitivitySettings,
+                        style: AppTypography.titleMedium,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -244,8 +303,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       SizedBox(
                         width: 48,
-                        child: Text('${fallG.toStringAsFixed(1)}G',
-                            style: AppTypography.bodySmall),
+                        child: Text(
+                          '${fallG.toStringAsFixed(1)}G',
+                          style: AppTypography.bodySmall,
+                        ),
                       ),
                     ],
                   ),
@@ -267,8 +328,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       SizedBox(
                         width: 48,
-                        child: Text('${crashG.toStringAsFixed(1)}G',
-                            style: AppTypography.bodySmall),
+                        child: Text(
+                          '${crashG.toStringAsFixed(1)}G',
+                          style: AppTypography.bodySmall,
+                        ),
                       ),
                     ],
                   ),
@@ -290,8 +353,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       SizedBox(
                         width: 48,
-                        child: Text('${(minConf * 100).toInt()}%',
-                            style: AppTypography.bodySmall),
+                        child: Text(
+                          '${(minConf * 100).toInt()}%',
+                          style: AppTypography.bodySmall,
+                        ),
                       ),
                     ],
                   ),
@@ -323,10 +388,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             final service = getIt<CrashFallDetectionService>();
                             service.stop();
                             // Re-register with new thresholds.
-                            if (getIt.isRegistered<CrashFallDetectionService>()) {
+                            if (getIt
+                                .isRegistered<CrashFallDetectionService>()) {
                               getIt.unregister<CrashFallDetectionService>();
                             }
-                            getIt.registerLazySingleton<CrashFallDetectionService>(
+                            getIt.registerLazySingleton<
+                              CrashFallDetectionService
+                            >(
                               () => CrashFallDetectionService(
                                 engine: CrashFallDetectionEngine(
                                   fallThresholdG: fallG,
@@ -356,68 +424,117 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// Show upgrade dialog for Pro-only features.
+  void _showUpgradeDialog() {
+    final l = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.proFeatureTitle),
+        content: Text(l.proFeatureMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.push(AppRoutes.paywall);
+            },
+            child: Text(l.upgradeToPro),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _toggleGeofence(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(
+          ProFeature.unlimitedGeofenceZones,
+        )) {
+      _showUpgradeDialog();
+      return;
+    }
     setState(() => _geofenceEnabled = enabled);
     _appSettings.put('geofence_enabled', enabled);
     final service = getIt<GeofenceService>();
     if (enabled) {
-      service.start(onExitAllZones: (position) {
-        final l = AppLocalizations.of(context)!;
-        final zoneName = l.geofenceTitle; // generic; API provides Position not name
-        // Inject into main alert pipeline.
-        final alertEvent = AlertEvent(
-          id: 'geofence_exit_${DateTime.now().millisecondsSinceEpoch}',
-          type: AlertType.geofenceExit,
-          title: l.alertGeofenceExitTitle(zoneName),
-          description: l.alertGeofenceExitDesc(zoneName),
-          latitude: position.latitude,
-          longitude: position.longitude,
-          timestamp: DateTime.now(),
-          source: 'On-Device GPS',
-        );
-        if (mounted) {
-          context.read<AlertsCubit>().addLocalAlert(alertEvent);
-        }
-      });
+      service.start(
+        onExitAllZones: (position) {
+          final l = AppLocalizations.of(context)!;
+          final zoneName =
+              l.geofenceTitle; // generic; API provides Position not name
+          // Inject into main alert pipeline.
+          final alertEvent = AlertEvent(
+            id: 'geofence_exit_${DateTime.now().millisecondsSinceEpoch}',
+            type: AlertType.geofenceExit,
+            title: l.alertGeofenceExitTitle(zoneName),
+            description: l.alertGeofenceExitDesc(zoneName),
+            latitude: position.latitude,
+            longitude: position.longitude,
+            timestamp: DateTime.now(),
+            source: 'On-Device GPS',
+          );
+          if (mounted) {
+            context.read<AlertsCubit>().addLocalAlert(alertEvent);
+          }
+        },
+      );
     } else {
       service.stop();
     }
   }
 
   void _toggleSnatch(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(
+          ProFeature.snatchDetection,
+        )) {
+      _showUpgradeDialog();
+      return;
+    }
     setState(() => _snatchEnabled = enabled);
     _appSettings.put('snatch_enabled', enabled);
     final service = getIt<SnatchDetectionService>();
     if (enabled) {
-      service.start(onSnatchDetected: (confidence) {
-        final l = AppLocalizations.of(context)!;
-        // Snatch is critical — auto-trigger SOS countdown.
-        if (mounted) {
-          context.read<SosCubit>().startCountdown();
-        }
-        // Also inject into alert pipeline.
-        final pct = (confidence * 100).toStringAsFixed(0);
-        final alertEvent = AlertEvent(
-          id: 'snatch_${DateTime.now().millisecondsSinceEpoch}',
-          type: AlertType.phoneSnatching,
-          title: l.alertSnatchTitle,
-          description: l.alertSnatchDesc(pct),
-          latitude: _lastLat,
-          longitude: _lastLon,
-          timestamp: DateTime.now(),
-          source: 'On-Device Accelerometer',
-          magnitude: confidence,
-        );
-        if (mounted) {
-          context.read<AlertsCubit>().addLocalAlert(alertEvent);
-        }
-      });
+      service.start(
+        onSnatchDetected: (confidence) {
+          final l = AppLocalizations.of(context)!;
+          // Snatch is critical — auto-trigger SOS countdown.
+          if (mounted) {
+            context.read<SosCubit>().startCountdown();
+          }
+          // Also inject into alert pipeline.
+          final pct = (confidence * 100).toStringAsFixed(0);
+          final alertEvent = AlertEvent(
+            id: 'snatch_${DateTime.now().millisecondsSinceEpoch}',
+            type: AlertType.phoneSnatching,
+            title: l.alertSnatchTitle,
+            description: l.alertSnatchDesc(pct),
+            latitude: _lastLat,
+            longitude: _lastLon,
+            timestamp: DateTime.now(),
+            source: 'On-Device Accelerometer',
+            magnitude: confidence,
+          );
+          if (mounted) {
+            context.read<AlertsCubit>().addLocalAlert(alertEvent);
+          }
+        },
+      );
     } else {
       service.stop();
     }
   }
 
   void _toggleSpeedAlert(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(ProFeature.speedAlert)) {
+      _showUpgradeDialog();
+      return;
+    }
     setState(() => _speedAlertEnabled = enabled);
     _appSettings.put('speed_alert_enabled', enabled);
     final service = getIt<SpeedAlertService>();
@@ -453,6 +570,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _toggleContextAlert(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(ProFeature.contextAlerts)) {
+      _showUpgradeDialog();
+      return;
+    }
     setState(() => _contextAlertEnabled = enabled);
     _appSettings.put('context_alert_enabled', enabled);
     final service = getIt<ContextAlertService>();
@@ -460,28 +582,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (enabled) {
       // Start app-level weather feed (persists across navigation).
       feed.start();
-      service.start(onContextAlert: (ctxAlert) {
-        // Map ContextAlertType to AlertType.
-        final alertType = _mapContextAlertType(ctxAlert.type);
-        // Localize title/message at display time.
-        final localized = _localizeContextAlert(ctxAlert);
-        final alertEvent = AlertEvent(
-          id: 'ctx_${ctxAlert.type.name}_${DateTime.now().millisecondsSinceEpoch}',
-          type: alertType,
-          title: localized.$1,
-          description: localized.$2,
-          latitude: _lastLat,
-          longitude: _lastLon,
-          timestamp: DateTime.now(),
-          source: 'On-Device Context',
-        );
-        if (mounted) {
-          context.read<AlertsCubit>().addLocalAlert(alertEvent);
-        }
-      });
+      service.start(
+        onContextAlert: (ctxAlert) {
+          // Map ContextAlertType to AlertType.
+          final alertType = _mapContextAlertType(ctxAlert.type);
+          // Localize title/message at display time.
+          final localized = _localizeContextAlert(ctxAlert);
+          final alertEvent = AlertEvent(
+            id: 'ctx_${ctxAlert.type.name}_${DateTime.now().millisecondsSinceEpoch}',
+            type: alertType,
+            title: localized.$1,
+            description: localized.$2,
+            latitude: _lastLat,
+            longitude: _lastLon,
+            timestamp: DateTime.now(),
+            source: 'On-Device Context',
+          );
+          if (mounted) {
+            context.read<AlertsCubit>().addLocalAlert(alertEvent);
+          }
+        },
+      );
     } else {
       service.stop();
       feed.stop();
+    }
+  }
+
+  void _toggleDms(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(
+          ProFeature.deadManSwitch,
+        )) {
+      _showUpgradeDialog();
+      return;
+    }
+    setState(() => _dmsEnabled = enabled);
+    _appSettings.put('dead_man_switch_enabled', enabled);
+    final dms = getIt<DeadManSwitchService>();
+    if (enabled) {
+      dms.startWithInterval(Duration(minutes: _dmsIntervalMinutes));
+    } else {
+      dms.stop();
+    }
+  }
+
+  void _changeDmsInterval(int minutes) {
+    setState(() => _dmsIntervalMinutes = minutes);
+    _appSettings.put('dms_interval_minutes', minutes);
+    final dms = getIt<DeadManSwitchService>();
+    if (_dmsEnabled) {
+      dms.startWithInterval(Duration(minutes: minutes));
     }
   }
 
@@ -496,40 +647,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l = AppLocalizations.of(context)!;
     return switch (alert.type) {
       ContextAlertType.heatStroke => (
-          l.ctxHeatTitle,
-          l.ctxHeatMsg(
-            (getIt<ContextAlertService>().currentTemperatureCelsius ?? 0)
-                .toStringAsFixed(0),
-          ),
+        l.ctxHeatTitle,
+        l.ctxHeatMsg(
+          (getIt<ContextAlertService>().currentTemperatureCelsius ?? 0)
+              .toStringAsFixed(0),
         ),
+      ),
       ContextAlertType.hypothermia => (
-          l.ctxHypothermiaTitle,
-          l.ctxHypothermiaMsg(
-            (getIt<ContextAlertService>().currentTemperatureCelsius ?? 0)
-                .toStringAsFixed(0),
-            '—', // wind chill unavailable at this point; use service message as fallback
-          ),
+        l.ctxHypothermiaTitle,
+        l.ctxHypothermiaMsg(
+          (getIt<ContextAlertService>().currentTemperatureCelsius ?? 0)
+              .toStringAsFixed(0),
+          '—', // wind chill unavailable at this point; use service message as fallback
         ),
+      ),
       ContextAlertType.drowsyDriving => (
-          l.ctxDrowsyTitle,
-          l.ctxDrowsyMsg(
-            '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, "0")}',
-            (getIt<ContextAlertService>().currentSpeedKmh ?? 0)
-                .toStringAsFixed(0),
+        l.ctxDrowsyTitle,
+        l.ctxDrowsyMsg(
+          '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, "0")}',
+          (getIt<ContextAlertService>().currentSpeedKmh ?? 0).toStringAsFixed(
+            0,
           ),
         ),
+      ),
       ContextAlertType.loneNightWalk => (
-          l.ctxNightWalkTitle,
-          l.ctxNightWalkMsg,
-        ),
+        l.ctxNightWalkTitle,
+        l.ctxNightWalkMsg,
+      ),
       ContextAlertType.altitudeSickness => (
-          l.ctxAltitudeTitle,
-          alert.message, // keep service-generated message (has precise altitude data)
-        ),
+        l.ctxAltitudeTitle,
+        alert
+            .message, // keep service-generated message (has precise altitude data)
+      ),
       ContextAlertType.flashFloodRisk => (
-          l.ctxFloodTitle,
-          alert.message, // keep service-generated message (has precise precipitation data)
-        ),
+        l.ctxFloodTitle,
+        alert
+            .message, // keep service-generated message (has precise precipitation data)
+      ),
     };
   }
 
@@ -611,9 +765,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (confirm == null) return null;
     if (firstPin != confirm) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.pinMismatch)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.pinMismatch)));
       }
       return null;
     }
@@ -647,9 +801,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               final ok = _lockService.verifyPin(pinController.text);
               Navigator.pop(ctx, ok);
               if (!ok) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l.wrongPin)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l.wrongPin)));
               }
             },
             child: Text(l.ok),
@@ -672,14 +826,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _SettingsSection(
             title: l.account,
             children: [
-              _SettingsTile(
-                icon: Icons.person_rounded,
-                title: l.profile,
-                subtitle: l.manageProfile,
-                onTap: () => context.push('/profile'),
-              ),
+
               _SettingsTile(
                 icon: Icons.workspace_premium_rounded,
+                iconColor: AppColors.accent,
                 title: l.premium,
                 subtitle: l.unlockAllRiskTypes,
                 onTap: () {
@@ -688,8 +838,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     builder: (ctx) => AlertDialog(
                       title: Row(
                         children: [
-                          const Icon(Icons.workspace_premium_rounded,
-                              color: AppColors.accent),
+                          const Icon(
+                            Icons.workspace_premium_rounded,
+                            color: AppColors.accent,
+                          ),
                           const SizedBox(width: 8),
                           Text(l.saforaPremium),
                         ],
@@ -700,40 +852,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         children: [
                           Text(l.currentFreePlan),
                           const SizedBox(height: 8),
-                          _iconText(Icons.check_circle, AppColors.success, l.freeSos),
-                          _iconText(Icons.check_circle, AppColors.success, l.freeContacts),
-                          _iconText(Icons.check_circle, AppColors.success, l.freeAlerts),
-                          _iconText(Icons.check_circle, AppColors.success, l.freeDetection),
-                          _iconText(Icons.check_circle, AppColors.success, l.freeMedicalId),
+                          _iconText(
+                            Icons.check_circle,
+                            AppColors.success,
+                            l.freeSos,
+                          ),
+                          _iconText(
+                            Icons.check_circle,
+                            AppColors.success,
+                            l.freeContacts,
+                          ),
+                          _iconText(
+                            Icons.check_circle,
+                            AppColors.success,
+                            l.freeAlerts,
+                          ),
+                          _iconText(
+                            Icons.check_circle,
+                            AppColors.success,
+                            l.freeDetection,
+                          ),
+                          _iconText(
+                            Icons.check_circle,
+                            AppColors.success,
+                            l.freeMedicalId,
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             l.premiumRoadmap,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 13,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
                       ),
                       actions: [
-                        if (AdService.instance.isRewardedReady)
-                          TextButton.icon(
-                            onPressed: () async {
-                              Navigator.pop(ctx);
-                              final rewarded =
-                                  await AdService.instance.showRewarded();
-                              if (rewarded && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l.premiumRoadmap),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            },
-                            icon: const Icon(Icons.play_circle_outline),
-                            label: Text(l.watchAd),
-                          ),
+                        FilledButton.icon(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            context.push(AppRoutes.paywall);
+                          },
+                          icon: const Icon(Icons.workspace_premium),
+                          label: Text(l.upgradeToPro),
+                        ),
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
                           child: Text(l.ok),
@@ -772,6 +933,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       : 0;
                   return _SettingsTile(
                     icon: Icons.contacts_rounded,
+                    iconColor: AppColors.secondary,
                     title: l.emergencyContacts,
                     subtitle: l.nContactsAdded(count),
                     onTap: () => context.push('/contacts'),
@@ -780,6 +942,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _SettingsTile(
                 icon: Icons.vibration_rounded,
+                iconColor: AppColors.primary,
                 title: l.shakeToSos,
                 subtitle: l.shakeToSosDesc,
                 onTap: () => _toggleShake(!_shakeEnabled),
@@ -791,6 +954,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _SettingsTile(
                 icon: Icons.lock_rounded,
+                iconColor: AppColors.textSecondary,
                 title: l.appLock,
                 subtitle: l.appLockDesc,
                 onTap: () => _toggleLock(!_lockEnabled),
@@ -803,18 +967,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (_lockEnabled)
                 _SettingsTile(
                   icon: Icons.pin_rounded,
+                  iconColor: AppColors.textSecondary,
                   title: l.changePinTitle,
                   subtitle: l.changePinDesc,
                   onTap: _changePin,
                 ),
               _SettingsTile(
                 icon: Icons.car_crash_rounded,
+                iconColor: AppColors.warning,
                 title: l.crashFallDetection,
                 subtitle: l.crashFallDetectionDesc,
                 onTap: () => _toggleCrashFall(!_crashFallEnabled),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (getIt<PremiumManager>().isProOnly(
+                          ProFeature.crashFallDetection,
+                        ) &&
+                        !getIt<PremiumManager>().isPremium)
+                      _proBadge(),
                     IconButton(
                       icon: const Icon(Icons.tune_rounded, size: 20),
                       onPressed: _showSensitivitySettings,
@@ -828,70 +999,185 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Switch(
                       value: _crashFallEnabled,
                       onChanged: _toggleCrashFall,
-                      activeTrackColor:
-                          AppColors.primary.withValues(alpha: 0.4),
+                      activeTrackColor: AppColors.primary.withValues(
+                        alpha: 0.4,
+                      ),
                     ),
                   ],
                 ),
               ),
               _SettingsTile(
                 icon: Icons.my_location_rounded,
+                iconColor: AppColors.success,
                 title: l.geofenceTitle,
                 subtitle: l.geofenceDesc,
                 onTap: () => _toggleGeofence(!_geofenceEnabled),
-                trailing: Switch(
-                  value: _geofenceEnabled,
-                  onChanged: _toggleGeofence,
-                  activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!getIt<PremiumManager>().isPremium) _proBadge(),
+                    Switch(
+                      value: _geofenceEnabled,
+                      onChanged: _toggleGeofence,
+                      activeTrackColor: AppColors.primary.withValues(
+                        alpha: 0.4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               _SettingsTile(
                 icon: Icons.pan_tool_rounded,
+                iconColor: AppColors.primary,
                 title: l.snatchTitle,
                 subtitle: l.snatchDesc,
                 onTap: () => _toggleSnatch(!_snatchEnabled),
-                trailing: Switch(
-                  value: _snatchEnabled,
-                  onChanged: _toggleSnatch,
-                  activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!getIt<PremiumManager>().isPremium) _proBadge(),
+                    Switch(
+                      value: _snatchEnabled,
+                      onChanged: _toggleSnatch,
+                      activeTrackColor: AppColors.primary.withValues(
+                        alpha: 0.4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               _SettingsTile(
                 icon: Icons.speed_rounded,
+                iconColor: AppColors.info,
                 title: l.speedAlertTitle,
                 subtitle: l.speedAlertDesc,
                 onTap: () => _toggleSpeedAlert(!_speedAlertEnabled),
-                trailing: Switch(
-                  value: _speedAlertEnabled,
-                  onChanged: _toggleSpeedAlert,
-                  activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!getIt<PremiumManager>().isPremium) _proBadge(),
+                    Switch(
+                      value: _speedAlertEnabled,
+                      onChanged: _toggleSpeedAlert,
+                      activeTrackColor: AppColors.primary.withValues(
+                        alpha: 0.4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               _SettingsTile(
                 icon: Icons.psychology_rounded,
+                iconColor: AppColors.accent,
                 title: l.contextAlertTitle,
                 subtitle: l.contextAlertDesc,
                 onTap: () => _toggleContextAlert(!_contextAlertEnabled),
-                trailing: Switch(
-                  value: _contextAlertEnabled,
-                  onChanged: _toggleContextAlert,
-                  activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!getIt<PremiumManager>().isPremium) _proBadge(),
+                    Switch(
+                      value: _contextAlertEnabled,
+                      onChanged: _toggleContextAlert,
+                      activeTrackColor: AppColors.primary.withValues(
+                        alpha: 0.4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               _SettingsTile(
+                icon: Icons.timer_rounded,
+                iconColor: AppColors.error,
+                title: 'Dead Man\'s Switch',
+                subtitle: 'Auto-SOS if you don\'t check in',
+                onTap: () => _toggleDms(!_dmsEnabled),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!getIt<PremiumManager>().isPremium) _proBadge(),
+                    Switch(
+                      value: _dmsEnabled,
+                      onChanged: _toggleDms,
+                      activeTrackColor: AppColors.primary.withValues(
+                        alpha: 0.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // ─── DMS Interval Picker (only when enabled) ───
+              if (_dmsEnabled)
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Check-in Interval',
+                          style: AppTypography.labelMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [15, 30, 60].map((m) {
+                            final isSelected = _dmsIntervalMinutes == m;
+                            return Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: GestureDetector(
+                                  onTap: () => _changeDmsInterval(m),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? AppColors.error
+                                          : AppColors.error.withValues(alpha: 0.08),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '$m min',
+                                      style: AppTypography.labelMedium.copyWith(
+                                        color: isSelected
+                                            ? Colors.white
+                                            : AppColors.textPrimary,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              _SettingsTile(
                 icon: Icons.tune_rounded,
+                iconColor: const Color(0xFF7E57C2),
                 title: 'Alert Preferences',
                 subtitle: 'Choose which alerts to receive',
                 onTap: () => context.push(AppRoutes.alertPreferences),
               ),
-              _SettingsTile(
-                icon: Icons.history_rounded,
-                title: l.sosHistory,
-                subtitle: l.sosHistoryDesc,
-                onTap: () => context.push(AppRoutes.sosHistory),
-              ),
+
               _SettingsTile(
                 icon: Icons.volume_up_rounded,
+                iconColor: AppColors.info,
                 title: l.alertSounds,
                 subtitle: l.configureAlertSounds,
                 onTap: () {
@@ -905,16 +1191,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         children: [
                           Text(l.alertSoundExplain),
                           const SizedBox(height: 12),
-                          _colorDotText(Colors.red, l.criticalSiren,
-                              fontWeight: FontWeight.w600),
-                          _colorDotText(Colors.amber, l.highMediumWarning),
-                          _colorDotText(Colors.green, l.lowNotification),
+                          _colorDotText(
+                            AppColors.danger,
+                            l.criticalSiren,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          _colorDotText(AppColors.warning, l.highMediumWarning),
+                          _colorDotText(AppColors.success, l.lowNotification),
                           const SizedBox(height: 12),
                           Text(
                             l.customSoundFuture,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 13,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -936,6 +1224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _SettingsTile(
                 icon: Icons.language_rounded,
+                iconColor: AppColors.secondary,
                 title: l.language,
                 subtitle: l.english,
                 onTap: () {
@@ -954,13 +1243,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 4),
-                          _iconText(Icons.smartphone, null, l.deviceSettingsLanguage),
+                          _iconText(
+                            Icons.smartphone,
+                            null,
+                            l.deviceSettingsLanguage,
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             l.inAppLanguageFuture,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 13,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -977,6 +1269,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _SettingsTile(
                 icon: Icons.dark_mode_rounded,
+                iconColor: AppColors.textSecondary,
                 title: l.darkMode,
                 subtitle: l.systemDefault,
                 onTap: () {
@@ -1014,23 +1307,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   );
                 },
               ),
-              _SettingsTile(
-                icon: Icons.info_outline_rounded,
-                title: l.about,
-                subtitle: l.saforaVersion,
-                onTap: () {
-                  showAboutDialog(
-                    context: context,
-                    applicationName: l.appTitle,
-                    applicationVersion: '1.1.0',
-                    applicationLegalese: l.saforaLegalese,
-                    children: [
-                      const SizedBox(height: 16),
-                      Text(l.saforaAbout),
-                    ],
-                  );
-                },
-              ),
+              // ── Manage Subscription (Pro users) ──────
+              if (getIt<PremiumManager>().isPremium)
+                _SettingsTile(
+                  icon: Icons.card_membership_rounded,
+                  iconColor: AppColors.accent,
+                  title: 'Manage Subscription',
+                  subtitle: 'View, change, or cancel your plan',
+                  onTap: () {
+                    getIt<SubscriptionService>().presentCustomerCenter();
+                  },
+                ),
+
             ],
           ),
           // ── Account Actions ────────────────────────────
@@ -1038,6 +1326,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (getIt<AuthService>().isSignedIn)
             _SettingsTile(
               icon: Icons.logout_rounded,
+              iconColor: AppColors.danger,
               title: l.signOut,
               subtitle: getIt<AuthService>().currentUser?.email ?? '',
               onTap: () async {
@@ -1067,10 +1356,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
           else
             _SettingsTile(
               icon: Icons.login_rounded,
+              iconColor: AppColors.success,
               title: l.signIn,
               subtitle: l.signInSubtitle,
               onTap: () => context.go('/login'),
             ),
+          // ── Version Footer ──────────────────────────────
+          const SizedBox(height: 24),
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  'Safora',
+                  style: AppTypography.titleSmall.copyWith(
+                    color: AppColors.textDisabled,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _appVersion.isNotEmpty ? _appVersion : '...',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textDisabled,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -1097,10 +1411,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Container(
             width: 10,
             height: 10,
-            decoration: BoxDecoration(
-              color: dotColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
           Flexible(
@@ -1149,10 +1460,12 @@ class _SettingsTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.iconColor,
     this.trailing,
   });
 
   final IconData icon;
+  final Color? iconColor;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
@@ -1160,21 +1473,20 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = iconColor ?? AppColors.primary;
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: AppColors.primary, size: 22),
+        child: Icon(icon, color: color, size: 22),
       ),
       title: Text(title, style: AppTypography.titleSmall),
       subtitle: Text(
         subtitle,
-        style: AppTypography.bodySmall.copyWith(
-          color: AppColors.textSecondary,
-        ),
+        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
       ),
       trailing: trailing ?? const Icon(Icons.chevron_right_rounded),
       onTap: onTap,

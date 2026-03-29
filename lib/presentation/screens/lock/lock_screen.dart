@@ -130,7 +130,7 @@ class _LockScreenState extends State<LockScreen> {
                 Text(
                   l.wrongPin,
                   style: AppTypography.bodyMedium.copyWith(
-                    color: Colors.yellow,
+                    color: AppColors.accent,
                   ),
                 )
               else
@@ -157,7 +157,7 @@ class _LockScreenState extends State<LockScreen> {
                           ? Colors.white
                           : Colors.white.withValues(alpha: 0.3),
                       border: _error
-                          ? Border.all(color: Colors.yellow, width: 2)
+                          ? Border.all(color: AppColors.accent, width: 2)
                           : null,
                     ),
                   );

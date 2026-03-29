@@ -272,7 +272,6 @@
   "contextAlertTitle": "Smart Context Alerts",
   "contextAlertDesc": "AI-powered alerts for heat, drowsy driving, and more",
 
-  "watchAd": "Watch Ad",
   "signOut": "Sign Out",
   "signOutConfirm": "Are you sure you want to sign out?",
   "createAccount": "Create Account",
@@ -353,5 +352,9 @@
   "aboutSafora": "About Safora",
   "aboutSaforaSubtitle": "Version info & credits",
   "close": "Close",
-  "remindersAccessedFromHome": "Reminders can be accessed from the Home screen"
+  "remindersAccessedFromHome": "Reminders can be accessed from the Home screen",
+  "proFeatureTitle": "Pro Feature",
+  "proFeatureMessage": "This feature requires Safora Pro. Upgrade to unlock advanced detection, unlimited contacts, and ad-free experience.",
+  "upgradeToPro": "Upgrade to Pro",
+  "sosHistoryFreeNote": "Showing last 7 days. Upgrade to Pro for full history."
 }

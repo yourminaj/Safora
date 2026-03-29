@@ -93,22 +93,28 @@ build_release() {
   log "AAB built successfully"
   
   echo ""
-  info "Building APK for direct distribution..."
-  flutter build apk --release
-  log "APK built successfully"
+  info "Building split APKs for direct distribution..."
+  flutter build apk --release --split-per-abi
+  log "Split APKs built successfully"
   
   # Copy to PlayStore directory with versioned names
   local aab_src="build/app/outputs/bundle/release/app-release.aab"
-  local apk_src="build/app/outputs/flutter-apk/app-release.apk"
+  local apk_src="build/app/outputs/flutter-apk/app-arm64-v8a-release.apk"
   local aab_dst="${OUTPUT_DIR}/safora-v${NEW_SEMVER}+${BUILD_NUMBER}.aab"
-  local apk_dst="${OUTPUT_DIR}/safora-v${NEW_SEMVER}+${BUILD_NUMBER}.apk"
+  local apk_dst="${OUTPUT_DIR}/safora-v${NEW_SEMVER}+${BUILD_NUMBER}-arm64.apk"
   
   cp "$aab_src" "$aab_dst"
   cp "$apk_src" "$apk_dst"
   
+  # Also copy armeabi-v7a if it exists
+  local apk_v7a="build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk"
+  if [[ -f "$apk_v7a" ]]; then
+    cp "$apk_v7a" "${OUTPUT_DIR}/safora-v${NEW_SEMVER}+${BUILD_NUMBER}-armv7.apk"
+  fi
+  
   echo ""
   log "Release files:"
-  ls -lh "$aab_dst" "$apk_dst"
+  ls -lh "${OUTPUT_DIR}/safora-v${NEW_SEMVER}+${BUILD_NUMBER}"*
 }
 
 # ── Git commit ──────────────────────────────────────────────

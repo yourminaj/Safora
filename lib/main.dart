@@ -13,6 +13,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'app.dart';
 import 'core/services/ad_service.dart';
+import 'core/services/premium_manager.dart';
+import 'core/services/app_open_ad_service.dart';
+import 'core/services/subscription_service.dart';
 import 'core/services/app_lock_service.dart';
 import 'core/services/service_bootstrapper.dart';
 import 'presentation/blocs/theme/theme_cubit.dart';
@@ -114,6 +117,9 @@ void main() {
       // Initialize dependency injection (opens Hive boxes).
       await configureDependencies();
 
+      // Load premium state from Hive (must run after DI opens boxes).
+      await getIt<PremiumManager>().init();
+
       // Eagerly initialize notification channels + FCM.
       await getIt<NotificationService>().init();
 
@@ -122,6 +128,16 @@ void main() {
 
       // Initialize Google Mobile Ads SDK.
       await AdService.initialize();
+
+      // Pre-load App Open Ad for foreground resumes.
+      AppOpenAdService.instance.loadAd();
+
+      // Sync premium state to ad services (single source of truth).
+      AdService.instance.setPremium(getIt<PremiumManager>().isPremium);
+      AppOpenAdService.instance.setPremium(getIt<PremiumManager>().isPremium);
+
+      // Initialize RevenueCat subscription service.
+      await getIt<SubscriptionService>().init();
 
       // ── Service Re-hydration ─────────────────────────────────
       final appSettings = getIt<Box>(instanceName: 'app_settings');
@@ -167,6 +183,8 @@ class _SaforaAppState extends State<SaforaApp> {
       // Track when app actually enters background.
       onHide: _onAppHidden,
       onResume: _onAppResumed,
+      // App Open Ad on foreground restore.
+      onShow: _onAppShown,
     );
   }
 
@@ -207,6 +225,11 @@ class _SaforaAppState extends State<SaforaApp> {
     } catch (_) {
       // AppLockService not registered yet during startup — ignore.
     }
+  }
+
+  /// Show App Open ad when the app becomes visible (e.g., from recents).
+  void _onAppShown() {
+    AppOpenAdService.instance.onAppResumed();
   }
 
   @override

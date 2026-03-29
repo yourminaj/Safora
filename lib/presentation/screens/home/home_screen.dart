@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../widgets/safora_brand_mark.dart';
 import '../shell/main_shell.dart';
 import '../../../data/models/medicine_reminder.dart';
-import '../../../services/dead_man_switch_service.dart';
+
 import '../../../services/risk_score_engine.dart';
 import '../../../core/services/sms_service.dart';
 import '../../../data/repositories/contacts_repository.dart';
@@ -18,6 +19,7 @@ import '../../blocs/alerts/alerts_state.dart';
 import '../../blocs/reminders/reminders_cubit.dart';
 import '../../blocs/reminders/reminders_state.dart';
 import '../../widgets/alert_card.dart';
+import '../../../services/dead_man_switch_service.dart';
 import 'widgets/sos_button.dart';
 
 /// Main dashboard with SOS button, status, and quick actions.
@@ -29,8 +31,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final DeadManSwitchService _dms;
-  bool _dmsActive = false;
   final _riskEngine = const RiskScoreEngine();
   /// Track which alert IDs have already triggered a full-screen card.
   final _triggeredAlertIds = <String>{};
@@ -38,46 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _dms = GetIt.instance<DeadManSwitchService>();
-    _dmsActive = _dms.isActive;
-
     // Load alerts when home screen opens (if not already loaded).
     final alertsCubit = context.read<AlertsCubit>();
     if (alertsCubit.state is AlertsInitial) {
       alertsCubit.loadAlerts();
     }
-  }
-
-  void _toggleDeadManSwitch() {
-    setState(() {
-      if (_dmsActive) {
-        _dms.stop();
-        _dmsActive = false;
-      } else {
-        _dms.start();
-        _dmsActive = true;
-      }
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _dmsActive
-              ? 'Dead Man\'s Switch activated — check in every 30 min'
-              : 'Dead Man\'s Switch deactivated',
-        ),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _checkInDeadManSwitch() {
-    _dms.checkIn();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Checked in — timer reset'),
-        duration: Duration(seconds: 1),
-      ),
-    );
   }
 
   /// Check if any loaded alert has riskScore >= 80 and trigger
@@ -151,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 40,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: Colors.grey[300],
+                            color: AppColors.textDisabled,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -222,13 +187,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Icon(
                                   Icons.medication_outlined,
                                   size: 48,
-                                  color: Colors.grey[400],
+                                  color: AppColors.textDisabled,
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
                                   l.noRemindersSet,
                                   style: AppTypography.bodyMedium.copyWith(
-                                    color: Colors.grey[600],
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -236,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   l.addRemindersHint,
                                   textAlign: TextAlign.center,
                                   style: AppTypography.bodySmall.copyWith(
-                                    color: Colors.grey[500],
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -257,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       : Icons.circle_outlined,
                                   color: r.isActive
                                       ? AppColors.success
-                                      : Colors.grey,
+                                      : AppColors.textDisabled,
                                 ),
                                 title: Text(r.name),
                                 subtitle: Text(
@@ -438,6 +403,108 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
+            // ─── Dead Man's Switch Check-In ───────────────────
+            SliverToBoxAdapter(
+              child: Builder(
+                builder: (context) {
+                  final settings = GetIt.instance<Box>(instanceName: 'app_settings');
+                  final dmsEnabled = settings.get('dead_man_switch_enabled', defaultValue: false) as bool;
+                  if (!dmsEnabled) return const SizedBox.shrink();
+
+                  final dms = GetIt.instance<DeadManSwitchService>();
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          dms.checkIn();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('✓ Check-in confirmed — timer reset'),
+                              backgroundColor: AppColors.safe,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.safe.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.safe.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.safe.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.shield_rounded,
+                                  color: AppColors.safe,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Dead Man\'s Switch Active',
+                                      style: AppTypography.labelLarge.copyWith(
+                                        color: AppColors.safe,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Tap to confirm you\'re safe',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.safe.withValues(alpha: 0.7),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.safe,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'I\'m Safe',
+                                  style: AppTypography.labelMedium.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
             // ─── SOS Button ──────────────────────────────────
             const SliverToBoxAdapter(
               child: Padding(
@@ -494,22 +561,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () => context.push('/contacts'),
                         ),
                         _QuickAction(
-                          icon: Icons.medical_information_rounded,
-                          label: l.medicalId,
+                          icon: Icons.person_rounded,
+                          label: l.profile,
                           color: AppColors.success,
                           onTap: () => context.push('/profile'),
-                        ),
-                        _QuickAction(
-                          icon: Icons.warning_amber_rounded,
-                          label: l.alerts,
-                          color: AppColors.warning,
-                          onTap: () => context.push('/alerts'),
-                        ),
-                        _QuickAction(
-                          icon: Icons.map_rounded,
-                          label: l.alertMap,
-                          color: AppColors.info,
-                          onTap: () => context.push('/alert-map'),
                         ),
                         _QuickAction(
                           icon: Icons.my_location_rounded,
@@ -526,25 +581,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                         _QuickAction(
-                          icon: _dmsActive
-                              ? Icons.timer_rounded
-                              : Icons.timer_off_rounded,
-                          label: _dmsActive ? 'Check In' : 'Dead Switch',
-                          color: _dmsActive
-                              ? AppColors.warning
-                              : AppColors.textSecondary,
-                          onTap: _dmsActive
-                              ? _checkInDeadManSwitch
-                              : _toggleDeadManSwitch,
-                          onLongPress: _dmsActive
-                              ? _toggleDeadManSwitch
-                              : null,
-                        ),
-                        _QuickAction(
-                          icon: Icons.settings_rounded,
-                          label: l.settings,
-                          color: AppColors.textSecondary,
-                          onTap: () => context.push('/settings'),
+                          icon: Icons.emergency_rounded,
+                          label: 'Emergency Center',
+                          color: AppColors.danger,
+                          onTap: () => context.push('/emergency-center'),
                         ),
                       ],
                     ),
@@ -664,14 +704,12 @@ class _QuickAction extends StatelessWidget {
     required this.label,
     required this.color,
     required this.onTap,
-    this.onLongPress,
   });
 
   final IconData icon;
   final String label;
   final Color color;
   final VoidCallback onTap;
-  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -706,7 +744,6 @@ class _QuickAction extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         child: InkWell(
           onTap: onTap,
-          onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(18),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

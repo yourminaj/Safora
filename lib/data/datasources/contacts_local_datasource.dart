@@ -1,5 +1,7 @@
 import 'package:hive/hive.dart';
+import 'package:get_it/get_it.dart';
 import 'package:uuid/uuid.dart';
+import '../../core/services/premium_manager.dart';
 import '../models/emergency_contact.dart';
 
 /// Local data source for emergency contacts using Hive.
@@ -9,7 +11,9 @@ class ContactsLocalDataSource {
   final Box _box;
 
   static const String boxName = 'emergency_contacts';
-  static const int maxFreeContacts = 3;
+
+  /// Contact limit from PremiumManager (3 free, 999 pro).
+  int get maxFreeContacts => GetIt.instance<PremiumManager>().contactLimit;
 
   /// Get all saved emergency contacts.
   List<EmergencyContact> getAll() {
@@ -33,11 +37,12 @@ class ContactsLocalDataSource {
 
   /// Add a new emergency contact. Returns the assigned ID.
   ///
-  /// Throws [ContactLimitException] if the free limit is reached.
+  /// Throws [ContactLimitException] if the tier limit is reached.
+  /// Free users: 3 contacts. Pro users: 999 contacts.
   Future<String> add(EmergencyContact contact) async {
     if (_box.length >= maxFreeContacts) {
       throw ContactLimitException(
-        'Maximum $maxFreeContacts contacts allowed on the free tier.',
+        'Maximum $maxFreeContacts contacts reached. Upgrade to Pro for unlimited contacts.',
       );
     }
     final id = const Uuid().v4();
@@ -73,11 +78,11 @@ class ContactsLocalDataSource {
   /// Number of stored contacts.
   int get count => _box.length;
 
-  /// Whether the free contact limit has been reached.
+  /// Whether the contact limit has been reached.
   bool get isLimitReached => _box.length >= maxFreeContacts;
 }
 
-/// Exception thrown when the user has reached the max free contacts limit.
+/// Exception thrown when the user has reached the max contacts limit for their tier.
 class ContactLimitException implements Exception {
   ContactLimitException(this.message);
   final String message;

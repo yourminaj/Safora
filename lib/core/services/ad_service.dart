@@ -5,10 +5,15 @@ import 'app_logger.dart';
 
 /// Centralized Ad management service for Safora.
 ///
-/// Handles banner, interstitial, and rewarded ads with:
+/// Handles banner, interstitial, and native ads for free users with:
 /// - Frequency capping (interstitials max once per 3 min)
-/// - Premium bypass (no ads for premium users)
+/// - Premium bypass (no ads for Pro subscribers)
 /// - Safety exclusion (never show during emergency)
+/// - Meta Audience Network mediation (interstitial + native)
+///
+/// Monetization model:
+/// - Free users: all ads shown (banner, interstitial, native, app open)
+/// - Pro users: all ads disabled (paid subscription = ad-free)
 class AdService {
   AdService._();
   static final AdService instance = AdService._();
@@ -24,7 +29,6 @@ class AdService {
   static const _interstitialCooldown = Duration(minutes: 3);
 
   InterstitialAd? _interstitialAd;
-  RewardedAd? _rewardedAd;
 
   // ── Ad Unit IDs ──────────────────────────────────────────
   static const _bannerAlerts = 'ca-app-pub-3413399953381965/9006242267';
@@ -32,7 +36,7 @@ class AdService {
   static const _bannerContacts = 'ca-app-pub-3413399953381965/3945487274';
   static const _bannerProfile = 'ca-app-pub-3413399953381965/7749505494';
   static const _interstitialUnit = 'ca-app-pub-3413399953381965/3778470893';
-  static const _rewardedUnit = 'ca-app-pub-3413399953381965/8382950373';
+  static const _nativeAlertsFeed = 'ca-app-pub-3413399953381965/6150921784';
 
   /// Ad unit IDs for each screen with a banner.
   static String get bannerAlerts => _bannerAlerts;
@@ -40,16 +44,21 @@ class AdService {
   static String get bannerContacts => _bannerContacts;
   static String get bannerProfile => _bannerProfile;
 
+  /// Native ad unit ID for alerts feed.
+  static String get nativeAlertsFeed => _nativeAlertsFeed;
+
   /// Initialize the Mobile Ads SDK.
   static Future<void> initialize() async {
     await MobileAds.instance.initialize();
     AppLogger.info('[AdService] Mobile Ads SDK initialized');
-    // Pre-load interstitial and rewarded ads.
+    // Pre-load interstitial ad for free users.
     instance._loadInterstitial();
-    instance._loadRewarded();
   }
 
-  /// Set premium status (skips all ads).
+  /// Set premium status (skips all ads for Pro users).
+  /// Whether the user is premium (getter for external checks).
+  bool get isPremium => _isPremium;
+
   void setPremium(bool premium) => _isPremium = premium;
 
   /// Set emergency status (blocks interstitials during SOS).
@@ -104,63 +113,8 @@ class AdService {
     }
   }
 
-  // ── Rewarded ─────────────────────────────────────────────
-
-  void _loadRewarded() {
-    RewardedAd.load(
-      adUnitId: kDebugMode
-          ? 'ca-app-pub-3940256099942544/5224354917' // Official Google test rewarded ID
-          : _rewardedUnit,
-      request: const AdRequest(),
-      rewardedAdLoadCallback: RewardedAdLoadCallback(
-        onAdLoaded: (ad) {
-          _rewardedAd = ad;
-          ad.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) {
-              ad.dispose();
-              _rewardedAd = null;
-              _loadRewarded();
-            },
-            onAdFailedToShowFullScreenContent: (ad, error) {
-              ad.dispose();
-              _rewardedAd = null;
-              _loadRewarded();
-            },
-          );
-        },
-        onAdFailedToLoad: (error) {
-          AppLogger.warning('[AdService] Rewarded load failed: $error');
-          Future.delayed(const Duration(seconds: 30), _loadRewarded);
-        },
-      ),
-    );
-  }
-
-  /// Show rewarded ad. Returns true if reward was granted.
-  Future<bool> showRewarded() async {
-    if (_rewardedAd == null) return false;
-
-    final completer = Completer<bool>();
-
-    _rewardedAd!.show(
-      onUserEarnedReward: (ad, reward) {
-        if (!completer.isCompleted) completer.complete(true);
-      },
-    );
-
-    // Timeout after 60 seconds in case callback never fires.
-    return completer.future.timeout(
-      const Duration(seconds: 60),
-      onTimeout: () => false,
-    );
-  }
-
-  /// Whether a rewarded ad is ready to show.
-  bool get isRewardedReady => _rewardedAd != null;
-
   /// Dispose all loaded ads.
   void dispose() {
     _interstitialAd?.dispose();
-    _rewardedAd?.dispose();
   }
 }

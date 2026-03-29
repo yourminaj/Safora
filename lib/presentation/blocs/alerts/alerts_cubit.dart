@@ -5,6 +5,7 @@ import '../../../core/services/notification_service.dart';
 import '../../../data/models/alert_event.dart';
 import '../../../data/models/alert_preferences.dart';
 import '../../../data/repositories/alerts_repository.dart';
+import '../../../services/risk_score_engine.dart';
 import 'alerts_state.dart';
 
 /// Cubit for fetching, caching, and filtering disaster alerts.
@@ -25,6 +26,7 @@ class AlertsCubit extends Cubit<AlertsState> {
   final AlertsRepository _alertsRepository;
   final NotificationService _notificationService;
   final AlertPreferences _prefs;
+  static const _riskEngine = RiskScoreEngine();
   Timer? _refreshTimer;
 
   static const Duration refreshInterval = Duration(minutes: 15);
@@ -42,14 +44,14 @@ class AlertsCubit extends Cubit<AlertsState> {
         emit(AlertsLoaded(alerts: cached, preferencesApplied: true));
       }
 
-      // Then fetch fresh data from APIs.
+      // Then fetch fresh data from APIs, enrich with risk scores.
       final rawFresh = await _alertsRepository.fetchLatestAlerts();
-      final fresh = _filterByPreferences(rawFresh);
+      final scored = _riskEngine.enrichAndSort(_filterByPreferences(rawFresh));
 
       // Notify about new critical alerts (only if enabled by user).
-      _notifyNewCritical(fresh, cached);
+      _notifyNewCritical(scored, cached);
 
-      emit(AlertsLoaded(alerts: fresh, preferencesApplied: true));
+      emit(AlertsLoaded(alerts: scored, preferencesApplied: true));
 
       // Start auto-refresh timer.
       _startAutoRefresh();
@@ -72,6 +74,9 @@ class AlertsCubit extends Cubit<AlertsState> {
     // Gate: if the user has disabled this alert type, drop it silently.
     if (!_prefs.isEnabled(alert.type)) return;
 
+    // Enrich with composite risk score before inserting into pipeline.
+    final enriched = _riskEngine.enrichWithScore(alert);
+
     final currentState = state;
     final List<AlertEvent> current;
 
@@ -82,7 +87,7 @@ class AlertsCubit extends Cubit<AlertsState> {
     }
 
     // Add to front (newest first) and deduplicate.
-    current.insert(0, alert);
+    current.insert(0, enriched);
     final seen = <String>{};
     final unique = <AlertEvent>[];
     for (final a in current) {
@@ -96,31 +101,32 @@ class AlertsCubit extends Cubit<AlertsState> {
     emit(AlertsLoaded(alerts: unique, preferencesApplied: true));
 
     // Notify if critical.
-    if (alert.type.priority == AlertPriority.critical) {
+    if (enriched.type.priority == AlertPriority.critical ||
+        (enriched.riskScore ?? 0) >= 80) {
       _notificationService.showDisasterAlert(
-        title: '${alert.type.category.label}: ${alert.title}',
-        body: alert.description ??
-            'Critical alert from ${alert.source ?? "on-device detection"}',
+        title: '${enriched.type.category.label}: ${enriched.title}',
+        body: enriched.description ??
+            'Critical alert from ${enriched.source ?? "on-device detection"}',
       );
     }
   }
 
-  /// Force refresh alerts from all APIs — filtered by preferences.
+  /// Force refresh alerts from all APIs — filtered by preferences + scored.
   Future<void> refreshAlerts() async {
     final currentState = state;
 
     try {
       final rawFresh = await _alertsRepository.fetchLatestAlerts();
-      final fresh = _filterByPreferences(rawFresh);
+      final scored = _riskEngine.enrichAndSort(_filterByPreferences(rawFresh));
 
       if (currentState is AlertsLoaded) {
-        _notifyNewCritical(fresh, currentState.alerts);
+        _notifyNewCritical(scored, currentState.alerts);
         emit(currentState.copyWith(
-          alerts: fresh,
+          alerts: scored,
           preferencesApplied: true,
         ));
       } else {
-        emit(AlertsLoaded(alerts: fresh, preferencesApplied: true));
+        emit(AlertsLoaded(alerts: scored, preferencesApplied: true));
       }
     } catch (_) {
       // Keep current state on refresh failure.

@@ -41,3 +41,17 @@
 # Prevents R8 from stripping JNI bindings used by tflite_flutter plugin.
 -keep class org.tensorflow.lite.** { *; }
 -dontwarn org.tensorflow.lite.**
+
+# ─── RevenueCat (in-app purchases & subscriptions) ────────────
+# RevenueCat uses reflection for billing communication with Google Play.
+-keep class com.revenuecat.purchases.** { *; }
+-dontwarn com.revenuecat.purchases.**
+-keep class com.android.vending.billing.** { *; }
+
+# ─── Meta Audience Network (Facebook Ads) ─────────────────────
+# Meta SDK references internal annotation classes not bundled in the SDK.
+# These are compile-time annotations safe to suppress at runtime.
+-keep class com.facebook.ads.** { *; }
+-dontwarn com.facebook.infer.annotation.Nullsafe$Mode
+-dontwarn com.facebook.infer.annotation.Nullsafe
+-dontwarn com.facebook.infer.annotation.**

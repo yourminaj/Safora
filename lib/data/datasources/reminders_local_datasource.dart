@@ -1,4 +1,6 @@
 import '../../core/services/app_logger.dart';
+import 'package:get_it/get_it.dart';
+import '../../core/services/premium_manager.dart';
 import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 import '../models/medicine_reminder.dart';
@@ -10,7 +12,9 @@ class RemindersLocalDataSource {
   final Box _box;
 
   static const String boxName = 'medicine_reminders';
-  static const int maxReminders = 20;
+
+  /// Reminder limit from PremiumManager (2 free, 999 pro).
+  int get maxReminders => GetIt.instance<PremiumManager>().reminderLimit;
 
   /// Get all reminders, sorted by time of day.
   List<MedicineReminder> getAll() {

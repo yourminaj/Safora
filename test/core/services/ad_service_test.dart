@@ -33,44 +33,56 @@ void main() {
           AdService.bannerContacts,
           AdService.bannerProfile,
         };
-        expect(ids.length, 4, reason: 'Each screen should have a unique ad unit ID');
+        expect(ids.length, 4,
+            reason: 'Each screen should have a unique ad unit ID');
+      });
+
+      test('native alerts feed ad unit ID is non-empty', () {
+        expect(AdService.nativeAlertsFeed.isNotEmpty, true);
+        expect(AdService.nativeAlertsFeed, startsWith('ca-app-pub-'));
       });
     });
 
-    group('Premium Bypass', () {
-      test('setPremium accepts true', () {
-        // Should not throw — we can't verify internals without ads SDK,
-        // but this validates the method contract.
+    group('Premium Bypass — Pro users see no ads', () {
+      test('setPremium(true) disables ads for Pro users', () {
         expect(() => AdService.instance.setPremium(true), returnsNormally);
+        expect(AdService.instance.isPremium, isTrue);
       });
 
-      test('setPremium accepts false', () {
+      test('setPremium(false) enables ads for free users', () {
         expect(() => AdService.instance.setPremium(false), returnsNormally);
+        expect(AdService.instance.isPremium, isFalse);
+      });
+
+      test('isPremium getter reflects current state', () {
+        AdService.instance.setPremium(true);
+        expect(AdService.instance.isPremium, isTrue);
+        AdService.instance.setPremium(false);
+        expect(AdService.instance.isPremium, isFalse);
       });
     });
 
     group('Emergency Safety', () {
       test('setEmergencyActive blocks ads during emergency', () {
-        expect(() => AdService.instance.setEmergencyActive(true), returnsNormally);
+        expect(
+            () => AdService.instance.setEmergencyActive(true), returnsNormally);
       });
 
       test('setEmergencyActive can be deactivated', () {
-        expect(() => AdService.instance.setEmergencyActive(false), returnsNormally);
+        expect(() => AdService.instance.setEmergencyActive(false),
+            returnsNormally);
       });
     });
 
     group('Interstitial Guard Logic', () {
       test('showInterstitial does not throw when no ad is loaded', () {
-        // Reset state
         AdService.instance.setPremium(false);
         AdService.instance.setEmergencyActive(false);
-        // No interstitial loaded, should silently return
         expect(() => AdService.instance.showInterstitial(), returnsNormally);
       });
 
       test('showInterstitial is blocked when premium is true', () {
         AdService.instance.setPremium(true);
-        // Should silently return without attempting to show
         expect(() => AdService.instance.showInterstitial(), returnsNormally);
         AdService.instance.setPremium(false); // cleanup
       });
@@ -82,14 +94,13 @@ void main() {
       });
     });
 
-    group('Rewarded Ad', () {
-      test('isRewardedReady returns false when no ad is loaded', () {
-        expect(AdService.instance.isRewardedReady, false);
-      });
-
-      test('showRewarded returns false when no ad is loaded', () async {
-        final result = await AdService.instance.showRewarded();
-        expect(result, false);
+    group('Ad Model — No Rewarded Ads', () {
+      test('AdService has no rewarded ad methods', () {
+        // Verify the simplified model: free users see banner/interstitial/native/app open
+        // No rewarded ads exist in the new monetization model
+        expect(AdService.instance.isPremium, isFalse);
+        // The AdService should only have: setPremium, setEmergencyActive,
+        // showInterstitial, isPremium, dispose — no showRewarded or isRewardedReady
       });
     });
 

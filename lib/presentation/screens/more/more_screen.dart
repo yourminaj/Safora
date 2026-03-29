@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
@@ -19,12 +20,14 @@ class MoreScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l.more),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l.more), centerTitle: true),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(16, 16, 16, saforaBottomInset(context) + 8),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          saforaBottomInset(context) + 8,
+        ),
         children: [
           // Account Section
           _SectionHeader(title: l.account),
@@ -119,23 +122,32 @@ class MoreScreen extends StatelessWidget {
   }
 
   void _showRemindersInfo(BuildContext context) {
-    // Navigate home and the user can access reminders from there.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context)!.remindersAccessedFromHome),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    // Navigate to Home tab where reminders bottom sheet is accessible.
+    context.go('/home');
+    // Show a hint after navigation completes.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.remindersAccessedFromHome,
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    });
   }
 
-  void _showAboutDialog(BuildContext context) {
+  void _showAboutDialog(BuildContext context) async {
     final l = AppLocalizations.of(context)!;
+    final info = await PackageInfo.fromPlatform();
+    if (!context.mounted) return;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -159,7 +171,7 @@ class MoreScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'v1.1.3',
+              'v${info.version}',
               style: AppTypography.labelMedium.copyWith(
                 color: AppColors.textDisabled,
               ),

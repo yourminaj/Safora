@@ -44,7 +44,7 @@ class EmergencyCenterScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ── QUICK ACTIONS ──
-            _SectionLabel(text: 'QUICK ACTIONS'),
+            const _SectionLabel(text: 'QUICK ACTIONS'),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -75,7 +75,7 @@ class EmergencyCenterScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ── SAFETY RESOURCES ──
-            _SectionLabel(text: 'SAFETY RESOURCES'),
+            const _SectionLabel(text: 'SAFETY RESOURCES'),
             const SizedBox(height: 12),
 
             _ResourceTile(
@@ -108,7 +108,7 @@ class EmergencyCenterScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ── EMERGENCY NUMBERS ──
-            _SectionLabel(text: 'EMERGENCY NUMBERS'),
+            const _SectionLabel(text: 'EMERGENCY NUMBERS'),
             const SizedBox(height: 12),
             _EmergencyNumbersGrid(isDark: isDark),
           ],
@@ -433,7 +433,7 @@ class _ResourceTile extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.chevron_right_rounded,
                 color: AppColors.textDisabled,
                 size: 22,
@@ -561,7 +561,7 @@ class _LiveLocationSheet extends StatelessWidget {
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('📍 Live location shared for 15 minutes'),
+                content: Text('Live location shared for 15 minutes'),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -575,7 +575,7 @@ class _LiveLocationSheet extends StatelessWidget {
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('📍 Live location shared for 1 hour'),
+                content: Text('Live location shared for 1 hour'),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -589,7 +589,7 @@ class _LiveLocationSheet extends StatelessWidget {
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('📍 Live location shared continuously'),
+                content: Text('Live location shared continuously'),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -881,7 +881,7 @@ class _FirstAidCardState extends State<_FirstAidCard> {
               children: [
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.medical_services_rounded,
                       color: AppColors.primary,
                       size: 20,
@@ -938,27 +938,27 @@ class _OfflineSurvivalSheet extends StatelessWidget {
       icon: const SaforaOfflineIcon(size: 48, animated: true),
       children: [
         _SurvivalSection(
-          title: '🔥 Fire Emergency',
+          title: 'Fire Emergency',
           content: '• Stay low — smoke rises\n• Feel doors before opening\n• Use stairs, never elevators\n• Stop, Drop, Roll if clothes catch fire\n• Meet at designated meeting point',
           isDark: isDark,
         ),
         _SurvivalSection(
-          title: '🌊 Flood Emergency',
+          title: 'Flood Emergency',
           content: '• Move to higher ground immediately\n• Do NOT walk or drive through flood water\n• 6 inches of water can knock you down\n• 2 feet of water can float a car\n• Stay away from power lines',
           isDark: isDark,
         ),
         _SurvivalSection(
-          title: '🌪️ Earthquake',
+          title: 'Earthquake',
           content: '• DROP, COVER, HOLD ON\n• Get under sturdy furniture\n• Stay away from windows\n• If outside, move to open area\n• After: Check for gas leaks, injuries',
           isDark: isDark,
         ),
         _SurvivalSection(
-          title: '🔋 Power Outage',
+          title: 'Power Outage',
           content: '• Conserve phone battery\n• Turn off unnecessary apps\n• Use flashlight, not candles\n• Keep refrigerator closed\n• Unplug electronics to prevent surge',
           isDark: isDark,
         ),
         _SurvivalSection(
-          title: '🧊 Extreme Cold',
+          title: 'Extreme Cold',
           content: '• Layer clothing loosely\n• Stay dry — wet clothing loses heat fast\n• Watch for frostbite (numbness, white skin)\n• Eat and drink — body needs fuel for warmth\n• If stranded in car: run engine briefly for heat',
           isDark: isDark,
         ),

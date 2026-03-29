@@ -78,7 +78,7 @@ void main() {
 
     test('add throws ReminderLimitException when at max', () {
       when(() => mockBox.length)
-          .thenReturn(RemindersLocalDataSource.maxReminders);
+          .thenReturn(datasource.maxReminders);
       const reminder = MedicineReminder(
         name: 'Test',
         dosage: '1',

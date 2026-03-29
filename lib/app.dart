@@ -32,6 +32,7 @@ import 'presentation/screens/map/live_map_screen.dart';
 import 'presentation/screens/settings/alert_preferences_screen.dart';
 import 'presentation/screens/more/more_screen.dart';
 import 'presentation/screens/emergency/emergency_center_screen.dart';
+import 'presentation/screens/settings/paywall_screen.dart';
 import 'presentation/screens/shell/main_shell.dart';
 
 /// Named route paths.
@@ -56,6 +57,7 @@ abstract final class AppRoutes {
   static const String more = '/more';
   static const String alertPreferences = '/alert-preferences';
   static const String emergencyCenter = '/emergency-center';
+  static const String paywall = '/paywall';
 }
 
 // Navigation keys for the shell branches.
@@ -128,65 +130,119 @@ GoRouter createRouter() {
         ),
 
         // ─── Sub-routes that push on top of the shell ──
+        // Each route uses pageBuilder with a unique ValueKey to prevent
+        // duplicate page key assertions in the root Navigator (GoRouter
+        // can generate colliding keys when StatefulShellRoute and
+        // root-level pushed routes coexist).
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.addContact,
-          builder: (context, state) => const AddContactScreen(),
+          pageBuilder: (context, state) => MaterialPage(
+            key: const ValueKey('page-add-contact'),
+            name: AppRoutes.addContact,
+            child: const AddContactScreen(),
+          ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.editContact,
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final contact = state.extra as EmergencyContact?;
-            if (contact == null) return const ContactsScreen();
-            return EditContactScreen(contact: contact);
+            return MaterialPage(
+              key: const ValueKey('page-edit-contact'),
+              name: AppRoutes.editContact,
+              child: contact == null
+                  ? const ContactsScreen()
+                  : EditContactScreen(contact: contact),
+            );
           },
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.editProfile,
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final profile = state.extra as UserProfile?;
-            return EditProfileScreen(existingProfile: profile);
+            return MaterialPage(
+              key: const ValueKey('page-edit-profile'),
+              name: AppRoutes.editProfile,
+              child: EditProfileScreen(existingProfile: profile),
+            );
           },
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.profile,
-          builder: (context, state) => const ProfileScreen(),
+          pageBuilder: (context, state) => MaterialPage(
+            key: const ValueKey('page-profile'),
+            name: AppRoutes.profile,
+            child: const ProfileScreen(),
+          ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.settings,
-          builder: (context, state) => const SettingsScreen(),
+          pageBuilder: (context, state) => MaterialPage(
+            key: const ValueKey('page-settings'),
+            name: AppRoutes.settings,
+            child: const SettingsScreen(),
+          ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.decoyCall,
-          builder: (context, state) => const DecoyCallScreen(),
+          pageBuilder: (context, state) => MaterialPage(
+            key: const ValueKey('page-decoy-call'),
+            name: AppRoutes.decoyCall,
+            child: const DecoyCallScreen(),
+          ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.alertMap,
-          builder: (context, state) => const AlertMapScreen(),
+          pageBuilder: (context, state) => MaterialPage(
+            key: const ValueKey('page-alert-map'),
+            name: AppRoutes.alertMap,
+            child: const AlertMapScreen(),
+          ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.sosHistory,
-          builder: (context, state) => const SosHistoryScreen(),
+          pageBuilder: (context, state) => MaterialPage(
+            key: const ValueKey('page-sos-history'),
+            name: AppRoutes.sosHistory,
+            child: const SosHistoryScreen(),
+          ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.alertPreferences,
-          builder: (context, state) => BlocProvider.value(
-            value: getIt<AlertPreferencesCubit>(),
-            child: const AlertPreferencesScreen(),
+          pageBuilder: (context, state) => MaterialPage(
+            key: const ValueKey('page-alert-preferences'),
+            name: AppRoutes.alertPreferences,
+            child: BlocProvider.value(
+              value: getIt<AlertPreferencesCubit>(),
+              child: const AlertPreferencesScreen(),
+            ),
           ),
         ),
         GoRoute(
           parentNavigatorKey: _rootKey,
           path: AppRoutes.emergencyCenter,
-          builder: (context, state) => const EmergencyCenterScreen(),
+          pageBuilder: (context, state) => MaterialPage(
+            key: const ValueKey('page-emergency-center'),
+            name: AppRoutes.emergencyCenter,
+            child: const EmergencyCenterScreen(),
+          ),
+        ),
+        GoRoute(
+          parentNavigatorKey: _rootKey,
+          path: AppRoutes.paywall,
+          pageBuilder: (context, state) => MaterialPage(
+            key: const ValueKey('page-paywall'),
+            name: AppRoutes.paywall,
+            child: const PaywallScreen(),
+          ),
         ),
 
         // ─── Shell Route: 5-Tab Bottom Navigation ──────

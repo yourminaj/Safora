@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:safora/l10n/app_localizations.dart';
+import '../../../core/services/premium_manager.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../data/datasources/sos_history_datasource.dart';
@@ -25,7 +26,11 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
   }
 
   void _loadEntries() {
-    _entries = getIt<SosHistoryDatasource>().getAll();
+    final allEntries = getIt<SosHistoryDatasource>().getAll();
+    // Apply free-tier date filter (7 days free, 365 days pro).
+    final retentionDays = getIt<PremiumManager>().historyRetentionDays;
+    final cutoff = DateTime.now().subtract(Duration(days: retentionDays));
+    _entries = allEntries.where((e) => e.timestamp.isAfter(cutoff)).toList();
   }
 
   Future<void> _clearHistory(AppLocalizations l) async {
@@ -42,7 +47,7 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.danger,
               foregroundColor: Colors.white,
             ),
             child: Text(l.clearHistory),
@@ -102,7 +107,7 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
                   Icon(
                     Icons.history_rounded,
                     size: 64,
-                    color: Colors.grey.shade400,
+                    color: AppColors.textDisabled,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -127,13 +132,13 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: entry.wasCancelled
-                          ? Colors.orange.withValues(alpha: 0.1)
-                          : Colors.red.withValues(alpha: 0.1),
+                          ? AppColors.warning.withValues(alpha: 0.1)
+                          : AppColors.danger.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       _triggerIcon(entry.triggerSource),
-                      color: entry.wasCancelled ? Colors.orange : Colors.red,
+                      color: entry.wasCancelled ? AppColors.warning : AppColors.danger,
                       size: 22,
                     ),
                   ),
@@ -151,8 +156,8 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: entry.wasCancelled
-                              ? Colors.orange.withValues(alpha: 0.15)
-                              : Colors.green.withValues(alpha: 0.15),
+                              ? AppColors.warning.withValues(alpha: 0.15)
+                              : AppColors.success.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -161,8 +166,8 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
                               : l.completedLabel,
                           style: AppTypography.labelSmall.copyWith(
                             color: entry.wasCancelled
-                                ? Colors.orange
-                                : Colors.green,
+                                ? AppColors.warning
+                                : AppColors.success,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
