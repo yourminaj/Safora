@@ -395,9 +395,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get about => 'About';
 
   @override
-  String get saforaVersion => 'Safora v0.1.0';
-
-  @override
   String get saforaLegalese => '© 2026 Safora Technologies';
 
   @override

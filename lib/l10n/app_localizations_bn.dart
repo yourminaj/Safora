@@ -384,9 +384,6 @@ class AppLocalizationsBn extends AppLocalizations {
   String get about => 'সম্পর্কে';
 
   @override
-  String get saforaVersion => 'সাফোরা v০.১.০';
-
-  @override
   String get saforaLegalese => '© ২০২৬ সাফোরা টেকনোলজিস';
 
   @override

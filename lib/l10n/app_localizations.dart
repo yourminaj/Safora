@@ -812,12 +812,6 @@ abstract class AppLocalizations {
   /// **'About'**
   String get about;
 
-  /// No description provided for @saforaVersion.
-  ///
-  /// In en, this message translates to:
-  /// **'Safora v0.1.0'**
-  String get saforaVersion;
-
   /// No description provided for @saforaLegalese.
   ///
   /// In en, this message translates to:
