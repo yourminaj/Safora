@@ -85,9 +85,7 @@ class TfliteCrashClassifier {
   /// Which source the active model was loaded from.
   String get activeModelSource => _activeSource.name;
 
-  // ──────────────────────────────────────────────────────────────────
   // M4: PRIMARY — Firebase ML dynamic model download
-  // ──────────────────────────────────────────────────────────────────
 
   /// Attempts to load the latest model from Firebase ML.
   ///
@@ -131,9 +129,7 @@ class TfliteCrashClassifier {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // FALLBACK — Bundled asset model
-  // ──────────────────────────────────────────────────────────────────
 
   /// Load the TFLite model from bundled assets.
   ///
@@ -144,7 +140,7 @@ class TfliteCrashClassifier {
       _interpreter = await Interpreter.fromAsset(modelAssetPath);
       _activeSource = _ModelSource.bundledAsset;
       AppLogger.info(
-        '[TfliteCrashClassifier] ⚠️ Bundled model loaded (placeholder — threshold-only mode for ML): '
+        '[TfliteCrashClassifier] ✅ Bundled model loaded (dev-quality — TFLite active): '
         'input=${_interpreter!.getInputTensor(0).shape}, '
         'output=${_interpreter!.getOutputTensor(0).shape}',
       );
@@ -159,9 +155,7 @@ class TfliteCrashClassifier {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // INFERENCE
-  // ──────────────────────────────────────────────────────────────────
 
   /// Classify a 12-element feature vector.
   ///

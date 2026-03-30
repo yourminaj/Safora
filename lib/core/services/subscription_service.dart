@@ -22,7 +22,6 @@ class SubscriptionService {
   SubscriptionService._();
   static final SubscriptionService instance = SubscriptionService._();
 
-  // ── Configuration ──────────────────────────────────────────
   /// RevenueCat Public SDK Key for Google Play (Android).
   /// App ID: appd5b7f0b474
   static const _apiKey = 'goog_zTdOFvWUWYQNoNzuPTufQopXXdv';
@@ -36,7 +35,6 @@ class SubscriptionService {
   static const productYearly = 'yearly';
   static const productLifetime = 'lifetime';
 
-  // ── State ──────────────────────────────────────────────────
   bool _initialized = false;
   Offerings? _offerings;
   bool _isPurchasing = false;
@@ -117,8 +115,6 @@ class SubscriptionService {
   /// Get the lifetime package price string (convenience).
   String? get lifetimePriceString => getPriceString(PackageType.lifetime);
 
-  // ── Initialize ─────────────────────────────────────────────
-
   /// Initialize RevenueCat SDK and sync subscription status.
   Future<void> init() async {
     if (_initialized) return;
@@ -148,8 +144,6 @@ class SubscriptionService {
     }
   }
 
-  // ── Native Paywall ─────────────────────────────────────────
-
   /// Present RevenueCat's native paywall UI.
   ///
   /// This uses the paywall configured in the RevenueCat Dashboard,
@@ -170,8 +164,6 @@ class SubscriptionService {
     }
   }
 
-  // ── Customer Center ────────────────────────────────────────
-
   /// Present RevenueCat's Customer Center for subscription management.
   ///
   /// Allows users to:
@@ -190,8 +182,6 @@ class SubscriptionService {
       AppLogger.warning('[Subscription] Customer Center failed: $e');
     }
   }
-
-  // ── Purchase ───────────────────────────────────────────────
 
   /// Purchase a specific package.
   ///
@@ -262,8 +252,6 @@ class SubscriptionService {
     return purchasePackage(pkg);
   }
 
-  // ── Restore ────────────────────────────────────────────────
-
   /// Restore previous purchases (e.g., after re-install).
   ///
   /// Returns `true` if Pro entitlement was restored.
@@ -281,8 +269,6 @@ class SubscriptionService {
       return false;
     }
   }
-
-  // ── Status Check ───────────────────────────────────────────
 
   /// Check if the user has an active Pro entitlement.
   Future<bool> checkProStatus() async {

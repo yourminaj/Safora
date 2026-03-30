@@ -63,15 +63,12 @@ class SosContactAlertListener {
   /// Anchor timestamp: only react to SOS events created AFTER we started.
   late Timestamp _startedAt;
 
-  // ── Notification channel constants ─────────────────────────────────────────
   static const _channelId = 'sos_contact_alerts';
   static const _channelName = 'SOS Contact Alerts';
   static const _channelDesc =
       'Alerts when one of your contacts triggers an SOS emergency';
 
-  // ────────────────────────────────────────────────────────────────────────────
   // PUBLIC API
-  // ────────────────────────────────────────────────────────────────────────────
 
   /// Start listening for incoming SOS events from contacts.
   ///
@@ -122,9 +119,7 @@ class SosContactAlertListener {
     AppLogger.info('[SosContactAlert] Listener stopped');
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
   // PRIVATE
-  // ────────────────────────────────────────────────────────────────────────────
 
   void _onSnapshot(QuerySnapshot snapshot) {
     for (final change in snapshot.docChanges) {
@@ -159,7 +154,7 @@ class SosContactAlertListener {
         : '$senderName needs emergency help! GPS unavailable.';
 
     // Use non-const so we can use the Color from material.
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       _channelId,
       _channelName,
       channelDescription: _channelDesc,
@@ -169,7 +164,7 @@ class SosContactAlertListener {
       playSound: true,
       enableVibration: true,
       enableLights: true,
-      color: const Color(0xFFD32F2F),
+      color: Color(0xFFD32F2F),
       ongoing: false,
       autoCancel: true,
       category: AndroidNotificationCategory.alarm,
@@ -187,7 +182,7 @@ class SosContactAlertListener {
       id: docId.hashCode & 0x7FFFFFFF,
       title: '🚨 SOS — $senderName needs help!',
       body: body,
-      notificationDetails: NotificationDetails(android: androidDetails, iOS: iosDetails),
+      notificationDetails: const NotificationDetails(android: androidDetails, iOS: iosDetails),
       payload: locationUrl,
     );
   }

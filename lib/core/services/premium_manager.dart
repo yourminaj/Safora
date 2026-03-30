@@ -57,8 +57,6 @@ class PremiumManager {
     }
   }
 
-  // ─── Feature Gate Definitions ──────────────────────────────
-
   /// Core safety features — always available to all users.
   /// Free users see ads alongside these features.
   static const Set<ProFeature> _freeFeatures = {
@@ -80,6 +78,9 @@ class PremiumManager {
     ProFeature.speedAlert,
     ProFeature.contextAlerts,
     ProFeature.deadManSwitch,
+    ProFeature.voiceDistressDetection,
+    ProFeature.anomalyMovementDetection,
+    ProFeature.roadConditionDetection,
     ProFeature.unlimitedContacts,
     ProFeature.unlimitedReminders,
     ProFeature.unlimitedGeofenceZones,
@@ -96,8 +97,6 @@ class PremiumManager {
 
   /// Check if a feature requires Pro (useful for showing lock badges).
   bool isProOnly(ProFeature feature) => _proFeatures.contains(feature);
-
-  // ─── Tier Limits ───────────────────────────────────────────
 
   /// Max emergency contacts for free users.
   static const int freeContactLimit = 3;
@@ -142,6 +141,9 @@ enum ProFeature {
   speedAlert,
   contextAlerts,
   deadManSwitch,
+  voiceDistressDetection,
+  anomalyMovementDetection,
+  roadConditionDetection,
   unlimitedContacts,
   unlimitedReminders,
   unlimitedGeofenceZones,

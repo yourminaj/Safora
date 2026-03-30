@@ -77,9 +77,7 @@ class _MainShellState extends State<MainShell> with TickerProviderStateMixin {
   }
 }
 
-// ===================================================================
 // Premium Floating Glassmorphism Navigation Bar
-// ===================================================================
 
 class _PremiumNavBar extends StatelessWidget {
   const _PremiumNavBar({
@@ -187,9 +185,7 @@ class _PremiumNavBar extends StatelessWidget {
   }
 }
 
-// ===================================================================
 // Individual Nav Item with Pill Indicator
-// ===================================================================
 
 class _PremiumNavItem extends StatelessWidget {
   const _PremiumNavItem({
@@ -223,7 +219,6 @@ class _PremiumNavItem extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // ─── Active Indicator Dot ────────────────────
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOutCubic,
@@ -244,7 +239,6 @@ class _PremiumNavItem extends StatelessWidget {
                       : null,
                 ),
               ),
-              // ─── Icon with Badge ─────────────────────────
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -268,7 +262,6 @@ class _PremiumNavItem extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              // ─── Label ───────────────────────────────────
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
                 style: TextStyle(
@@ -289,9 +282,7 @@ class _PremiumNavItem extends StatelessWidget {
   }
 }
 
-// ===================================================================
 // Alert Badge
-// ===================================================================
 
 class _AlertBadge extends StatelessWidget {
   const _AlertBadge({required this.isSelected});
@@ -350,9 +341,7 @@ class _AlertBadge extends StatelessWidget {
   }
 }
 
-// ===================================================================
 // Data Model
-// ===================================================================
 
 class _NavItem {
   const _NavItem({

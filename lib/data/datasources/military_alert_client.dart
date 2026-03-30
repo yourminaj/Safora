@@ -80,8 +80,6 @@ class MilitaryAlertClient {
     };
   }
 
-  // ─── Ukraine: alerts.in.ua ──────────────────────────────
-
   /// Fetch active air raid alerts from the Ukrainian government system.
   ///
   /// The free API provides oblast-level alerts in real-time.
@@ -150,8 +148,6 @@ class MilitaryAlertClient {
       _ => AlertType.airRaid,
     };
   }
-
-  // ─── Israel: Home Front Command (Pikud HaOref) ──────────
 
   /// Fetch active alerts from Israel's Home Front Command.
   ///
@@ -228,8 +224,6 @@ class MilitaryAlertClient {
     }
     return AlertType.airRaid;
   }
-
-  // ─── US: FEMA / NWS Alerts ──────────────────────────────
 
   /// Fetch emergency alerts from FEMA/NWS unified alert system.
   ///

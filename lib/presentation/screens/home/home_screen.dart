@@ -263,7 +263,6 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // ─── App Bar ─────────────────────────────────────
             SliverAppBar(
               expandedHeight: 60,
               floating: true,
@@ -302,7 +301,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
 
-            // ─── Status Banner ───────────────────────────────
             SliverToBoxAdapter(
               child: BlocBuilder<AlertsCubit, AlertsState>(
                 builder: (context, state) {
@@ -403,7 +401,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // ─── Dead Man's Switch Check-In ───────────────────
             SliverToBoxAdapter(
               child: Builder(
                 builder: (context) {
@@ -505,7 +502,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // ─── SOS Button ──────────────────────────────────
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
@@ -513,7 +509,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // ─── Quick Actions Grid ─────────────────────────
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverToBoxAdapter(
@@ -593,7 +588,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // ─── Recent Alerts Section ──────────────────────
             SliverPadding(
               padding: const EdgeInsets.all(16),
               sliver: SliverToBoxAdapter(

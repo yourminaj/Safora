@@ -42,7 +42,6 @@ class CountdownOverlay extends StatelessWidget {
     return BlocConsumer<SosCubit, SosState>(
       listener: (context, state) {
         if (state is SosCancelled || state is SosActive || state is SosIdle) {
-          // Close the dialog when SOS is cancelled, active, or reset.
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
           }
@@ -163,7 +162,6 @@ class CountdownOverlay extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // ─── Warning text ───────────────
                     Text(
                       l.sosAlertTitle,
                       style: AppTypography.headlineMedium.copyWith(
@@ -181,7 +179,6 @@ class CountdownOverlay extends StatelessWidget {
                     ),
                     const SizedBox(height: 40),
 
-                    // ─── Circular countdown ─────────
                     _CircularCountdown(
                       secondsRemaining: state.secondsRemaining,
                       progress: state.progress,
@@ -190,7 +187,6 @@ class CountdownOverlay extends StatelessWidget {
 
                     const SizedBox(height: 40),
 
-                    // ─── Info text ───────────────────
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 32),
                       child: Text(
@@ -203,7 +199,6 @@ class CountdownOverlay extends StatelessWidget {
                     ),
                     const SizedBox(height: 40),
 
-                    // ─── Cancel button ───────────────
                     OutlinedButton.icon(
                       onPressed: () {
                         context.read<SosCubit>().cancelCountdown();

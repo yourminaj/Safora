@@ -19,17 +19,14 @@ import '../core/constants/alert_types.dart';
 class RiskScoreEngine {
   const RiskScoreEngine();
 
-  // ── Weight Constants ─────────────────────────────────────
   static const double _wSeverity = 0.40;
   static const double _wProximity = 0.25;
   static const double _wConfidence = 0.20;
   static const double _wRecency = 0.15;
 
-  // ── Proximity Decay ──────────────────────────────────────
   /// Max relevant radius in km. Beyond this, proximity score = 0.
   static const double _maxRadiusKm = 50.0;
 
-  // ── Recency Decay ────────────────────────────────────────
   /// Events older than this are considered fully decayed.
   static const Duration _maxAge = Duration(hours: 24);
 
@@ -71,8 +68,6 @@ class RiskScoreEngine {
     if (score >= 20) return 'Low';
     return 'Minimal';
   }
-
-  // ── Internal Scoring Functions ───────────────────────────
 
   /// Maps 5-tier priority to a 0.0–1.0 base severity factor.
   double _severityScore(AlertPriority priority) {

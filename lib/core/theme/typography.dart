@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// Safora typography scale using Inter font family.
 abstract final class AppTypography {
-  // ─── Display ─────────────────────────────────────────────
   static TextStyle displayLarge = GoogleFonts.inter(
     fontSize: 57,
     fontWeight: FontWeight.w400,
@@ -23,7 +22,6 @@ abstract final class AppTypography {
     height: 1.22,
   );
 
-  // ─── Headline ────────────────────────────────────────────
   static TextStyle headlineLarge = GoogleFonts.inter(
     fontSize: 32,
     fontWeight: FontWeight.w600,
@@ -42,7 +40,6 @@ abstract final class AppTypography {
     height: 1.33,
   );
 
-  // ─── Title ───────────────────────────────────────────────
   static TextStyle titleLarge = GoogleFonts.inter(
     fontSize: 22,
     fontWeight: FontWeight.w600,
@@ -63,7 +60,6 @@ abstract final class AppTypography {
     height: 1.43,
   );
 
-  // ─── Body ────────────────────────────────────────────────
   static TextStyle bodyLarge = GoogleFonts.inter(
     fontSize: 16,
     fontWeight: FontWeight.w400,
@@ -85,7 +81,6 @@ abstract final class AppTypography {
     height: 1.33,
   );
 
-  // ─── Label ───────────────────────────────────────────────
   static TextStyle labelLarge = GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w500,
@@ -107,7 +102,6 @@ abstract final class AppTypography {
     height: 1.45,
   );
 
-  // ─── Special ─────────────────────────────────────────────
   static TextStyle sosCountdown = GoogleFonts.inter(
     fontSize: 72,
     fontWeight: FontWeight.w800,

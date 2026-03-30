@@ -18,12 +18,9 @@ class AppLockService {
   final Box _box;
   final LocalAuthentication _localAuth;
 
-  // ── Hive keys ──
   static const String _keyLockEnabled = 'app_lock_enabled';
   static const String _keyPinHash = 'app_lock_pin_hash';
   static const String _keyBiometricEnabled = 'app_lock_biometric';
-
-  // ── State ──
 
   /// Whether app lock is currently enabled.
   bool get isLockEnabled =>
@@ -35,8 +32,6 @@ class AppLockService {
   /// Whether biometric is enabled (user preference).
   bool get isBiometricEnabled =>
       _box.get(_keyBiometricEnabled, defaultValue: true) as bool;
-
-  // ── PIN Management ──
 
   /// Hash a PIN using SHA-256.
   String _hashPin(String pin) {
@@ -64,8 +59,6 @@ class AppLockService {
     AppLogger.info('[AppLock] PIN cleared');
   }
 
-  // ── Lock Toggle ──
-
   /// Enable app lock. PIN must be set first.
   Future<void> enableLock() async {
     if (!hasPinSet) {
@@ -86,8 +79,6 @@ class AppLockService {
     await _box.put(_keyBiometricEnabled, enabled);
     AppLogger.info('[AppLock] Biometric ${enabled ? "enabled" : "disabled"}');
   }
-
-  // ── Biometric ──
 
   /// Check if the device supports biometric authentication.
   Future<bool> isBiometricAvailable() async {

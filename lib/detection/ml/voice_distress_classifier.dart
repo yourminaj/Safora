@@ -66,9 +66,7 @@ class VoiceDistressClassifier {
   /// Which source the active model was loaded from.
   String get activeModelSource => _source.name;
 
-  // ──────────────────────────────────────────────────────────────────
   // Loading
-  // ──────────────────────────────────────────────────────────────────
 
   /// Attempts Firebase ML download → falls back to bundled asset.
   Future<bool> load() async {
@@ -114,9 +112,7 @@ class VoiceDistressClassifier {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Inference
-  // ──────────────────────────────────────────────────────────────────
 
   /// Classify a Mel spectrogram feature vector.
   ///
@@ -159,9 +155,7 @@ class VoiceDistressClassifier {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────
 // Fallback: Energy-based heuristic (no ML required)
-// ──────────────────────────────────────────────────────────────────
 
 /// Rule-based voice distress detector used when TFLite model is unavailable.
 ///
@@ -221,7 +215,9 @@ class VoiceDistressFallback {
   static double _sqrt(double v) {
     if (v <= 0) return 0;
     double g = v / 2;
-    for (int i = 0; i < 10; i++) g = (g + v / g) / 2;
+    for (int i = 0; i < 10; i++) {
+      g = (g + v / g) / 2;
+    }
     return g;
   }
 }

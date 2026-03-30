@@ -48,7 +48,6 @@ class ServiceBootstrapper {
   }) async {
     AppLogger.info('[ServiceBootstrapper] Starting service re-hydration...');
 
-    // ── Always start ConnectivityService ──────────────────
     try {
       sl<ConnectivityService>().startMonitoring(
         onChanged: (isOnline) {
@@ -63,7 +62,6 @@ class ServiceBootstrapper {
       AppLogger.warning('[ServiceBootstrapper] ConnectivityService failed: $e');
     }
 
-    // ── SOS Contact Alert Listener (free push, no Cloud Functions) ────
     try {
       await sl<SosContactAlertListener>().startListening();
       AppLogger.info('[ServiceBootstrapper] SosContactAlertListener started');
@@ -77,7 +75,6 @@ class ServiceBootstrapper {
     double lastLon() =>
         sl<LocationService>().lastPosition?.longitude ?? 0.0;
 
-    // ── Shake Detection → SOS ─────────────────────────────
     if (_isEnabled(settings, 'shake_enabled')) {
       try {
         sl<ShakeDetectionService>().startListening(
@@ -89,7 +86,6 @@ class ServiceBootstrapper {
       }
     }
 
-    // ── Crash/Fall Detection → Alerts + Auto-SOS ──────────
     if (_isEnabled(settings, 'crash_fall_enabled')) {
       try {
         final service = sl<CrashFallDetectionService>();
@@ -122,7 +118,6 @@ class ServiceBootstrapper {
       }
     }
 
-    // ── Geofence → Alerts ─────────────────────────────────
     if (_isEnabled(settings, 'geofence_enabled')) {
       try {
         final service = sl<GeofenceService>();
@@ -152,7 +147,6 @@ class ServiceBootstrapper {
       }
     }
 
-    // ── Snatch Detection → SOS + Alerts ───────────────────
     if (_isEnabled(settings, 'snatch_enabled')) {
       try {
         sl<SnatchDetectionService>().start(
@@ -181,7 +175,6 @@ class ServiceBootstrapper {
       }
     }
 
-    // ── Speed Alert → Alerts + Cross-Service Speed Feed ────
     if (_isEnabled(settings, 'speed_alert_enabled')) {
       try {
         // Wire speed data into CrashFallDetectionService for improved
@@ -220,7 +213,6 @@ class ServiceBootstrapper {
       }
     }
 
-    // ── Context Alert → Alerts ────────────────────────────
     if (_isEnabled(settings, 'context_alert_enabled')) {
       try {
         sl<WeatherFeedService>().start();
@@ -246,7 +238,6 @@ class ServiceBootstrapper {
       }
     }
 
-    // ── Dead Man's Switch re-hydration ────────────────────
     if (_isEnabled(settings, 'dead_man_switch_enabled')) {
       try {
         final intervalMinutes =
@@ -260,7 +251,6 @@ class ServiceBootstrapper {
       }
     }
 
-    // ── Voice Distress Detection ────────────────────────────────
     if (_isEnabled(settings, 'voice_distress_enabled')) {
       try {
         final voiceService = sl<VoiceDistressService>();
@@ -289,7 +279,6 @@ class ServiceBootstrapper {
       }
     }
 
-    // ── Anomaly Movement Detection ─────────────────────────────
     if (_isEnabled(settings, 'anomaly_movement_enabled')) {
       try {
         final movService = sl<AnomalyMovementService>();
@@ -319,7 +308,6 @@ class ServiceBootstrapper {
       }
     }
 
-    // ── Road Condition Detection ───────────────────────────────
     if (_isEnabled(settings, 'road_condition_enabled')) {
       try {
         final roadService = sl<RoadConditionService>();
@@ -348,7 +336,6 @@ class ServiceBootstrapper {
       }
     }
 
-    // ── Battery Monitoring → Alerts + SMS to Contacts ─────
     try {
       sl<BatteryCubit>().startMonitoring();
       AppLogger.info('[ServiceBootstrapper] BatteryMonitor started');
@@ -356,7 +343,6 @@ class ServiceBootstrapper {
       AppLogger.warning('[ServiceBootstrapper] BatteryMonitor failed: $e');
     }
 
-    // ── Foreground Service (keep alive in background) ─────
     final anyDetectionEnabled = _countEnabled(settings) > 0;
     if (anyDetectionEnabled) {
       try {

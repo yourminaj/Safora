@@ -78,9 +78,7 @@ class RoadConditionClassifier {
   bool get isModelLoaded => _interpreter != null;
   String get activeModelSource => _source.name;
 
-  // ──────────────────────────────────────────────────────────────────
   // Loading
-  // ──────────────────────────────────────────────────────────────────
 
   Future<bool> load() async {
     final fromFirebase = await _loadFromFirebase();
@@ -125,9 +123,7 @@ class RoadConditionClassifier {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Inference
-  // ──────────────────────────────────────────────────────────────────
 
   /// Classify road condition from an 8-element normalised feature vector.
   RoadConditionResult? classify(List<double> features, double speedKmh) {
@@ -147,7 +143,7 @@ class RoadConditionClassifier {
       _interpreter!.run(input, output);
 
       final probs = output[0] as List<double>;
-      final conditions = RoadCondition.values;
+      const conditions = RoadCondition.values;
       final maxIdx = probs.indexOf(probs.reduce(max));
       final predicted = conditions[maxIdx];
 
@@ -169,9 +165,7 @@ class RoadConditionClassifier {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────
 // Fallback: Physics-based heuristic
-// ──────────────────────────────────────────────────────────────────
 
 /// Accelerometer sample for road condition analysis.
 class RoadSample {
@@ -240,7 +234,9 @@ class RoadConditionFallback {
 
     // Rough road: continuous Z-axis variance
     double zVar = 0;
-    for (final z in zValues) zVar += (z - zMean) * (z - zMean);
+    for (final z in zValues) {
+      zVar += (z - zMean) * (z - zMean);
+    }
     zVar /= zValues.length;
 
     if (zVar > 0.8) {

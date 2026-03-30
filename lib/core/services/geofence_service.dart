@@ -194,7 +194,57 @@ class GeofenceService {
   /// Exposed for testing only.
   static double distanceMetersForTest(
     double lat1, double lon1, double lat2, double lon2,
-  ) => _distanceMeters(lat1, lon1, lat2, lon2);
+  ) =>
+      _distanceMeters(lat1, lon1, lat2, lon2);
+
+  /// Simulates a GPS position update for unit testing (bypasses live GPS and
+  /// the callback-based [_checkPosition]). Directly applies the zone-crossing
+  /// state machine with injected coordinates, mutating [_isOutsideAllZones]
+  /// and invoking [onExit] / [onReenter] just as the production path does.
+  void checkPositionForTest(
+    double lat,
+    double lon, {
+    void Function()? onExit,
+    void Function(SafeZone zone)? onReenter,
+  }) {
+    SafeZone? insideZone;
+    for (final zone in _zones) {
+      if (_distanceMeters(lat, lon, zone.latitude, zone.longitude) <=
+          zone.radiusMeters) {
+        insideZone = zone;
+        break;
+      }
+    }
+
+    if (insideZone != null) {
+      if (_isOutsideAllZones) {
+        _isOutsideAllZones = false;
+        onReenter?.call(insideZone);
+      }
+    } else {
+      if (!_isOutsideAllZones) {
+        _isOutsideAllZones = true;
+        onExit?.call();
+      }
+    }
+  }
+
+  /// Whether the service currently considers the user to be outside all zones.
+  bool get isOutsideAllZones => _isOutsideAllZones;
+
+  /// Returns true if [lat]/[lon] is inside [zone]'s radius.
+  static bool isInsideZone(SafeZone zone, double lat, double lon) {
+    return _distanceMeters(lat, lon, zone.latitude, zone.longitude) <=
+        zone.radiusMeters;
+  }
+
+  /// Returns the first zone that contains [lat]/[lon], or null.
+  SafeZone? firstZoneContaining(double lat, double lon) {
+    for (final zone in _zones) {
+      if (isInsideZone(zone, lat, lon)) return zone;
+    }
+    return null;
+  }
 
   /// Release resources.
   void dispose() {

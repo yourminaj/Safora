@@ -39,7 +39,6 @@ void main() {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
 
-      // ── Global Error Handling ──────────────────────────────
       FlutterError.onError = AppLogger.handleFlutterError;
 
       // Show a friendly error widget in production instead of the red error screen.
@@ -96,7 +95,6 @@ void main() {
       // Initialize Hive for local storage.
       await Hive.initFlutter();
 
-      // ── Firebase (must init before services that depend on FCM) ──
       await Firebase.initializeApp();
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -126,24 +124,27 @@ void main() {
       // Initialize SOS foreground service config.
       SosForegroundService.instance.init();
 
-      // Initialize Google Mobile Ads SDK.
-      await AdService.initialize();
-
-      // Pre-load App Open Ad for foreground resumes.
-      AppOpenAdService.instance.loadAd();
-
-      // Sync premium state to ad services (single source of truth).
-      AdService.instance.setPremium(getIt<PremiumManager>().isPremium);
-      AppOpenAdService.instance.setPremium(getIt<PremiumManager>().isPremium);
-
-      // Initialize RevenueCat subscription service.
-      await getIt<SubscriptionService>().init();
-
-      // ── Service Re-hydration ─────────────────────────────────
-      final appSettings = getIt<Box>(instanceName: 'app_settings');
-      await ServiceBootstrapper.bootstrap(sl: getIt, settings: appSettings);
+      // Everything else is deferred to after the first frame.
 
       runApp(const SaforaApp());
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        // Initialize Google Mobile Ads SDK.
+        await AdService.initialize();
+
+        // Sync premium state to ad services (single source of truth).
+        AdService.instance.setPremium(getIt<PremiumManager>().isPremium);
+        AppOpenAdService.instance.setPremium(getIt<PremiumManager>().isPremium);
+
+        // Pre-load App Open Ad for foreground resumes.
+        AppOpenAdService.instance.loadAd();
+
+        // Initialize RevenueCat subscription service.
+        await getIt<SubscriptionService>().init();
+
+        final appSettings = getIt<Box>(instanceName: 'app_settings');
+        await ServiceBootstrapper.bootstrap(sl: getIt, settings: appSettings);
+      });
     },
     AppLogger.handleUncaughtError,
   );
@@ -246,7 +247,6 @@ class _SaforaAppState extends State<SaforaApp> {
           themeMode: themeMode,
           routerConfig: _router,
 
-          // ── Localization ────────────────────────────────
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,

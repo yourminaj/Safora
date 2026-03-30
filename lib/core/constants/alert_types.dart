@@ -37,7 +37,6 @@ enum AlertCategory {
 ///
 /// Each type has a category, priority, and detection method.
 enum AlertType {
-  // ── Group 1: Health & Medical ──────────────────────────
   allergicReaction(
     label: 'Allergic Reaction',
     category: AlertCategory.healthMedical,
@@ -189,7 +188,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 2: Vehicle & Transport ──────────────────────
   bicycleCrash(
     label: 'Bicycle Crash',
     category: AlertCategory.vehicleTransport,
@@ -287,7 +285,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 3: Natural Disasters ────────────────────────
   avalanche(
     label: 'Avalanche',
     category: AlertCategory.naturalDisaster,
@@ -361,7 +358,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 4: Weather Emergencies ──────────────────────
   blizzard(
     label: 'Blizzard',
     category: AlertCategory.weatherEmergency,
@@ -417,7 +413,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 5: Personal Safety & Crime ──────────────────
   abduction(
     label: 'Abduction',
     category: AlertCategory.personalSafety,
@@ -527,7 +522,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 6: Home & Domestic ──────────────────────────
   carbonMonoxide(
     label: 'CO Leak',
     category: AlertCategory.homeDomestic,
@@ -571,7 +565,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 7: Workplace ────────────────────────────────
   chemicalSpill(
     label: 'Chemical Spill',
     category: AlertCategory.workplace,
@@ -615,7 +608,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 8: Water & Marine ───────────────────────────
   drowning(
     label: 'Drowning',
     category: AlertCategory.waterMarine,
@@ -647,7 +639,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 9: Travel & Outdoor ─────────────────────────
   altitudeSickness(
     label: 'Altitude Sickness',
     category: AlertCategory.travelOutdoor,
@@ -703,7 +694,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 10: Environmental & Chemical ────────────────
   airQuality(
     label: 'Hazardous Air Quality',
     category: AlertCategory.environmentalChemical,
@@ -747,7 +737,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 11: Digital & Cyber ─────────────────────────
   fakeEmergency(
     label: 'Fake Emergency Detection',
     category: AlertCategory.digitalCyber,
@@ -779,7 +768,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 12: Child & Elder ───────────────────────────
   childInHotCar(
     label: 'Child in Hot Car',
     category: AlertCategory.childElder,
@@ -823,7 +811,6 @@ enum AlertType {
     isFree: true,
   ),
 
-  // ── Group 13: Military & Defense ───────────────────────
   airRaid(
     label: 'Air Raid',
     category: AlertCategory.militaryDefense,
@@ -861,7 +848,6 @@ enum AlertType {
     isFree: true,
   ),
 
-  // ── Group 14: Infrastructure ───────────────────────────
   powerOutage(
     label: 'Power Outage',
     category: AlertCategory.infrastructure,
@@ -893,7 +879,6 @@ enum AlertType {
     isFree: true,
   ),
 
-  // ── Group 15: Space & Astronomical ─────────────────────
   solarFlare(
     label: 'Solar Flare',
     category: AlertCategory.spaceAstronomical,
@@ -913,7 +898,6 @@ enum AlertType {
     isFree: true,
   ),
 
-  // ── Group 16: Maritime & Aviation ──────────────────────
   aviationIncident(
     label: 'Aviation Incident',
     category: AlertCategory.maritimeAviation,
@@ -933,7 +917,6 @@ enum AlertType {
     isFree: true,
   ),
 
-  // ── Group 17: Traffic Additions ────────────────────────
   roadClosure(
     label: 'Road Closure',
     category: AlertCategory.vehicleTransport,
@@ -947,7 +930,6 @@ enum AlertType {
     isFree: true,
   ),
 
-  // ── Group 18: Cyber Additions ──────────────────────────
   dataBreach(
     label: 'Data Breach',
     category: AlertCategory.digitalCyber,
@@ -961,7 +943,6 @@ enum AlertType {
     isFree: false,
   ),
 
-  // ── Group 19: Personal/Local Additions ─────────────────
   amberAlert(
     label: 'Amber Alert (Missing Child)',
     category: AlertCategory.personalSafety,
@@ -975,7 +956,6 @@ enum AlertType {
     isFree: true,
   ),
 
-  // ── SOS (Core) ────────────────────────────────────────
   manualSos(
     label: 'Manual SOS',
     category: AlertCategory.personalSafety,
@@ -989,7 +969,6 @@ enum AlertType {
     isFree: true,
   ),
 
-  // ── ML Detection Alerts ───────────────────────────────────────
   voiceDistressSos(
     label: 'Voice Distress Detected',
     category: AlertCategory.personalSafety,

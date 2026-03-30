@@ -88,9 +88,7 @@ class AnomalyMovementClassifier {
   bool get isModelLoaded => _interpreter != null;
   String get activeModelSource => _source.name;
 
-  // ──────────────────────────────────────────────────────────────────
   // Loading
-  // ──────────────────────────────────────────────────────────────────
 
   Future<bool> load() async {
     final fromFirebase = await _loadFromFirebase();
@@ -135,9 +133,7 @@ class AnomalyMovementClassifier {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Inference
-  // ──────────────────────────────────────────────────────────────────
 
   /// Classify a 24-element normalised feature vector.
   ///
@@ -159,7 +155,7 @@ class AnomalyMovementClassifier {
       _interpreter!.run(input, output);
 
       final probs = output[0] as List<double>;
-      final classes = MovementClass.values;
+      const classes = MovementClass.values;
       final probMap = {
         for (int i = 0; i < classes.length; i++) classes[i]: probs[i].clamp(0.0, 1.0)
       };
@@ -183,9 +179,7 @@ class AnomalyMovementClassifier {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────
 // Fallback: Variance-based heuristic
-// ──────────────────────────────────────────────────────────────────
 
 /// Accelerometer sample for anomaly detection.
 class AccelWindow {

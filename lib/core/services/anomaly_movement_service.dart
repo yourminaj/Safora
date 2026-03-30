@@ -52,9 +52,7 @@ class AnomalyMovementService {
   final List<AccelWindow> _window = [];
   Timer? _inferenceTimer;
 
-  // ──────────────────────────────────────────────────────────────────
   // Lifecycle
-  // ──────────────────────────────────────────────────────────────────
 
   Future<void> start() async {
     if (_running) return;
@@ -81,9 +79,7 @@ class AnomalyMovementService {
     AppLogger.info('[AnomalyMovement] Monitoring stopped');
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Data Collection
-  // ──────────────────────────────────────────────────────────────────
 
   void _onAccelEvent(AccelerometerEvent event) {
     _window.add(AccelWindow(x: event.x, y: event.y, z: event.z));
@@ -92,9 +88,7 @@ class AnomalyMovementService {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Inference
-  // ──────────────────────────────────────────────────────────────────
 
   void _runInference() {
     if (_window.length < 50) return; // need minimum data
@@ -115,9 +109,7 @@ class AnomalyMovementService {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Feature Extraction (24-element vector)
-  // ──────────────────────────────────────────────────────────────────
 
   List<double> _extractFeatures(List<AccelWindow> window) {
     final n = window.length.toDouble();
@@ -161,7 +153,9 @@ class AnomalyMovementService {
 
     // Freefall ratio (SMV < 3G = 29.4 m/s²)
     int ffCount = 0;
-    for (final v in smvs) if (v < 2.94) ffCount++;
+    for (final v in smvs) {
+      if (v < 2.94) ffCount++;
+    }
     final ffRatio = ffCount / n;
 
     // Stillness ratio (variance of 10-sample sub-windows)
@@ -190,7 +184,9 @@ class AnomalyMovementService {
     // SMA
     double sma = 0;
     const dt = 1.0 / 50;
-    for (final s in window) sma += (s.x.abs() + s.y.abs() + s.z.abs()) * dt;
+    for (final s in window) {
+      sma += (s.x.abs() + s.y.abs() + s.z.abs()) * dt;
+    }
 
     // Autocorrelation at lag-1
     double ac1 = 0;
@@ -232,20 +228,23 @@ class AnomalyMovementService {
     ];
   }
 
-  // ── Math utilities ────────────────────────────────────────────────
   double _mean(List<double> v) => v.isEmpty ? 0 : v.reduce((a, b) => a + b) / v.length;
   double _std(List<double> v, double mean) => _variance(v, mean) > 0 ? _sqrtD(_variance(v, mean)) : 0;
   double _variance(List<double> v, double mean) {
     if (v.isEmpty) return 0;
     double s = 0;
-    for (final x in v) s += (x - mean) * (x - mean);
+    for (final x in v) {
+      s += (x - mean) * (x - mean);
+    }
     return s / v.length;
   }
   double _smv(double x, double y, double z) => _sqrtD(x*x + y*y + z*z);
   double _sqrtD(double v) {
     if (v <= 0) return 0;
     double g = v / 2;
-    for (int i = 0; i < 12; i++) g = (g + v / g) / 2;
+    for (int i = 0; i < 12; i++) {
+      g = (g + v / g) / 2;
+    }
     return g;
   }
 

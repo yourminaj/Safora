@@ -97,7 +97,6 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
 
           return Stack(
             children: [
-              // ── Map ────────────────────────────────────────
               FlutterMap(
                 mapController: _mapController,
                 options: MapOptions(
@@ -126,7 +125,6 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
                 ],
               ),
 
-              // ── Loading indicator ──────────────────────────
               if (isLoading)
                 Positioned(
                   top: 8,
@@ -157,7 +155,6 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
                   ),
                 ),
 
-              // ── Filter chips ───────────────────────────────
               Positioned(
                 bottom: 16,
                 left: 8,
@@ -210,7 +207,6 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
                 ),
               ),
 
-              // ── Error message ──────────────────────────────
               if (state is AlertsError)
                 Positioned(
                   top: 8,
@@ -427,8 +423,6 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
     );
   }
 
-  // ── Helpers ──────────────────────────────────────────────
-
   List<AlertEvent> _filteredAlerts(List<AlertEvent> alerts) {
     if (_selectedType == null) return alerts;
     return alerts.where((a) => a.type == _selectedType).toList();
@@ -486,9 +480,7 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
 //  FILTER BAR WIDGET
-// ═══════════════════════════════════════════════════════════
 
 class _FilterBar extends StatelessWidget {
   const _FilterBar({
@@ -534,9 +526,7 @@ class _FilterBar extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
 //  DETAIL CHIP WIDGET
-// ═══════════════════════════════════════════════════════════
 
 class _DetailChip extends StatelessWidget {
   const _DetailChip({required this.label, required this.value});

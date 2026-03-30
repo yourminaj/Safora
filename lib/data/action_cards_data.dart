@@ -24,8 +24,6 @@ class ActionCardsData {
     return _categoryActions[category] ?? [];
   }
 
-  // ── Type-Specific Actions ────────────────────────────────
-
   static final Map<AlertType, List<ActionCard>> _typeActions = {
     AlertType.earthquake: [
       const ActionCard(
@@ -93,8 +91,6 @@ class ActionCardsData {
       ),
     ],
   };
-
-  // ── Category-Level Fallback Actions ──────────────────────
 
   static final Map<AlertCategory, List<ActionCard>> _categoryActions = {
     AlertCategory.naturalDisaster: [

@@ -105,8 +105,6 @@ class CrashFallDetectionEngine {
        _featureExtractor = MlFeatureExtractor(samplingRateHz: samplingRateHz),
        _classifier = TfliteCrashClassifier();
 
-  // ── Thresholds (from research) ────────────────────────────
-
   /// Fall detection threshold in G-force.
   /// Research standard: 3 G minimum for human falls.
   final double fallThresholdG;
@@ -135,8 +133,6 @@ class CrashFallDetectionEngine {
   /// The threshold-based score receives `1 - mlWeight`.
   /// Ignored when the model is not loaded (threshold-only mode).
   final double mlWeight;
-
-  // ── Internal state ────────────────────────────────────────
 
   final SignalProcessor _signalProcessor;
   final MlFeatureExtractor _featureExtractor;

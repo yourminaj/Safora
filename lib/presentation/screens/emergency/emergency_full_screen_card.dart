@@ -116,7 +116,6 @@ class _EmergencyFullScreenCardState extends State<EmergencyFullScreenCard>
                     children: [
                       const SizedBox(height: 40),
 
-                      // ── Alert Type Icon ─────────────────────
                       Container(
                         width: 80,
                         height: 80,
@@ -136,7 +135,6 @@ class _EmergencyFullScreenCardState extends State<EmergencyFullScreenCard>
                       ),
                       const SizedBox(height: 20),
 
-                      // ── Risk Score ──────────────────────────
                       Text(
                         'RISK SCORE: $score',
                         style: AppTypography.titleLarge.copyWith(
@@ -166,7 +164,6 @@ class _EmergencyFullScreenCardState extends State<EmergencyFullScreenCard>
                       ),
                       const SizedBox(height: 28),
 
-                      // ── Alert Title ─────────────────────────
                       Text(
                         alert.title,
                         style: AppTypography.headlineMedium.copyWith(
@@ -177,7 +174,6 @@ class _EmergencyFullScreenCardState extends State<EmergencyFullScreenCard>
                       ),
                       const SizedBox(height: 12),
 
-                      // ── Description ─────────────────────────
                       if (alert.description != null)
                         Text(
                           alert.description!,
@@ -190,7 +186,6 @@ class _EmergencyFullScreenCardState extends State<EmergencyFullScreenCard>
                         ),
                       const SizedBox(height: 24),
 
-                      // ── Info Chips ──────────────────────────
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -215,7 +210,6 @@ class _EmergencyFullScreenCardState extends State<EmergencyFullScreenCard>
                       ),
                       const SizedBox(height: 28),
 
-                      // ── Action Advice ───────────────────────
                       if (alert.actionAdvice != null)
                         Container(
                           width: double.infinity,
@@ -265,7 +259,6 @@ class _EmergencyFullScreenCardState extends State<EmergencyFullScreenCard>
 
                       const Spacer(),
 
-                      // ── I AM SAFE Button ────────────────────
                       SizedBox(
                         width: double.infinity,
                         height: 56,
@@ -307,7 +300,6 @@ class _EmergencyFullScreenCardState extends State<EmergencyFullScreenCard>
                       ),
                       const SizedBox(height: 12),
 
-                      // ── CALL EMERGENCY Button ───────────────
                       SizedBox(
                         width: double.infinity,
                         height: 56,

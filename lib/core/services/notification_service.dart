@@ -37,7 +37,6 @@ class NotificationService {
     await _plugin.initialize(settings: settings);
     _isInitialized = true;
 
-    // ── Firebase Cloud Messaging ─────────────────────────
     await _initFcm();
   }
 
@@ -78,21 +77,31 @@ class NotificationService {
   }
 
   /// Save FCM token to Firestore for targeted push notifications.
+  ///
+  /// Writes to TWO locations:
+  /// 1. `users/{uid}` top-level document — used by `onSosTrigger` Cloud
+  ///    Function to resolve `safetyContactPhone → fcmToken` for multicast push.
+  /// 2. `users/{uid}/fcm_tokens/{token}` sub-collection — audit trail / multi-device support.
   Future<void> _persistFcmToken(String token) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('fcm_tokens')
-          .doc(token)
-          .set({
+      final usersRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+      await usersRef.set({
+        'fcmToken': token,
+        'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+        'fcmPlatform': defaultTargetPlatform.name,
+      }, SetOptions(merge: true));
+
+      await usersRef.collection('fcm_tokens').doc(token).set({
         'token': token,
         'platform': defaultTargetPlatform.name,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      AppLogger.info('[FCM] Token persisted for uid=${user.uid}');
     } catch (e) {
       AppLogger.warning('[FCM] Token persistence failed: $e');
     }

@@ -35,7 +35,6 @@ class AudioService {
     _sirenPlayer!.setReleaseMode(ReleaseMode.loop);
 
     try {
-      // Try to play from asset file, fall back to system sound.
       await _sirenPlayer!.play(
         AssetSource(AlertSounds.sirenSos),
         volume: 1.0,

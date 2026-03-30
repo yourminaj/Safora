@@ -51,10 +51,8 @@ class _PaywallScreenState extends State<PaywallScreen>
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // ── Gradient Header ───────────────────────────────
           SliverToBoxAdapter(child: _buildHeader(isDark)),
 
-          // ── Feature Comparison ────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -62,7 +60,6 @@ class _PaywallScreenState extends State<PaywallScreen>
             ),
           ),
 
-          // ── Plan Selection ────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -70,7 +67,6 @@ class _PaywallScreenState extends State<PaywallScreen>
             ),
           ),
 
-          // ── Error Message ─────────────────────────────────
           if (_errorMessage != null)
             SliverToBoxAdapter(
               child: Padding(
@@ -79,7 +75,6 @@ class _PaywallScreenState extends State<PaywallScreen>
               ),
             ),
 
-          // ── Purchase Button ───────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -87,7 +82,6 @@ class _PaywallScreenState extends State<PaywallScreen>
             ),
           ),
 
-          // ── Restore + Legal ───────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
@@ -98,10 +92,6 @@ class _PaywallScreenState extends State<PaywallScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════
-  // ── Header with Shield Icon ───────────────────────────────
-  // ═══════════════════════════════════════════════════════════
 
   Widget _buildHeader(bool isDark) {
     return Container(
@@ -188,10 +178,6 @@ class _PaywallScreenState extends State<PaywallScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════
-  // ── Feature Comparison ────────────────────────────────────
-  // ═══════════════════════════════════════════════════════════
 
   Widget _buildFeatureComparison(ThemeData theme, bool isDark) {
     return Column(
@@ -334,10 +320,6 @@ class _PaywallScreenState extends State<PaywallScreen>
           : Colors.grey.withValues(alpha: 0.15),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════
-  // ── Plan Selection Cards ──────────────────────────────────
-  // ═══════════════════════════════════════════════════════════
 
   Widget _buildPlanSelection(ThemeData theme, bool isDark) {
     final plans = <_PlanData>[
@@ -508,10 +490,6 @@ class _PaywallScreenState extends State<PaywallScreen>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ── Error Banner ──────────────────────────────────────────
-  // ═══════════════════════════════════════════════════════════
-
   Widget _buildErrorBanner() {
     return Container(
       width: double.infinity,
@@ -539,10 +517,6 @@ class _PaywallScreenState extends State<PaywallScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════
-  // ── Purchase Button ───────────────────────────────────────
-  // ═══════════════════════════════════════════════════════════
 
   Widget _buildPurchaseButton(ThemeData theme) {
     final planLabels = ['Monthly', 'Yearly', 'Lifetime'];
@@ -579,10 +553,6 @@ class _PaywallScreenState extends State<PaywallScreen>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ── Footer ────────────────────────────────────────────────
-  // ═══════════════════════════════════════════════════════════
-
   Widget _buildFooter(ThemeData theme) {
     return Column(
       children: [
@@ -616,10 +586,6 @@ class _PaywallScreenState extends State<PaywallScreen>
       ],
     );
   }
-
-  // ═══════════════════════════════════════════════════════════
-  // ── Purchase Logic ────────────────────────────────────────
-  // ═══════════════════════════════════════════════════════════
 
   Future<void> _handlePurchase() async {
     final purchaseFns = [

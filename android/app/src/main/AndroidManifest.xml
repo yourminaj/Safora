@@ -22,6 +22,16 @@
 
     <!-- Biometric authentication: local_auth fingerprint / face unlock -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- Explicitly mark biometric hardware as OPTIONAL.
+         Without this, Play Store infers the feature is required from the
+         USE_BIOMETRIC permission and drops devices without fingerprint/face
+         sensors. Safora falls back to PIN authentication on those devices. -->
+    <uses-feature
+        android:name="android.hardware.fingerprint"
+        android:required="false"/>
+    <uses-feature
+        android:name="android.hardware.biometrics"
+        android:required="false"/>
 
     <!-- SmsService: telephony plugin sends SMS directly without opening Messages -->
     <uses-permission android:name="android.permission.SEND_SMS"/>
@@ -29,6 +39,9 @@
     <!-- SOS Foreground Service: keeps SOS monitoring alive when app is in background -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+
+    <!-- VoiceDistressService: record package requires microphone access for PCM stream -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <application
         android:label="Safora"

@@ -49,8 +49,6 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     super.dispose();
   }
 
-  // ── Polling ─────────────────────────────────────────────
-
   void _startPolling() {
     _pollTimer = Timer.periodic(_pollInterval, (_) => _checkVerification());
   }
@@ -64,8 +62,6 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       context.go('/home');
     }
   }
-
-  // ── Resend ───────────────────────────────────────────────
 
   Future<void> _resendVerificationEmail() async {
     if (_resendCooldown > 0 || _isSending) return;
@@ -113,16 +109,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     });
   }
 
-  // ── Sign Out ─────────────────────────────────────────────
-
   Future<void> _signOut() async {
     _pollTimer?.cancel();
     await _authService.signOut();
     if (!mounted) return;
     context.go('/login');
   }
-
-  // ── UI ───────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {

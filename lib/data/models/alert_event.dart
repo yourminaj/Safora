@@ -40,7 +40,6 @@ class AlertEvent extends Equatable {
   final bool isActive;
   final bool isUserTriggered;
 
-  // ── Risk Intelligence Fields ──────────────────────────────
   /// Confidence level of the alert source (0.0 = unknown, 1.0 = verified).
   final double? confidenceLevel;
 

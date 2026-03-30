@@ -132,7 +132,6 @@ class _LiveMapScreenState extends State<LiveMapScreen>
       ),
       body: Stack(
         children: [
-          // ── Map ────────────────────────────────────────────────
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
@@ -211,7 +210,6 @@ class _LiveMapScreenState extends State<LiveMapScreen>
             ],
           ),
 
-          // ── Loading overlay ────────────────────────────────────
           if (_isLocating)
             Center(
               child: Card(
@@ -236,7 +234,6 @@ class _LiveMapScreenState extends State<LiveMapScreen>
               ),
             ),
 
-          // ── Bottom info card ─────────────────────────────────
           if (_userPosition != null && !_isLocating)
             Positioned(
               bottom: saforaBottomInset(context) + 8,
@@ -248,7 +245,6 @@ class _LiveMapScreenState extends State<LiveMapScreen>
                 safeZoneCount: _geofence.zones.length,
               ),
             ),
-          // ── Premium re-center button — bottom-right ───────
           if (_userPosition != null && !_followUser)
             Positioned(
               bottom: saforaBottomInset(context) + 12,
@@ -295,9 +291,7 @@ class _LiveMapScreenState extends State<LiveMapScreen>
   }
 }
 
-// ═════════════════════════════════════════════════════════════════════
 //  USER LOCATION DOT
-// ═════════════════════════════════════════════════════════════════════
 
 class _UserLocationDot extends StatefulWidget {
   @override
@@ -363,9 +357,7 @@ class _UserLocationDotState extends State<_UserLocationDot>
   }
 }
 
-// ═════════════════════════════════════════════════════════════════════
 //  LOCATION INFO CARD
-// ═════════════════════════════════════════════════════════════════════
 
 class _LocationInfoCard extends StatelessWidget {
   const _LocationInfoCard({

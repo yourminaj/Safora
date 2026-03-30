@@ -180,8 +180,6 @@ class AlertsCubit extends Cubit<AlertsState> {
     }
   }
 
-  // ─── Internals ──────────────────────────────────────────────────
-
   /// Core filter: drops alerts whose type is disabled or below severity threshold.
   List<AlertEvent> _filterByPreferences(List<AlertEvent> alerts) {
     return alerts.where((a) => _prefs.shouldReceive(a.type)).toList();

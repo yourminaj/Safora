@@ -422,6 +422,15 @@ void main() {
   // ── GROUP 4: SosEventService integration ─────────────────────
 
   group('SOS BLoC Integration — SosEventService (FCM) wiring', () {
+    setUp(() {
+      // In group 4 we always use [_primaryContact] (1 contact) so override
+      // the default stub that returns 2.
+      when(() => mockSms.sendEmergencySms(
+            contacts: any(named: 'contacts'),
+            userName: any(named: 'userName'),
+          )).thenAnswer((_) async => 1);
+    });
+
     test('SosEventService.recordSosEvent is called fire-and-forget — does not block SosResult', () async {
       // Even if the SosEventService is slow, the fast SmsService result
       // is returned without delay.
@@ -475,8 +484,8 @@ void main() {
       );
 
       // Even though SosEventService throws, execute() should complete normally.
-      // (unawaited() swallows the error at the call site — SosEventService
-      // itself catches internally; this tests the defense-in-depth at use case level)
+      // TriggerSosUseCase wraps the call in try-catch so synchronous errors
+      // from the service are caught and logged, not rethrown.
       final result = await useCase.execute(
         contacts: [_primaryContact],
         triggerType: 'fall',

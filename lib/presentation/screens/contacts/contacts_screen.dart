@@ -139,7 +139,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
       ),
       body: Stack(
         children: [
-          // ── Main content ──
           Column(
             children: [
               Expanded(
@@ -207,7 +206,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
             ],
           ),
 
-          // ── Premium Circular FAB — bottom-right ──
           Positioned(
             bottom: saforaBottomInset(context) + 2,
             right: 24,

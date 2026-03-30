@@ -92,14 +92,17 @@ class AlertPreferencesCubit extends Cubit<AlertPreferencesState> {
       return;
     }
 
-    // Enabling — check permissions.
-    emit(state.copyWith(isLoading: true, permissionDeniedMessage: null));
-
+    // Enabling — check permissions WITHOUT showing loading overlay.
+    // The system permission dialog appears on top of the app naturally;
+    // showing our own loading overlay underneath causes the app to look
+    // dim/crashed while the OS dialog is displayed.
     final result = await _gate.requestForAlert(type);
 
     if (!result.granted) {
-      emit(state.copyWith(
-        isLoading: false,
+      // Emit updated state with permission denied message — no isLoading.
+      emit(AlertPreferencesState(
+        preferences: _buildInitial(_prefs),
+        severityThreshold: _prefs.minimumSeverity,
         permissionDeniedMessage:
             '${type.label} requires ${result.deniedNames.join(" & ")} permission',
       ));
@@ -107,23 +110,27 @@ class AlertPreferencesCubit extends Cubit<AlertPreferencesState> {
     }
 
     await _prefs.setEnabled(type, true);
-    emit(state.copyWith(isLoading: false));
     _emitUpdated();
   }
 
   /// Enable all alerts in a category (requests permissions first).
   Future<void> enableCategory(AlertCategory category) async {
-    emit(state.copyWith(isLoading: true, permissionDeniedMessage: null));
+    // Check permissions WITHOUT showing loading overlay first.
+    // The OS permission dialog causes the app to appear dimmed — adding
+    // another loading indicator on top makes it look crashed.
+    // We only find a representative type that actually needs a permission.
+    final typesInCategory =
+        AlertType.values.where((t) => t.category == category);
+    if (typesInCategory.isEmpty) return;
 
-    // Check permissions for the category once.
-    final sampleType = AlertType.values.firstWhere(
-      (t) => t.category == category,
-    );
+    // Pick first type; permission check is per-category, not per-type.
+    final sampleType = typesInCategory.first;
     final result = await _gate.requestForAlert(sampleType);
 
     if (!result.granted) {
-      emit(state.copyWith(
-        isLoading: false,
+      emit(AlertPreferencesState(
+        preferences: _buildInitial(_prefs),
+        severityThreshold: _prefs.minimumSeverity,
         permissionDeniedMessage:
             '${category.label} requires ${result.deniedNames.join(" & ")} permission',
       ));
@@ -131,7 +138,6 @@ class AlertPreferencesCubit extends Cubit<AlertPreferencesState> {
     }
 
     await _prefs.enableCategory(category);
-    emit(state.copyWith(isLoading: false));
     _emitUpdated();
   }
 

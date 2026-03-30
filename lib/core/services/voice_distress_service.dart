@@ -58,9 +58,7 @@ class VoiceDistressService {
   /// PCM bytes per 1-second frame (16-bit mono = 2 bytes per sample).
   static const int _frameSizeBytes = _sampleRateHz * 2;
 
-  // ──────────────────────────────────────────────────────────────────
   // Lifecycle
-  // ──────────────────────────────────────────────────────────────────
 
   /// Loads the ML model and starts continuous microphone monitoring.
   Future<void> start() async {
@@ -103,9 +101,7 @@ class VoiceDistressService {
     AppLogger.info('[VoiceDistress] Monitoring stopped');
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Audio Processing
-  // ──────────────────────────────────────────────────────────────────
 
   void _onAudioChunk(Uint8List chunk) {
     _buffer.addAll(chunk);
@@ -149,9 +145,7 @@ class VoiceDistressService {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Signal Processing Utils
-  // ──────────────────────────────────────────────────────────────────
 
   /// Apply pre-emphasis: y[n] = x[n] - α*x[n-1]
   List<double> _preEmphasis(List<double> samples, double alpha) {
@@ -219,7 +213,7 @@ class VoiceDistressService {
     while (n >= 2.0) { n /= 2.0; result += 0.693147; }
     while (n < 0.5) { n *= 2.0; result -= 0.693147; }
     // ln(n) for n ≈ 1 using series: ln(1+u) = u - u²/2 + u³/3 - ...
-    double u = n - 1.0;
+    final double u = n - 1.0;
     double term = u;
     double sum = 0.0;
     for (int i = 1; i <= 20; i++) {

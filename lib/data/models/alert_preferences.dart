@@ -17,8 +17,6 @@ class AlertPreferences {
 
   final Box _box;
 
-  // ─── Severity Threshold ────────────────────────────────
-
   /// Priority index mapping (higher = more severe).
   static const _priorityIndex = {
     AlertPriority.info: 0,
@@ -56,8 +54,6 @@ class AlertPreferences {
     return alertLevel >= threshold;
   }
 
-  // ─── Type Enable/Disable ───────────────────────────────
-
   /// Check if a specific alert type is enabled.
   ///
   /// Defaults: free alerts → enabled, premium → disabled.
@@ -77,14 +73,10 @@ class AlertPreferences {
     return newValue;
   }
 
-  // ─── Combined Check ────────────────────────────────────
-
   /// Full filter: alert type must be enabled AND priority must meet threshold.
   bool shouldReceive(AlertType type) {
     return isEnabled(type) && isAllowedBySeverity(type.priority);
   }
-
-  // ─── Computed Sets ─────────────────────────────────────
 
   /// Get all currently enabled alert types.
   Set<AlertType> get enabledAlerts {

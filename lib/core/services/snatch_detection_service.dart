@@ -9,15 +9,14 @@ import 'app_logger.dart';
 /// 2. Without tumbling/rotation (unlike a fall)
 /// 3. Brief event (<500ms)
 ///
-/// This differs from fall detection which includes:
-/// - Freefall phase (low G before impact)
-/// - Multi-axis rotation
-/// - Post-impact stillness
+/// Inject a custom [accelerometerStream] via the constructor to drive
+/// the sensor pipeline from any stream source.
 class SnatchDetectionService {
   SnatchDetectionService({
     this.snatchThresholdG = 5.0,
     this.cooldownDuration = const Duration(seconds: 30),
-  });
+    Stream<AccelerometerEvent>? accelerometerStream,
+  }) : _accelerometerStream = accelerometerStream;
 
   /// Minimum G-force for a snatch event.
   final double snatchThresholdG;
@@ -25,9 +24,16 @@ class SnatchDetectionService {
   /// Cooldown between alerts.
   final Duration cooldownDuration;
 
+  /// Injected stream — if null, uses real hardware stream.
+  final Stream<AccelerometerEvent>? _accelerometerStream;
+
   StreamSubscription<AccelerometerEvent>? _subscription;
   DateTime? _lastAlertTime;
   bool _isRunning = false;
+
+  // Internal sample buffer accessible to the detection logic.
+  final List<_AccelSample> _recentSamples = [];
+  static const int _windowSize = 25; // ~500ms at 50Hz
 
   /// Whether the service is actively monitoring.
   bool get isRunning => _isRunning;
@@ -40,44 +46,78 @@ class SnatchDetectionService {
     if (_isRunning) return;
     _isRunning = true;
 
-    // Track recent samples for pattern analysis.
-    final recentSamples = <_AccelSample>[];
-    const windowSize = 25; // ~500ms at 50Hz
+    final stream = _accelerometerStream ??
+        accelerometerEventStream(
+          samplingPeriod: const Duration(milliseconds: 20), // 50Hz
+        );
 
-    _subscription = accelerometerEventStream(
-      samplingPeriod: const Duration(milliseconds: 20), // 50Hz
-    ).listen((event) {
-      final now = DateTime.now();
-      final gForce = _calculateG(event.x, event.y, event.z);
-
-      recentSamples.add(_AccelSample(
+    _subscription = stream.listen((event) {
+      _processSample(
         x: event.x,
         y: event.y,
         z: event.z,
-        gForce: gForce,
-        time: now,
-      ));
-
-      // Keep window bounded.
-      if (recentSamples.length > windowSize) {
-        recentSamples.removeAt(0);
-      }
-
-      // Check for snatch pattern.
-      if (gForce > snatchThresholdG && _canAlert()) {
-        // Snatch analysis: check if this is directional (not tumbling).
-        if (_isDirectionalSnatch(recentSamples)) {
-          _lastAlertTime = now;
-          onSnatchDetected(gForce);
-          AppLogger.info(
-            '[SnatchDetection] Snatch detected: '
-            '${gForce.toStringAsFixed(1)}G',
-          );
-        }
-      }
+        now: DateTime.now(),
+        onSnatchDetected: onSnatchDetected,
+      );
     });
 
     AppLogger.info('[SnatchDetection] Started monitoring');
+  }
+
+  /// Process a single accelerometer sample.
+  ///
+  /// Exposed for direct testing without needing a live stream.
+  /// Returns true if a snatch was detected.
+  bool processSample({
+    required double x,
+    required double y,
+    required double z,
+    required void Function(double peakG) onSnatchDetected,
+    DateTime? timestamp,
+  }) {
+    return _processSample(
+      x: x,
+      y: y,
+      z: z,
+      now: timestamp ?? DateTime.now(),
+      onSnatchDetected: onSnatchDetected,
+    );
+  }
+
+  bool _processSample({
+    required double x,
+    required double y,
+    required double z,
+    required DateTime now,
+    required void Function(double peakG) onSnatchDetected,
+  }) {
+    final gForce = _calculateG(x, y, z);
+
+    _recentSamples.add(_AccelSample(
+      x: x,
+      y: y,
+      z: z,
+      gForce: gForce,
+      time: now,
+    ));
+
+    // Keep window bounded.
+    if (_recentSamples.length > _windowSize) {
+      _recentSamples.removeAt(0);
+    }
+
+    // Check for snatch pattern.
+    if (gForce > snatchThresholdG && _canAlert(now)) {
+      if (_isDirectionalSnatch(_recentSamples)) {
+        _lastAlertTime = now;
+        onSnatchDetected(gForce);
+        AppLogger.info(
+          '[SnatchDetection] Snatch detected: ${gForce.toStringAsFixed(1)}G',
+        );
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Stop monitoring.
@@ -85,8 +125,10 @@ class SnatchDetectionService {
     _subscription?.cancel();
     _subscription = null;
     _isRunning = false;
+    _recentSamples.clear();
     AppLogger.info('[SnatchDetection] Stopped monitoring');
   }
+
 
   /// Check if acceleration pattern is a directional snatch vs. a tumbling fall.
   ///
@@ -100,16 +142,13 @@ class SnatchDetectionService {
       (a, b) => a.gForce > b.gForce ? a : b,
     );
 
-    // Calculate directional dominance: strongest axis should be >70% of total.
     final absX = peak.x.abs();
     final absY = peak.y.abs();
     final absZ = peak.z.abs();
     final total = absX + absY + absZ;
     if (total == 0) return false;
 
-    final maxAxis = [absX, absY, absZ].reduce(
-      (a, b) => a > b ? a : b,
-    );
+    final maxAxis = [absX, absY, absZ].reduce((a, b) => a > b ? a : b);
 
     // Snatch = dominant single-axis motion (>60% of total).
     return maxAxis / total > 0.6;
@@ -119,7 +158,6 @@ class SnatchDetectionService {
     return _sqrt(x * x + y * y + z * z) / 9.81;
   }
 
-  /// Sqrt without dart:math to reduce imports (same pattern as SignalProcessor).
   static double _sqrt(double value) {
     if (value <= 0) return 0;
     double guess = value / 2;
@@ -129,9 +167,9 @@ class SnatchDetectionService {
     return guess;
   }
 
-  bool _canAlert() {
+  bool _canAlert(DateTime now) {
     if (_lastAlertTime == null) return true;
-    return DateTime.now().difference(_lastAlertTime!) > cooldownDuration;
+    return now.difference(_lastAlertTime!) > cooldownDuration;
   }
 
   /// Release resources.

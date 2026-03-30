@@ -42,7 +42,6 @@ class _ShieldHeartbeatPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // ─── Shield Shape ──────────────────────────────────────
     final shieldPaint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
@@ -82,7 +81,6 @@ class _ShieldHeartbeatPainter extends CustomPainter {
 
     canvas.drawPath(shield, shieldPaint);
 
-    // ─── Heartbeat ECG Line ────────────────────────────────
     // White or contrasting color on the shield
     final ecgPaint = Paint()
       ..color = color == Colors.white

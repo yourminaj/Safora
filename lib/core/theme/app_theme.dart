@@ -4,7 +4,6 @@ import 'colors.dart';
 
 /// Safora Material 3 theme configuration.
 abstract final class AppTheme {
-  // ─── Light Theme ─────────────────────────────────────────
   static ThemeData get light => ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
@@ -96,7 +95,6 @@ abstract final class AppTheme {
     ),
   );
 
-  // ─── Dark Theme ──────────────────────────────────────────
   static ThemeData get dark => ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,

@@ -2,11 +2,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/theme/colors.dart';
 
-// ═══════════════════════════════════════════════════════════════════
 //  SAFORA ANIMATED ICON LIBRARY
 //  Custom branded icons using CustomPainter + AnimationController.
 //  No Lottie dependency — pure vector rendering at 60fps.
-// ═══════════════════════════════════════════════════════════════════
 
 /// Brand colors used across all custom icons.
 class _BrandPalette {
@@ -18,10 +16,8 @@ class _BrandPalette {
   static const infoBlue = Color(0xFF42A5F5);
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  1. SAFORA SOS ICON — Pulsing shield with heartbeat ECG
 //     Used: Onboarding page 1
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaSosIcon extends StatefulWidget {
   const SaforaSosIcon({
@@ -82,7 +78,6 @@ class _SosIconPainter extends CustomPainter {
     final cx = w / 2;
     final cy = h / 2;
 
-    // ── Outer pulse ring ──
     final pulseRadius = w * 0.42 + (w * 0.06 * math.sin(progress * 2 * math.pi));
     final ringPaint = Paint()
       ..color = _BrandPalette.shieldRed.withValues(
@@ -91,7 +86,6 @@ class _SosIconPainter extends CustomPainter {
       ..strokeWidth = w * 0.02;
     canvas.drawCircle(Offset(cx, cy), pulseRadius, ringPaint);
 
-    // ── Shield shape ──
     final shieldPaint = Paint()
       ..shader = const LinearGradient(
         begin: Alignment.topCenter,
@@ -102,14 +96,12 @@ class _SosIconPainter extends CustomPainter {
     final shield = _buildShieldPath(w, h);
     canvas.drawPath(shield, shieldPaint);
 
-    // ── Shield border highlight ──
     final borderPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = w * 0.015;
     canvas.drawPath(shield, borderPaint);
 
-    // ── ECG heartbeat line ──
     final ecg = _buildEcgPath(w, h, progress);
     final ecgPaint = Paint()
       ..color = _BrandPalette.ecgWhite
@@ -119,7 +111,6 @@ class _SosIconPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
     canvas.drawPath(ecg, ecgPaint);
 
-    // ── "SOS" text ──
     final textPainter = TextPainter(
       text: TextSpan(
         text: 'SOS',
@@ -171,10 +162,8 @@ class _SosIconPainter extends CustomPainter {
   bool shouldRepaint(_SosIconPainter old) => old.progress != progress;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  2. SAFORA LOCATION ICON — Radar sweep with location pin
 //     Used: Onboarding page 2
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaLocationIcon extends StatefulWidget {
   const SaforaLocationIcon({
@@ -235,7 +224,6 @@ class _LocationIconPainter extends CustomPainter {
     final cx = w / 2;
     final cy = h * 0.45;
 
-    // ── Radar rings (expand outward) ──
     for (int i = 0; i < 3; i++) {
       final ringProgress = (progress + i * 0.33) % 1.0;
       final radius = w * 0.1 + (w * 0.35 * ringProgress);
@@ -247,7 +235,6 @@ class _LocationIconPainter extends CustomPainter {
       canvas.drawCircle(Offset(cx, cy), radius, ringPaint);
     }
 
-    // ── Map pin body ──
     final pinGradient = Paint()
       ..shader = const LinearGradient(
         begin: Alignment.topCenter,
@@ -268,7 +255,6 @@ class _LocationIconPainter extends CustomPainter {
 
     canvas.drawPath(pin, pinGradient);
 
-    // ── Pin highlight ──
     canvas.drawPath(
       pin,
       Paint()
@@ -277,7 +263,6 @@ class _LocationIconPainter extends CustomPainter {
         ..strokeWidth = w * 0.012,
     );
 
-    // ── Inner shield on pin ──
     final shieldSize = w * 0.14;
     final sx = cx - shieldSize / 2;
     final sy = cy - shieldSize * 0.6;
@@ -301,7 +286,6 @@ class _LocationIconPainter extends CustomPainter {
       Paint()..color = Colors.white,
     );
 
-    // ── Drop shadow beneath pin ──
     canvas.drawOval(
       Rect.fromCenter(
         center: Offset(cx, h * 0.78),
@@ -316,10 +300,8 @@ class _LocationIconPainter extends CustomPainter {
   bool shouldRepaint(_LocationIconPainter old) => old.progress != progress;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  3. SAFORA MEDICAL ICON — Medical cross with pulse ring
 //     Used: Onboarding page 3
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaMedicalIcon extends StatefulWidget {
   const SaforaMedicalIcon({
@@ -380,7 +362,6 @@ class _MedicalIconPainter extends CustomPainter {
     final cx = w / 2;
     final cy = h / 2;
 
-    // ── Pulse ring ──
     final pulsePhase = (progress * 2 * math.pi);
     final ringRadius = w * 0.38 + w * 0.04 * math.sin(pulsePhase);
     canvas.drawCircle(
@@ -393,7 +374,6 @@ class _MedicalIconPainter extends CustomPainter {
         ..strokeWidth = w * 0.018,
     );
 
-    // ── Second pulse ring (offset) ──
     final ring2Radius = w * 0.44 + w * 0.03 * math.cos(pulsePhase);
     canvas.drawCircle(
       Offset(cx, cy),
@@ -405,7 +385,6 @@ class _MedicalIconPainter extends CustomPainter {
         ..strokeWidth = w * 0.012,
     );
 
-    // ── Main circle background ──
     canvas.drawCircle(
       Offset(cx, cy),
       w * 0.30,
@@ -420,7 +399,6 @@ class _MedicalIconPainter extends CustomPainter {
         ),
     );
 
-    // ── Circle highlight ──
     canvas.drawCircle(
       Offset(cx, cy),
       w * 0.30,
@@ -430,7 +408,6 @@ class _MedicalIconPainter extends CustomPainter {
         ..strokeWidth = w * 0.012,
     );
 
-    // ── Medical cross ──
     final crossPaint = Paint()..color = Colors.white;
     final armW = w * 0.08;
     final armH = w * 0.22;
@@ -452,7 +429,6 @@ class _MedicalIconPainter extends CustomPainter {
       crossPaint,
     );
 
-    // ── Small heartbeat line below cross ──
     final ecgY = cy + w * 0.14;
     final ecgPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.7)
@@ -475,10 +451,8 @@ class _MedicalIconPainter extends CustomPainter {
   bool shouldRepaint(_MedicalIconPainter old) => old.progress != progress;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  4. SAFORA LOADING SPINNER — Branded arc spinner with shield
 //     Used: Splash screen
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaLoadingSpinner extends StatefulWidget {
   const SaforaLoadingSpinner({
@@ -548,7 +522,6 @@ class _LoadingSpinnerPainter extends CustomPainter {
     canvas.rotate(progress * 2 * math.pi);
     canvas.translate(-cx, -cy);
 
-    // ── Arc segments ──
     final arcPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = w * 0.08
@@ -582,10 +555,8 @@ class _LoadingSpinnerPainter extends CustomPainter {
       old.progress != progress || old.color != color;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  5. SAFORA SHIELD PULSE — Breathing shield with glow
 //     Used: About dialog, alert system
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaShieldPulse extends StatefulWidget {
   const SaforaShieldPulse({
@@ -646,7 +617,6 @@ class _ShieldPulsePainter extends CustomPainter {
     final cx = w / 2;
     final cy = h / 2;
 
-    // ── Glow circle ──
     final glowRadius = w * 0.44 + w * 0.04 * progress;
     canvas.drawCircle(
       Offset(cx, cy),
@@ -657,7 +627,6 @@ class _ShieldPulsePainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
     );
 
-    // ── Shield ──
     final scale = 0.95 + 0.05 * progress;
     canvas.save();
     canvas.translate(cx, cy);
@@ -684,7 +653,6 @@ class _ShieldPulsePainter extends CustomPainter {
         ..strokeWidth = w * 0.015,
     );
 
-    // ── ECG line on shield ──
     final ecgPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
@@ -724,10 +692,8 @@ class _ShieldPulsePainter extends CustomPainter {
   bool shouldRepaint(_ShieldPulsePainter old) => old.progress != progress;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  6. SAFORA WARNING ICON — Animated triangle with exclamation
 //     Used: Alert system
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaWarningIcon extends StatefulWidget {
   const SaforaWarningIcon({
@@ -821,7 +787,6 @@ class _WarningIconPainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round,
     );
 
-    // ── Exclamation mark ──
     final exclColor = Colors.white.withValues(
         alpha: 0.7 + 0.3 * progress);
     // Stem
@@ -848,10 +813,8 @@ class _WarningIconPainter extends CustomPainter {
   bool shouldRepaint(_WarningIconPainter old) => old.progress != progress;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  7. SAFORA SUCCESS ICON — Animated checkmark with circle fill
 //     Used: Success states
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaSuccessIcon extends StatefulWidget {
   const SaforaSuccessIcon({
@@ -912,7 +875,6 @@ class _SuccessIconPainter extends CustomPainter {
     final cy = w / 2;
     final radius = w * 0.40;
 
-    // ── Circle fill (expands in) ──
     final circleProgress = (progress * 2).clamp(0.0, 1.0);
     canvas.drawCircle(
       Offset(cx, cy),
@@ -923,7 +885,6 @@ class _SuccessIconPainter extends CustomPainter {
         ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: radius)),
     );
 
-    // ── Circle border ──
     canvas.drawCircle(
       Offset(cx, cy),
       radius,
@@ -933,7 +894,6 @@ class _SuccessIconPainter extends CustomPainter {
         ..strokeWidth = w * 0.02,
     );
 
-    // ── Checkmark (draws in after circle) ──
     final checkProgress = ((progress - 0.4) / 0.6).clamp(0.0, 1.0);
     if (checkProgress > 0) {
       final checkPath = Path()
@@ -960,10 +920,8 @@ class _SuccessIconPainter extends CustomPainter {
   bool shouldRepaint(_SuccessIconPainter old) => old.progress != progress;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  8. SAFORA EMPTY STATE — Shield outline with question mark
 //     Used: Empty lists
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaEmptyState extends StatefulWidget {
   const SaforaEmptyState({
@@ -1023,7 +981,6 @@ class _EmptyStatePainter extends CustomPainter {
     final h = size.height;
     final cx = w / 2;
 
-    // ── Dashed shield outline ──
     final dashAlpha = 0.25 + 0.15 * math.sin(progress * math.pi);
     final shield = Path()
       ..moveTo(w * 0.5, h * 0.10)
@@ -1043,7 +1000,6 @@ class _EmptyStatePainter extends CustomPainter {
         ..strokeWidth = w * 0.025,
     );
 
-    // ── Question mark ──
     final textPainter = TextPainter(
       text: TextSpan(
         text: '?',
@@ -1066,10 +1022,8 @@ class _EmptyStatePainter extends CustomPainter {
   bool shouldRepaint(_EmptyStatePainter old) => old.progress != progress;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  9. SAFORA CONTACTS ICON — Shield with two people silhouettes
 //     Used: Onboarding page 2 ("Add Emergency Contacts")
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaContactsIcon extends StatefulWidget {
   const SaforaContactsIcon({
@@ -1129,7 +1083,6 @@ class _ContactsIconPainter extends CustomPainter {
     final h = size.height;
     final cx = w / 2;
 
-    // ── Shield background ──
     final shield = Path()
       ..moveTo(w * 0.5, h * 0.08)
       ..cubicTo(w * 0.30, h * 0.08, w * 0.12, h * 0.14, w * 0.12, h * 0.30)
@@ -1154,7 +1107,6 @@ class _ContactsIconPainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );
 
-    // ── Shield border glow ──
     canvas.drawPath(
       shield,
       Paint()
@@ -1163,7 +1115,6 @@ class _ContactsIconPainter extends CustomPainter {
         ..strokeWidth = w * 0.015,
     );
 
-    // ── Left person (head + shoulders) ──
     final personColor = Colors.white.withValues(alpha: 0.95);
     // Head
     canvas.drawCircle(
@@ -1186,7 +1137,6 @@ class _ContactsIconPainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-    // ── Right person (head + shoulders) ──
     // Head
     canvas.drawCircle(
       Offset(cx + w * 0.13, h * 0.34),
@@ -1208,7 +1158,6 @@ class _ContactsIconPainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-    // ── Connecting bond line (animated pulse between people) ──
     final bondProgress = (progress * 2 * math.pi);
     final bondAlpha = 0.5 + 0.4 * math.sin(bondProgress);
     final bondY = h * 0.42;
@@ -1238,7 +1187,6 @@ class _ContactsIconPainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-    // ── Connection lines from heart to each person ──
     final linePaint = Paint()
       ..color = Colors.white.withValues(alpha: bondAlpha * 0.6)
       ..style = PaintingStyle.stroke
@@ -1256,7 +1204,6 @@ class _ContactsIconPainter extends CustomPainter {
       linePaint,
     );
 
-    // ── Phone icon beneath (small) ──
     final phoneY = h * 0.68;
     final phoneW = w * 0.06;
     final phoneH = w * 0.09;
@@ -1286,7 +1233,6 @@ class _ContactsIconPainter extends CustomPainter {
       Paint()..color = _BrandPalette.infoBlue.withValues(alpha: 0.5),
     );
 
-    // ── Signal waves from phone (animated) ──
     for (int i = 0; i < 2; i++) {
       final waveProgress = (progress + i * 0.5) % 1.0;
       final waveRadius = w * 0.04 + w * 0.06 * waveProgress;
@@ -1311,10 +1257,8 @@ class _ContactsIconPainter extends CustomPainter {
   bool shouldRepaint(_ContactsIconPainter old) => old.progress != progress;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 // 10. SAFORA FIRST AID ICON — Heart with cross overlay
 //     Used: Emergency Center — First Aid Steps
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaFirstAidIcon extends StatefulWidget {
   const SaforaFirstAidIcon({
@@ -1375,7 +1319,6 @@ class _FirstAidIconPainter extends CustomPainter {
     final cx = w / 2;
     final cy = h * 0.48;
 
-    // ── Heartbeat pulse scale ──
     final pulse = 1.0 + 0.06 * math.sin(progress * 2 * math.pi);
 
     canvas.save();
@@ -1383,7 +1326,6 @@ class _FirstAidIconPainter extends CustomPainter {
     canvas.scale(pulse);
     canvas.translate(-cx, -cy);
 
-    // ── Heart shape ──
     final heartPath = Path()
       ..moveTo(cx, h * 0.78)
       ..cubicTo(w * 0.10, h * 0.55, w * 0.10, h * 0.22, cx, h * 0.32)
@@ -1399,7 +1341,6 @@ class _FirstAidIconPainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );
 
-    // ── Heart highlight ──
     canvas.drawPath(
       heartPath,
       Paint()
@@ -1408,7 +1349,6 @@ class _FirstAidIconPainter extends CustomPainter {
         ..strokeWidth = w * 0.015,
     );
 
-    // ── White cross on heart ──
     final crossPaint = Paint()..color = Colors.white;
     final armW = w * 0.07;
     final armH = w * 0.20;
@@ -1443,10 +1383,8 @@ class _FirstAidIconPainter extends CustomPainter {
   bool shouldRepaint(_FirstAidIconPainter old) => old.progress != progress;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 // 11. SAFORA SAFE PLACE ICON — Building with shield badge
 //     Used: Emergency Center — Nearest Safe Place
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaSafePlaceIcon extends StatefulWidget {
   const SaforaSafePlaceIcon({
@@ -1506,7 +1444,6 @@ class _SafePlaceIconPainter extends CustomPainter {
     final h = size.height;
     final cx = w / 2;
 
-    // ── Building body ──
     final buildingPath = Path()
       ..addRRect(RRect.fromRectAndCorners(
         Rect.fromLTWH(w * 0.18, h * 0.20, w * 0.64, h * 0.65),
@@ -1524,7 +1461,6 @@ class _SafePlaceIconPainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );
 
-    // ── Building windows (2x3 grid) ──
     final windowPaint = Paint();
     for (int row = 0; row < 3; row++) {
       for (int col = 0; col < 2; col++) {
@@ -1544,7 +1480,6 @@ class _SafePlaceIconPainter extends CustomPainter {
       }
     }
 
-    // ── Door ──
     canvas.drawRRect(
       RRect.fromRectAndCorners(
         Rect.fromLTWH(w * 0.40, h * 0.65, w * 0.20, h * 0.20),
@@ -1554,7 +1489,6 @@ class _SafePlaceIconPainter extends CustomPainter {
       Paint()..color = const Color(0xFF283593),
     );
 
-    // ── Shield badge (top-right corner) ──
     final shieldCx = w * 0.76;
     final shieldCy = h * 0.18;
     final ss = w * 0.14;
@@ -1603,7 +1537,6 @@ class _SafePlaceIconPainter extends CustomPainter {
       checkPaint,
     );
 
-    // ── Pulsing safety ring around building ──
     final ringPhase = progress * 2 * math.pi;
     final ringAlpha = 0.15 + 0.1 * math.sin(ringPhase);
     canvas.drawRRect(
@@ -1626,10 +1559,8 @@ class _SafePlaceIconPainter extends CustomPainter {
   bool shouldRepaint(_SafePlaceIconPainter old) => old.progress != progress;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 // 12. SAFORA OFFLINE ICON — Shield with download/offline indicator
 //     Used: Emergency Center — Offline Survival Instructions
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaOfflineIcon extends StatefulWidget {
   const SaforaOfflineIcon({
@@ -1689,7 +1620,6 @@ class _OfflineIconPainter extends CustomPainter {
     final h = size.height;
     final cx = w / 2;
 
-    // ── Shield outline ──
     final shield = Path()
       ..moveTo(w * 0.5, h * 0.10)
       ..cubicTo(w * 0.30, h * 0.10, w * 0.14, h * 0.16, w * 0.14, h * 0.32)
@@ -1721,7 +1651,6 @@ class _OfflineIconPainter extends CustomPainter {
         ..strokeWidth = w * 0.015,
     );
 
-    // ── Download arrow (animated bounce) ──
     final bounce = math.sin(progress * 2 * math.pi) * w * 0.02;
     final arrowPaint = Paint()
       ..color = Colors.white
@@ -1746,7 +1675,6 @@ class _OfflineIconPainter extends CustomPainter {
       arrowPaint,
     );
 
-    // ── Base line (storage) ──
     canvas.drawLine(
       Offset(w * 0.30, h * 0.68),
       Offset(w * 0.70, h * 0.68),
@@ -1757,7 +1685,6 @@ class _OfflineIconPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round,
     );
 
-    // ── "NO WIFI" crossed circle ──
     final nwCx = w * 0.78;
     final nwCy = h * 0.22;
     final nwR = w * 0.08;
@@ -1785,10 +1712,8 @@ class _OfflineIconPainter extends CustomPainter {
   bool shouldRepaint(_OfflineIconPainter old) => old.progress != progress;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 // 13. SAFORA LIVE LOCATION ICON — Pulsing radar with person dot
 //     Used: Emergency Center — Share Live Location
-// ═══════════════════════════════════════════════════════════════════
 
 class SaforaLiveLocationIcon extends StatefulWidget {
   const SaforaLiveLocationIcon({
@@ -1848,7 +1773,6 @@ class _LiveLocationIconPainter extends CustomPainter {
     final cx = w / 2;
     final cy = w / 2;
 
-    // ── Expanding pulse rings ──
     for (int i = 0; i < 3; i++) {
       final ringAt = (progress + i * 0.33) % 1.0;
       final radius = w * 0.08 + w * 0.38 * ringAt;
@@ -1863,7 +1787,6 @@ class _LiveLocationIconPainter extends CustomPainter {
       );
     }
 
-    // ── Center person dot ──
     canvas.drawCircle(
       Offset(cx, cy - w * 0.04),
       w * 0.055,
@@ -1885,7 +1808,6 @@ class _LiveLocationIconPainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-    // ── Arrow pointing outward (broadcasting) ──
     final arrowPaint = Paint()
       ..color = _BrandPalette.successGreen.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke

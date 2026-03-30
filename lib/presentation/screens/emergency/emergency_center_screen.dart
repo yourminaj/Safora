@@ -39,11 +39,9 @@ class EmergencyCenterScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── TOP SOS BANNER ──
             _SosBanner(isDark: isDark),
             const SizedBox(height: 24),
 
-            // ── QUICK ACTIONS ──
             const _SectionLabel(text: 'QUICK ACTIONS'),
             const SizedBox(height: 12),
             Row(
@@ -74,7 +72,6 @@ class EmergencyCenterScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ── SAFETY RESOURCES ──
             const _SectionLabel(text: 'SAFETY RESOURCES'),
             const SizedBox(height: 12),
 
@@ -107,7 +104,6 @@ class EmergencyCenterScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ── EMERGENCY NUMBERS ──
             const _SectionLabel(text: 'EMERGENCY NUMBERS'),
             const SizedBox(height: 12),
             _EmergencyNumbersGrid(isDark: isDark),
@@ -116,8 +112,6 @@ class EmergencyCenterScreen extends StatelessWidget {
       ),
     );
   }
-
-  // ── Actions ──
 
   void _shareLiveLocation(BuildContext context) {
     HapticFeedback.mediumImpact();
@@ -170,9 +164,7 @@ class EmergencyCenterScreen extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  SOS BANNER — Large pulsing emergency button
-// ═══════════════════════════════════════════════════════════════════
 
 class _SosBanner extends StatefulWidget {
   const _SosBanner({required this.isDark});
@@ -275,9 +267,7 @@ class _SosBannerState extends State<_SosBanner>
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  SECTION LABEL
-// ═══════════════════════════════════════════════════════════════════
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.text});
@@ -296,9 +286,7 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  ACTION CARD — Compact gradient card for quick actions
-// ═══════════════════════════════════════════════════════════════════
 
 class _ActionCard extends StatelessWidget {
   const _ActionCard({
@@ -370,9 +358,7 @@ class _ActionCard extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  RESOURCE TILE — Full-width tile for safety resources
-// ═══════════════════════════════════════════════════════════════════
 
 class _ResourceTile extends StatelessWidget {
   const _ResourceTile({
@@ -446,9 +432,7 @@ class _ResourceTile extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  EMERGENCY NUMBERS GRID — Common emergency numbers
-// ═══════════════════════════════════════════════════════════════════
 
 class _EmergencyNumbersGrid extends StatelessWidget {
   const _EmergencyNumbersGrid({required this.isDark});
@@ -533,11 +517,8 @@ class _EmNum {
   final Color color;
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  BOTTOM SHEETS — Detailed views for each section
-// ═══════════════════════════════════════════════════════════════════
 
-// -- Live Location Sheet --
 class _LiveLocationSheet extends StatelessWidget {
   const _LiveLocationSheet({required this.isDark});
   final bool isDark;
@@ -600,7 +581,6 @@ class _LiveLocationSheet extends StatelessWidget {
   }
 }
 
-// -- Contacts Dialer Sheet --
 class _ContactsDialerSheet extends StatelessWidget {
   const _ContactsDialerSheet({required this.isDark});
   final bool isDark;
@@ -675,7 +655,6 @@ class _ContactsDialerSheet extends StatelessWidget {
   }
 }
 
-// -- Safe Places Sheet --
 class _SafePlacesSheet extends StatelessWidget {
   const _SafePlacesSheet({required this.isDark});
   final bool isDark;
@@ -775,7 +754,6 @@ class _SafePlaceCategory extends StatelessWidget {
   }
 }
 
-// -- First Aid Sheet --
 class _FirstAidSheet extends StatelessWidget {
   const _FirstAidSheet({required this.isDark});
   final bool isDark;
@@ -925,7 +903,6 @@ class _FirstAidCardState extends State<_FirstAidCard> {
   }
 }
 
-// -- Offline Survival Sheet --
 class _OfflineSurvivalSheet extends StatelessWidget {
   const _OfflineSurvivalSheet({required this.isDark});
   final bool isDark;
@@ -1013,9 +990,7 @@ class _SurvivalSection extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  SHARED SHEET CONTAINER
-// ═══════════════════════════════════════════════════════════════════
 
 class _SheetContainer extends StatelessWidget {
   const _SheetContainer({
@@ -1094,9 +1069,7 @@ class _SheetContainer extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
 //  SHEET ACTION BUTTON
-// ═══════════════════════════════════════════════════════════════════
 
 class _SheetAction extends StatelessWidget {
   const _SheetAction({

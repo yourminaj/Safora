@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:telephony/telephony.dart';
+import 'package:another_telephony/telephony.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../../core/services/location_service.dart';
@@ -57,7 +57,6 @@ class SosCubit extends Cubit<SosState> {
   }
 
   Future<void> _runPreflightAndStart() async {
-    // ── Pre-flight checks ──────────────────────────────────
     final gpsReady = _locationService.lastPosition != null;
     final networkReady = _connectivityService?.isOnline ?? true;
     final contacts = _contactsRepository.getAll();
@@ -87,7 +86,6 @@ class SosCubit extends Cubit<SosState> {
       return;
     }
 
-    // ── Android SMS permission check ──────────────────────
     // On Android, direct background SMS requires SEND_SMS permission.
     // If it's denied, emit a non-fatal failure so the UI can direct the
     // user to grant it.  iOS uses url_launcher fallback — no check needed.
@@ -121,7 +119,6 @@ class SosCubit extends Cubit<SosState> {
       }
     }
 
-    // ── Start countdown ──────────────────────────────────
     _secondsRemaining = countdownDuration;
     emit(SosCountdown(secondsRemaining: _secondsRemaining));
 

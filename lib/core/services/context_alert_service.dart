@@ -72,7 +72,6 @@ class ContextAlertService {
       final hour = now.hour;
       final position = await _getCurrentPosition();
 
-      // ── Heat Stroke Risk ───────────────────────────────
       // High temp + UV + outdoor movement
       if (currentTemperatureCelsius != null &&
           currentTemperatureCelsius! > 35 &&
@@ -94,7 +93,6 @@ class ContextAlertService {
         );
       }
 
-      // ── Hypothermia Risk ───────────────────────────────
       // Low temp + outdoor movement + wind chill
       if (currentTemperatureCelsius != null &&
           currentTemperatureCelsius! < -5 &&
@@ -120,7 +118,6 @@ class ContextAlertService {
         );
       }
 
-      // ── Drowsy Driving ─────────────────────────────────
       // Night time (11 PM – 5 AM) + driving speed (>50 km/h)
       if ((hour >= 23 || hour < 5) &&
           currentSpeedKmh != null &&
@@ -140,7 +137,6 @@ class ContextAlertService {
         );
       }
 
-      // ── Lone Night Walk ────────────────────────────────
       // Late night (10 PM – 4 AM) + walking speed (2–7 km/h)
       if ((hour >= 22 || hour < 4) &&
           currentSpeedKmh != null &&
@@ -160,7 +156,6 @@ class ContextAlertService {
         );
       }
 
-      // ── Altitude Sickness ──────────────────────────────
       // Rapid altitude gain (>500m in 30 minutes)
       if (position != null) {
         final altitude = position.altitude;
@@ -190,7 +185,6 @@ class ContextAlertService {
         _lastAltitudeTime = now;
       }
 
-      // ── Flash Flood Risk ───────────────────────────────
       // Heavy rain forecast + low elevation
       if (currentPrecipitationMm != null &&
           currentPrecipitationMm! > 30 &&
@@ -238,10 +232,6 @@ class ContextAlertService {
         11.37 * math.pow(windKmh, 0.16) +
         0.3965 * tempC * math.pow(windKmh, 0.16);
   }
-
-  /// Exposed for testing only.
-  static double calculateWindChillForTest(double tempC, double windKmh) =>
-      _calculateWindChill(tempC, windKmh);
 
   Future<Position?> _getCurrentPosition() async {
     try {

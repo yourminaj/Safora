@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:telephony/telephony.dart';
+import 'package:another_telephony/telephony.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/models/emergency_contact.dart';
 import 'app_logger.dart';

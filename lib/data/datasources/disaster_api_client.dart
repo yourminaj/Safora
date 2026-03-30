@@ -51,8 +51,6 @@ class DisasterApiClient {
     }
   }
 
-  // ─── USGS Earthquakes ────────────────────────────────────
-
   /// Fetch earthquakes from the last 24 hours.
   ///
   /// Returns [AlertEvent] list sorted by time (newest first).
@@ -133,8 +131,6 @@ class DisasterApiClient {
     }
   }
 
-  // ─── GDACS (Global Disaster Alerts) ──────────────────────
-
   /// Fetch recent disaster events from GDACS.
   ///
   /// Includes earthquakes, tropical cyclones, and floods worldwide.
@@ -208,8 +204,6 @@ class DisasterApiClient {
     };
   }
 
-  // ─── Open-Meteo Flood ────────────────────────────────────
-
   /// Check flood risk at a specific location.
   ///
   /// Returns a list of flood alerts if river discharge exceeds threshold.
@@ -270,8 +264,6 @@ class DisasterApiClient {
       return [];
     }
   }
-
-  // ─── Open-Meteo Weather Alerts ──────────────────────────
 
   /// Fetch weather-based alerts for a specific location.
   ///
@@ -346,7 +338,6 @@ class DisasterApiClient {
             ? (uvMax[i] as num?)?.toDouble()
             : null;
 
-        // ── Extreme Heat (>40°C) ─────────────────────────
         if (maxTemp != null && maxTemp > 40) {
           alerts.add(AlertEvent(
             id: 'weather_heat_${times[i]}',
@@ -363,7 +354,6 @@ class DisasterApiClient {
           ));
         }
 
-        // ── Extreme Cold (<-15°C) ────────────────────────
         if (minTemp != null && minTemp < -15) {
           alerts.add(AlertEvent(
             id: 'weather_cold_${times[i]}',
@@ -380,7 +370,6 @@ class DisasterApiClient {
           ));
         }
 
-        // ── Blizzard (snow >15cm + wind >50 km/h) ────────
         if (snowfall != null &&
             snowfall > 15 &&
             wind != null &&
@@ -400,7 +389,6 @@ class DisasterApiClient {
           ));
         }
 
-        // ── Thunderstorm (rain >20mm + wind >60 km/h) ────
         if (rain != null &&
             rain > 20 &&
             wind != null &&
@@ -420,7 +408,6 @@ class DisasterApiClient {
           ));
         }
 
-        // ── Strong Wind (>90 km/h) ──────────────────────
         if (wind != null && wind > 90) {
           alerts.add(AlertEvent(
             id: 'weather_wind_${times[i]}',
@@ -436,7 +423,6 @@ class DisasterApiClient {
           ));
         }
 
-        // ── High UV (index >8) ──────────────────────────
         if (uv != null && uv > 8) {
           alerts.add(AlertEvent(
             id: 'weather_uv_${times[i]}',
@@ -453,7 +439,6 @@ class DisasterApiClient {
         }
       }
 
-      // ── Dense Fog (hourly visibility <200m) ───────────
       if (hourly != null) {
         final visTimes = hourly['time'] as List<dynamic>? ?? [];
         final visibility = hourly['visibility'] as List<dynamic>? ?? [];
@@ -488,8 +473,6 @@ class DisasterApiClient {
       return [];
     }
   }
-
-  // ─── Open-Meteo Air Quality ─────────────────────────────
 
   /// Fetch air quality alerts for a specific location.
   ///
@@ -536,7 +519,6 @@ class DisasterApiClient {
             ? (pm10Values[i] as num?)?.toDouble()
             : null;
 
-        // ── Hazardous Air Quality (European AQI >100) ────
         if (!aqiAlerted && aqi != null && aqi > 100) {
           alerts.add(AlertEvent(
             id: 'air_quality_${times[i]}',
@@ -554,7 +536,6 @@ class DisasterApiClient {
           aqiAlerted = true;
         }
 
-        // ── Dust Storm (PM10 >500 µg/m³) ────────────────
         if (!dustAlerted && pm10 != null && pm10 > 500) {
           alerts.add(AlertEvent(
             id: 'dust_storm_${times[i]}',
@@ -579,8 +560,6 @@ class DisasterApiClient {
       return [];
     }
   }
-
-  // ─── NASA FIRMS Wildfire ─────────────────────────────────
 
   /// Fetch active wildfire hotspots near a location from NASA FIRMS.
   ///
@@ -668,8 +647,6 @@ class DisasterApiClient {
       return [];
     }
   }
-
-  // ─── NASA EONET ─────────────────────────────────────────
 
   /// Fetch recent disaster events from NASA EONET (Earth Observatory).
   ///

@@ -1,4 +1,4 @@
-import 'dart:ui';
+// dart:ui import removed — BackdropFilter was removed for performance reasons.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -71,14 +71,12 @@ class _AlertPreferencesScreenState extends State<AlertPreferencesScreen> {
 
           return CustomScrollView(
             slivers: [
-              // ─── Premium Gradient Header ────────────────────
               _PremiumHeader(
                 enabledCount: state.enabledCount,
                 totalCount: state.totalCount,
                 isDark: isDark,
               ),
 
-              // ─── Search Bar ─────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
                   padding:
@@ -91,17 +89,14 @@ class _AlertPreferencesScreenState extends State<AlertPreferencesScreen> {
                 ),
               ),
 
-              // ─── Quick Actions ──────────────────────────────
               SliverToBoxAdapter(
                 child: _QuickActions(isDark: isDark),
               ),
 
-              // ─── Severity Threshold ──────────────────────────
               SliverToBoxAdapter(
                 child: _SeverityThresholdSelector(isDark: isDark),
               ),
 
-              // ─── Category Sections ──────────────────────────
               if (categories.isEmpty)
                 SliverFillRemaining(
                   child: Center(
@@ -173,9 +168,7 @@ class _AlertPreferencesScreenState extends State<AlertPreferencesScreen> {
   }
 }
 
-// =====================================================================
 // Premium Gradient Header with Progress Ring
-// =====================================================================
 
 class _PremiumHeader extends StatelessWidget {
   const _PremiumHeader({
@@ -296,9 +289,7 @@ class _PremiumHeader extends StatelessWidget {
   }
 }
 
-// =====================================================================
 // Search Bar
-// =====================================================================
 
 class _SearchBar extends StatelessWidget {
   const _SearchBar({
@@ -364,9 +355,7 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
-// =====================================================================
 // Quick Actions Row
-// =====================================================================
 
 class _QuickActions extends StatelessWidget {
   const _QuickActions({required this.isDark});
@@ -463,9 +452,7 @@ class _QuickActionChip extends StatelessWidget {
   }
 }
 
-// =====================================================================
 // Severity Threshold Selector
-// =====================================================================
 
 class _SeverityThresholdSelector extends StatelessWidget {
   const _SeverityThresholdSelector({required this.isDark});
@@ -622,9 +609,7 @@ class _SeverityThresholdSelector extends StatelessWidget {
   }
 }
 
-// =====================================================================
 // Premium Category Card with Glassmorphism
-// =====================================================================
 
 class _PremiumCategoryCard extends StatefulWidget {
   const _PremiumCategoryCard({
@@ -698,172 +683,167 @@ class _PremiumCategoryCardState extends State<_PremiumCategoryCard> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 0.5, sigmaY: 0.5),
-          child: Container(
-            decoration: BoxDecoration(
+        // NOTE: BackdropFilter removed — stacking 16 blur passes (one per
+        // category card) caused severe GPU overload on mid-range devices,
+        // presenting as a dim/frozen UI. Plain Container is used instead.
+        child: Container(
+          decoration: BoxDecoration(
+            color: widget.isDark
+                ? AppColors.darkSurfaceVariant.withValues(alpha: 0.7)
+                : Colors.white.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
               color: widget.isDark
-                  ? AppColors.darkSurfaceVariant.withValues(alpha: 0.7)
-                  : Colors.white.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : catColor.withValues(alpha: 0.12),
+            ),
+            boxShadow: [
+              BoxShadow(
                 color: widget.isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : catColor.withValues(alpha: 0.12),
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : catColor.withValues(alpha: 0.06),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.isDark
-                      ? Colors.black.withValues(alpha: 0.2)
-                      : catColor.withValues(alpha: 0.06),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // ─── Category Header ──────────────────────
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => setState(() => _expanded = !_expanded),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(18),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          // Category Icon with colored circle
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  catColor.withValues(alpha: 0.2),
-                                  catColor.withValues(alpha: 0.08),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              _categoryIcon(widget.category),
-                              color: catColor,
-                              size: 22,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Category Label + Count
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.category.label,
-                                  style: AppTypography.titleSmall.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  children: [
-                                    // Mini progress bar
-                                    SizedBox(
-                                      width: 40,
-                                      height: 3,
-                                      child: ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(4),
-                                        child: LinearProgressIndicator(
-                                          value: widget.alerts.isNotEmpty
-                                              ? widget.enabledCount /
-                                                  widget.alerts.length
-                                              : 0,
-                                          backgroundColor: catColor
-                                              .withValues(alpha: 0.12),
-                                          valueColor:
-                                              AlwaysStoppedAnimation(catColor),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '${widget.enabledCount}/${widget.alerts.length}',
-                                      style:
-                                          AppTypography.labelSmall.copyWith(
-                                        color: AppColors.textSecondary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => setState(() => _expanded = !_expanded),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(18),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        // Category Icon with colored circle
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                catColor.withValues(alpha: 0.2),
+                                catColor.withValues(alpha: 0.08),
                               ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          // Master toggle
-                          Transform.scale(
-                            scale: 0.85,
-                            child: Switch.adaptive(
-                              value: allEnabled,
-                              onChanged: (_) {
-                                if (allEnabled) {
-                                  cubit
-                                      .disableCategory(widget.category);
-                                } else {
-                                  cubit.enableCategory(widget.category);
-                                }
-                              },
-                              activeTrackColor: catColor,
-                            ),
+                          child: Icon(
+                            _categoryIcon(widget.category),
+                            color: catColor,
+                            size: 22,
                           ),
-                          // Expand chevron
-                          AnimatedRotation(
-                            turns: _expanded ? 0.5 : 0,
-                            duration: const Duration(milliseconds: 200),
-                            child: const Icon(
-                              Icons.expand_more_rounded,
-                              color: AppColors.textSecondary,
-                              size: 22,
-                            ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Category Label + Count
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.category.label,
+                                style: AppTypography.titleSmall.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  // Mini progress bar
+                                  SizedBox(
+                                    width: 40,
+                                    height: 3,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: widget.alerts.isNotEmpty
+                                            ? widget.enabledCount /
+                                                widget.alerts.length
+                                            : 0,
+                                        backgroundColor: catColor
+                                            .withValues(alpha: 0.12),
+                                        valueColor: AlwaysStoppedAnimation(
+                                            catColor),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${widget.enabledCount}/${widget.alerts.length}',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        // Master toggle
+                        Transform.scale(
+                          scale: 0.85,
+                          child: Switch.adaptive(
+                            value: allEnabled,
+                            onChanged: (_) {
+                              if (allEnabled) {
+                                cubit.disableCategory(widget.category);
+                              } else {
+                                cubit.enableCategory(widget.category);
+                              }
+                            },
+                            activeTrackColor: catColor,
+                          ),
+                        ),
+                        // Expand chevron
+                        AnimatedRotation(
+                          turns: _expanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 200),
+                          child: const Icon(
+                            Icons.expand_more_rounded,
+                            color: AppColors.textSecondary,
+                            size: 22,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
+              ),
 
-                // ─── Expanded Alert List ──────────────────
-                AnimatedCrossFade(
-                  firstChild: const SizedBox.shrink(),
-                  secondChild: Column(
-                    children: [
-                      Divider(
-                        height: 1,
-                        color: widget.isDark
-                            ? Colors.white.withValues(alpha: 0.05)
-                            : Colors.black.withValues(alpha: 0.04),
-                      ),
-                      ...widget.alerts.map((alertStatus) {
-                        return _PremiumAlertTile(
-                          alertStatus: alertStatus,
-                          catColor: catColor,
-                          isDark: widget.isDark,
-                        );
-                      }),
-                    ],
-                  ),
-                  crossFadeState: _expanded
-                      ? CrossFadeState.showSecond
-                      : CrossFadeState.showFirst,
-                  duration: const Duration(milliseconds: 250),
-                  sizeCurve: Curves.easeOutCubic,
+              AnimatedCrossFade(
+                firstChild: const SizedBox.shrink(),
+                secondChild: Column(
+                  children: [
+                    Divider(
+                      height: 1,
+                      color: widget.isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.black.withValues(alpha: 0.04),
+                    ),
+                    ...widget.alerts.map((alertStatus) {
+                      return _PremiumAlertTile(
+                        alertStatus: alertStatus,
+                        catColor: catColor,
+                        isDark: widget.isDark,
+                      );
+                    }),
+                  ],
                 ),
-              ],
-            ),
+                crossFadeState: _expanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 250),
+                sizeCurve: Curves.easeOutCubic,
+              ),
+            ],
           ),
         ),
       ),
@@ -871,9 +851,7 @@ class _PremiumCategoryCardState extends State<_PremiumCategoryCard> {
   }
 }
 
-// =====================================================================
 // Premium Alert Toggle Tile
-// =====================================================================
 
 class _PremiumAlertTile extends StatelessWidget {
   const _PremiumAlertTile({

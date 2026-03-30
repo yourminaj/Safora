@@ -100,7 +100,9 @@ GoRouter createRouter() {
                 Text(l?.routeNotFound(state.uri.toString()) ?? 'Route not found: ${state.uri}'),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => context.go(AppRoutes.home),
+                  // Route to /login (safe for all auth states) rather than /home
+                  // which is a protected shell route.
+                  onPressed: () => context.go(AppRoutes.login),
                   child: Text(l?.goHome ?? 'Go Home'),
                 ),
               ],
@@ -109,7 +111,6 @@ GoRouter createRouter() {
         );
       },
       routes: [
-        // ─── Top-Level Routes (no bottom nav) ──────────
         // All use pageBuilder with unique ValueKeys to prevent
         // duplicate key assertions when coexisting with StatefulShellRoute.
         GoRoute(
@@ -162,7 +163,6 @@ GoRouter createRouter() {
           ),
         ),
 
-        // ─── Sub-routes that push on top of the shell ──
         // Each route uses pageBuilder with a unique ValueKey to prevent
         // duplicate page key assertions in the root Navigator (GoRouter
         // can generate colliding keys when StatefulShellRoute and
@@ -278,7 +278,6 @@ GoRouter createRouter() {
           ),
         ),
 
-        // ─── Shell Route: 5-Tab Bottom Navigation ──────
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
             return MainShell(navigationShell: navigationShell);
@@ -350,8 +349,12 @@ Widget wrapWithProviders(Widget child) {
       BlocProvider<ContactsCubit>(
         create: (_) => getIt<ContactsCubit>(),
       ),
-      BlocProvider<BatteryCubit>(
-        create: (_) => getIt<BatteryCubit>()..startMonitoring(),
+      // BatteryCubit.startMonitoring() is called by ServiceBootstrapper
+      // (deferred post-frame). Calling it here as well causes a double-start
+      // with duplicate SMS alerts. Use .value to wire the singleton without
+      // triggering a second monitoring session.
+      BlocProvider<BatteryCubit>.value(
+        value: getIt<BatteryCubit>(),
       ),
       BlocProvider<AlertsCubit>.value(
         value: getIt<AlertsCubit>(),

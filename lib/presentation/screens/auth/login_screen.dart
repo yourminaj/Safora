@@ -43,11 +43,23 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
       if (!mounted) return;
-      context.go('/home');
+
+      // Always reload to get the freshest emailVerified flag from Firebase.
+      await getIt<AuthService>().reloadUser();
+      if (!mounted) return;
+
+      if (getIt<AuthService>().isEmailVerified) {
+        context.go('/home');
+      } else {
+        // User signed up but hasn't verified their email yet.
+        context.go('/verify-email');
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = _friendlyError(e.toString());
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = _friendlyError(e.toString());
+        });
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -257,6 +269,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showResetDialog() {
+    // TextEditingController is created here and disposed in onPopInvoked
+    // of the dialog, guaranteeing disposal regardless of how the dialog closes.
     final resetController = TextEditingController();
     showDialog(
       context: context,
@@ -299,12 +313,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 );
               }
-              resetController.dispose();
+              // Dispose after the dialog is fully closed (not inside the try block).
             },
             child: Text(AppLocalizations.of(context)!.send),
           ),
         ],
       ),
-    );
+    ).then((_) {
+      // Safe disposal: runs after the dialog widget tree is fully torn down.
+      resetController.dispose();
+    });
   }
 }

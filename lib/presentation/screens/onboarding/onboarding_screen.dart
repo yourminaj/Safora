@@ -68,10 +68,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     final settingsBox = getIt<Box>(instanceName: 'app_settings');
     await settingsBox.put('onboarding_completed', true);
-    if (mounted) context.go('/home');
+    // Always route to login after onboarding — auth state determines
+    // whether the user is taken to /home or /verify-email.
+    if (mounted) context.go('/login');
   }
 
-  void _skip() async {
+  Future<void> _skip() async {
     await _completeOnboarding();
   }
 

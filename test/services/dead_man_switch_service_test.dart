@@ -1,131 +1,141 @@
+import 'package:fake_async/fake_async.dart';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:safora/services/dead_man_switch_service.dart';
 
 void main() {
   group('DeadManSwitchService', () {
-    late DeadManSwitchService service;
     late bool triggered;
 
     setUp(() {
       triggered = false;
-      service = DeadManSwitchService(
-        onTrigger: () => triggered = true,
-        checkInInterval: const Duration(seconds: 3),
-        warningBeforeSeconds: 1,
-      );
     });
 
-    tearDown(() {
-      service.dispose();
-    });
+    DeadManSwitchService make({
+      Duration interval = const Duration(seconds: 3),
+      int warningBefore = 1,
+      TimerFactory? createTimer,
+    }) => DeadManSwitchService(
+      onTrigger: () => triggered = true,
+      checkInInterval: interval,
+      warningBeforeSeconds: warningBefore,
+      createTimer: createTimer,
+    );
+
+    tearDownAll(() {});
 
     test('starts inactive', () {
-      expect(service.isActive, isFalse);
-      expect(service.nextDeadline, isNull);
+      final s = make();
+      addTearDown(s.dispose);
+      expect(s.isActive, isFalse);
+      expect(s.nextDeadline, isNull);
     });
 
     test('becomes active after start', () {
-      service.start();
-      expect(service.isActive, isTrue);
-      expect(service.nextDeadline, isNotNull);
+      final s = make();
+      addTearDown(s.dispose);
+      s.start();
+      expect(s.isActive, isTrue);
+      expect(s.nextDeadline, isNotNull);
     });
 
     test('becomes inactive after stop', () {
-      service.start();
-      service.stop();
-      expect(service.isActive, isFalse);
-      expect(service.nextDeadline, isNull);
+      final s = make();
+      addTearDown(s.dispose);
+      s.start();
+      s.stop();
+      expect(s.isActive, isFalse);
+      expect(s.nextDeadline, isNull);
     });
 
-    test('checkIn resets the timer without stopping', () async {
-      service.start();
-      final firstDeadline = service.nextDeadline;
+    test('checkIn resets the timer without stopping', () {
+      fakeAsync((fake) {
+        final s = make(interval: const Duration(seconds: 10), warningBefore: 0);
+        addTearDown(s.dispose);
+        s.start();
+        final firstDeadline = s.nextDeadline;
 
-      // Wait a bit then check in.
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      service.checkIn();
+        fake.elapse(const Duration(seconds: 3));
+        s.checkIn();
 
-      // After checkIn, deadline should be updated.
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-      expect(service.isActive, isTrue);
-      expect(service.nextDeadline, isNotNull);
-      if (firstDeadline != null) {
-        expect(service.nextDeadline!.isAfter(firstDeadline), isTrue);
-      }
+        expect(s.isActive, isTrue);
+        expect(s.nextDeadline, isNotNull);
+        expect(s.nextDeadline!.isAfter(firstDeadline!), isTrue);
+      });
     });
 
     test('remainingTime returns a non-null duration when active', () {
-      service.start();
-      final remaining = service.remainingTime;
+      final s = make();
+      addTearDown(s.dispose);
+      s.start();
+      final remaining = s.remainingTime;
       expect(remaining, isNotNull);
       expect(remaining!.inSeconds, greaterThan(0));
     });
 
     test('remainingTime is null when inactive', () {
-      expect(service.remainingTime, isNull);
+      final s = make();
+      addTearDown(s.dispose);
+      expect(s.remainingTime, isNull);
     });
 
-    test('triggers onTrigger callback after interval expires', () async {
-      service = DeadManSwitchService(
-        onTrigger: () => triggered = true,
-        checkInInterval: const Duration(seconds: 1),
-        warningBeforeSeconds: 0,
-      );
+    test('triggers onTrigger callback after interval expires', () {
+      fakeAsync((fake) {
+        final s = make(interval: const Duration(seconds: 2), warningBefore: 0);
+        addTearDown(s.dispose);
+        s.start();
+        expect(triggered, isFalse);
 
-      service.start();
-      expect(triggered, isFalse);
+        fake.elapse(const Duration(seconds: 2, milliseconds: 100));
 
-      // Wait for the interval to expire.
-      await Future<void>.delayed(const Duration(milliseconds: 1500));
-
-      expect(triggered, isTrue);
-      expect(service.isActive, isFalse);
+        expect(triggered, isTrue);
+        expect(s.isActive, isFalse);
+      });
     });
 
-    test('emits warning before deadline', () async {
-      final warnings = <Duration>[];
-      service.warningStream.listen(warnings.add);
+    test('emits warning before deadline', () {
+      fakeAsync((fake) {
+        final warnings = <Duration>[];
+        final s = make(interval: const Duration(seconds: 5), warningBefore: 2);
+        addTearDown(s.dispose);
+        s.warningStream.listen(warnings.add);
 
-      service.start();
+        s.start();
+        // Warning fires at 5s - 2s = 3s
+        fake.elapse(const Duration(seconds: 3, milliseconds: 100));
 
-      // Wait for the warning to fire (3s interval - 1s warning = 2s delay).
-      await Future<void>.delayed(const Duration(milliseconds: 2500));
-
-      expect(warnings, isNotEmpty);
+        expect(warnings, isNotEmpty);
+      });
     });
 
-    test('stop prevents trigger', () async {
-      service = DeadManSwitchService(
-        onTrigger: () => triggered = true,
-        checkInInterval: const Duration(seconds: 1),
-        warningBeforeSeconds: 0,
-      );
+    test('stop prevents trigger', () {
+      fakeAsync((fake) {
+        final s = make(interval: const Duration(seconds: 2), warningBefore: 0);
+        addTearDown(s.dispose);
+        s.start();
+        s.stop();
 
-      service.start();
-      service.stop();
+        fake.elapse(const Duration(seconds: 3));
 
-      await Future<void>.delayed(const Duration(milliseconds: 1500));
-
-      expect(triggered, isFalse);
+        expect(triggered, isFalse);
+      });
     });
 
-    test('checkIn prevents trigger within interval', () async {
-      service = DeadManSwitchService(
-        onTrigger: () => triggered = true,
-        checkInInterval: const Duration(seconds: 2),
-        warningBeforeSeconds: 0,
-      );
+    test('checkIn prevents trigger within interval', () {
+      fakeAsync((fake) {
+        final s = make(interval: const Duration(seconds: 4), warningBefore: 0);
+        addTearDown(s.dispose);
+        s.start();
 
-      service.start();
+        // Check in halfway through
+        fake.elapse(const Duration(seconds: 2));
+        s.checkIn();
 
-      // Check in halfway through.
-      await Future<void>.delayed(const Duration(seconds: 1));
-      service.checkIn();
+        // Wait past original deadline but not past reset deadline
+        fake.elapse(const Duration(seconds: 3));
 
-      // Wait past original deadline but not past reset deadline.
-      await Future<void>.delayed(const Duration(milliseconds: 1500));
-
-      expect(triggered, isFalse);
+        expect(triggered, isFalse);
+      });
     });
   });
 }

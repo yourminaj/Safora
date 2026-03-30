@@ -35,25 +35,28 @@ class _AlertsScreenState extends State<AlertsScreen> {
     context.read<AlertsCubit>().loadAlerts();
   }
 
-  // ── Native ad slot helpers ───────────────────────────
-  /// Insert a native ad after every 5th real alert.
+  /// Insert a native ad after every 5th real alert (free users only).
   static const _nativeAdInterval = 5;
 
   /// Whether the list index is a native ad slot.
+  /// Always false for premium users — no ad slots injected.
   bool _isNativeAdSlot(int index) {
+    if (AdService.instance.isPremium) return false;
     if (index == 0) return false; // Never first item.
     return (index + 1) % (_nativeAdInterval + 1) == 0;
   }
 
-  /// Total items including native ad slots.
+  /// Total items including native ad slots (slots skipped for Pro users).
   int _itemCountWithNativeAds(int alertCount) {
     if (alertCount == 0) return 0;
+    if (AdService.instance.isPremium) return alertCount;
     final adCount = alertCount ~/ _nativeAdInterval;
     return alertCount + adCount;
   }
 
   /// Convert a list index to the real alert index.
   int _alertIndexFromListIndex(int index) {
+    if (AdService.instance.isPremium) return index;
     final adsBefore = index ~/ (_nativeAdInterval + 1);
     return index - adsBefore;
   }
@@ -113,7 +116,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
     return Column(
       children: [
-        // ─── Filter chips ─────────────────────────────────
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -235,7 +237,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
           ),
         ),
 
-        // ── Preference info banner ────────────────────────
         if (state.preferencesApplied)
           _PreferenceInfoBanner(
             enabledCount:
@@ -245,7 +246,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
             onTap: () => context.push('/alert-preferences'),
           ),
 
-        // ─── Alert count ──────────────────────────────────
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -269,7 +269,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
         const SizedBox(height: 8),
 
-        // ─── Alert list ───────────────────────────────────
         Expanded(
           child: filtered.isEmpty
               ? _buildEmpty(context)
@@ -383,9 +382,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
   //  TRUST CENTER DETAIL SHEET
-  // ═══════════════════════════════════════════════════════════
 
   void _showTrustCenterDetail(BuildContext context, AlertEvent alert) {
     HapticFeedback.lightImpact();
@@ -469,21 +466,18 @@ class _AlertsScreenState extends State<AlertsScreen> {
                     ],
                     const SizedBox(height: 20),
 
-                    // ── Why this alert exists ──
                     _TrustDetailSection(
                       icon: Icons.info_outline_rounded,
                       title: 'Why this alert exists',
                       content: _buildWhyExplanation(alert),
                     ),
 
-                    // ── Source ──
                     _TrustDetailSection(
                       icon: Icons.source_rounded,
                       title: 'Source',
                       content: alert.source ?? 'System-generated',
                     ),
 
-                    // ── Confidence ──
                     _TrustDetailSection(
                       icon: Icons.verified_rounded,
                       title: 'Confidence Score',
@@ -492,7 +486,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
                           : 'Not yet verified',
                     ),
 
-                    // ── Risk Score ──
                     if (alert.riskScore != null)
                       _TrustDetailSection(
                         icon: Icons.speed_rounded,
@@ -501,14 +494,12 @@ class _AlertsScreenState extends State<AlertsScreen> {
                             '${alert.riskScore}/100 — ${_riskLabel(alert.riskScore!)}',
                       ),
 
-                    // ── Timing ──
                     _TrustDetailSection(
                       icon: Icons.access_time_rounded,
                       title: 'Time of last update',
                       content: timeStr,
                     ),
 
-                    // ── Expiry ──
                     if (alert.expiresAt != null)
                       _TrustDetailSection(
                         icon: Icons.timer_off_rounded,
@@ -519,7 +510,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
                                 .format(alert.expiresAt!),
                       ),
 
-                    // ── Action Advice ──
                     if (alert.actionAdvice != null &&
                         alert.actionAdvice!.isNotEmpty) ...[
                       const SizedBox(height: 12),
@@ -555,7 +545,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
                     const SizedBox(height: 20),
 
-                    // ── Report False Alert action ──
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
@@ -610,9 +599,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
     return 'Minimal';
   }
 
-  // ═══════════════════════════════════════════════════════════
   //  REPORT FALSE ALERT SHEET
-  // ═══════════════════════════════════════════════════════════
 
   void _showReportFalseAlert(BuildContext context, AlertEvent alert) {
     HapticFeedback.mediumImpact();
@@ -631,9 +618,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
   }
 }
 
-// ═════════════════════════════════════════════════════════════
 //  PRIVATE WIDGETS
-// ═════════════════════════════════════════════════════════════
 
 /// Section row for Trust Center detail sheet.
 class _TrustDetailSection extends StatelessWidget {

@@ -53,13 +53,11 @@ class MlFeatureExtractor {
     final n = samples.length;
     final dt = 1.0 / samplingRateHz;
 
-    // ── Compute per-sample SMV ──────────────────────────────
     final smvValues = <double>[];
     for (final (ax, ay, az) in samples) {
       smvValues.add(SignalProcessor.computeSmv(ax, ay, az));
     }
 
-    // ── Basic statistics ────────────────────────────────────
     double smvSum = 0, smvMax = -double.infinity, smvMin = double.infinity;
     for (final v in smvValues) {
       smvSum += v;
@@ -75,13 +73,11 @@ class MlFeatureExtractor {
     final smvVariance = varianceSum / n;
     final smvRange = smvMax - smvMin;
 
-    // ── SMA (Signal Magnitude Area) ─────────────────────────
     double sma = 0;
     for (final (ax, ay, az) in samples) {
       sma += (ax.abs() + ay.abs() + az.abs()) * dt;
     }
 
-    // ── Jerk (rate of acceleration change) ──────────────────
     final jerkValues = <double>[];
     for (int i = 1; i < n; i++) {
       final (ax0, ay0, az0) = samples[i - 1];
@@ -98,14 +94,12 @@ class MlFeatureExtractor {
     }
     jerkMean = jerkValues.isEmpty ? 0 : jerkMean / jerkValues.length;
 
-    // ── Freefall ratio ──────────────────────────────────────
     int freefallCount = 0;
     for (final v in smvValues) {
       if (v < _freefallThreshold) freefallCount++;
     }
     final freefallRatio = freefallCount / n;
 
-    // ── Stillness ratio (using sliding sub-windows of 10 samples) ─
     int stillnessCount = 0;
     const subWindowSize = 10;
     for (int i = 0; i <= n - subWindowSize; i++) {
@@ -124,7 +118,6 @@ class MlFeatureExtractor {
     final totalSubWindows = max(1, n - subWindowSize + 1);
     final stillnessRatio = stillnessCount / totalSubWindows;
 
-    // ── Dominant axis ratio ─────────────────────────────────
     double energyX = 0, energyY = 0, energyZ = 0;
     for (final (ax, ay, az) in samples) {
       energyX += ax * ax;
@@ -135,7 +128,6 @@ class MlFeatureExtractor {
     final dominantAxisRatio =
         totalEnergy > 0 ? max(energyX, max(energyY, energyZ)) / totalEnergy : 0.33;
 
-    // ── Zero-crossing rate ──────────────────────────────────
     int zeroCrossings = 0;
     for (int i = 1; i < smvValues.length; i++) {
       final prev = smvValues[i - 1] - smvMean;
@@ -146,7 +138,6 @@ class MlFeatureExtractor {
     }
     final zeroCrossingRate = zeroCrossings / max(1, n - 1);
 
-    // ── Normalize & return feature vector ───────────────────
     return [
       (smvMean / (10 * _gravity)).clamp(0.0, 1.0),      // 0: SMV mean
       (smvMax / (10 * _gravity)).clamp(0.0, 1.0),        // 1: SMV max

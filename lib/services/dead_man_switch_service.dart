@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 
+/// Function signature for creating a one-shot [Timer].
+/// Injected via constructor to allow [fakeAsync] control in tests.
+typedef TimerFactory = Timer Function(Duration duration, void Function() callback);
+
 /// Dead Man's Switch — periodic check-in timer.
 ///
 /// If the user doesn't confirm they're safe within the [checkInInterval],
@@ -22,7 +26,8 @@ class DeadManSwitchService {
     required this.onTrigger,
     this.checkInInterval = const Duration(minutes: 30),
     this.warningBeforeSeconds = 60,
-  });
+    TimerFactory? createTimer,
+  }) : _createTimer = createTimer ?? Timer.new;
 
   /// Callback fired when the user fails to check in.
   final VoidCallback onTrigger;
@@ -32,6 +37,8 @@ class DeadManSwitchService {
 
   /// Seconds before deadline to fire a warning.
   final int warningBeforeSeconds;
+
+  final TimerFactory _createTimer;
 
   Timer? _mainTimer;
   Timer? _warningTimer;
@@ -98,14 +105,11 @@ class DeadManSwitchService {
 
     _nextDeadline = DateTime.now().add(checkInInterval);
 
-    // Set main timer — fires the SOS trigger.
-    _mainTimer = Timer(checkInInterval, _onDeadlineReached);
+    _mainTimer = _createTimer(checkInInterval, _onDeadlineReached);
 
-    // Set warning timer — fires warningBeforeSeconds before deadline.
-    final warningDelay = checkInInterval -
-        Duration(seconds: warningBeforeSeconds);
+    final warningDelay = checkInInterval - Duration(seconds: warningBeforeSeconds);
     if (warningDelay > Duration.zero) {
-      _warningTimer = Timer(warningDelay, _onWarning);
+      _warningTimer = _createTimer(warningDelay, _onWarning);
     }
   }
 

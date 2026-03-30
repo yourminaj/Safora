@@ -50,7 +50,6 @@ class SosEventService {
           ? 'https://maps.google.com/?q=$latitude,$longitude'
           : null;
 
-      // Build the SOS event document.
       final sosEvent = <String, dynamic>{
         'triggeredAt': FieldValue.serverTimestamp(),
         'triggerType': triggerType,

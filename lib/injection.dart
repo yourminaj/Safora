@@ -12,6 +12,7 @@ import 'core/services/geofence_service.dart';
 import 'core/services/location_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/sos_contact_alert_listener.dart';
+import 'core/services/sos_event_service.dart';
 import 'core/services/shake_detection_service.dart';
 import 'core/services/snatch_detection_service.dart';
 import 'core/services/sms_service.dart';
@@ -72,7 +73,6 @@ Future<Box> _openBoxSafe(String name) async {
 ///
 /// Call this in main() after Hive is initialized.
 Future<void> configureDependencies() async {
-  // ── Core Services ──────────────────────────────────────
   getIt.registerLazySingleton<AuthService>(() => AuthService());
   getIt.registerLazySingleton<AudioService>(() => AudioService());
   getIt.registerLazySingleton<LocationService>(() => LocationService());
@@ -108,11 +108,9 @@ Future<void> configureDependencies() async {
     () => ContextAlertService(),
     dispose: (s) => s.dispose(),
   );
-  // ── Subscription / Premium ─────────────────────────────
   getIt.registerSingleton<PremiumManager>(PremiumManager.instance);
   getIt.registerSingleton<SubscriptionService>(SubscriptionService.instance);
 
-  // ── Data Sources (with corruption recovery) ────────────
   final contactsBox = await _openBoxSafe(ContactsLocalDataSource.boxName);
   getIt.registerLazySingleton<ContactsLocalDataSource>(
     () => ContactsLocalDataSource(contactsBox, getIt<PremiumManager>()),
@@ -176,7 +174,6 @@ Future<void> configureDependencies() async {
     dispose: (s) => s.dispose(),
   );
 
-  // ── ML Detection Services ───────────────────────────────────────
   getIt.registerLazySingleton<VoiceDistressService>(
     () => VoiceDistressService(),
     dispose: (s) => s.dispose(),
@@ -223,7 +220,6 @@ Future<void> configureDependencies() async {
     () => ContactsCloudSync(authService: getIt<AuthService>()),
   );
 
-  // ── Repositories ───────────────────────────────────────
   getIt.registerLazySingleton<ContactsRepository>(
     () => ContactsRepositoryImpl(getIt<ContactsLocalDataSource>()),
   );
@@ -242,16 +238,19 @@ Future<void> configureDependencies() async {
     () => RemindersRepositoryImpl(getIt<RemindersLocalDataSource>()),
   );
 
-  // ── Use Cases ──────────────────────────────────────────
+  getIt.registerLazySingleton<SosEventService>(
+    () => SosEventService(),
+  );
+
   getIt.registerLazySingleton<TriggerSosUseCase>(
     () => TriggerSosUseCase(
       smsService: getIt<SmsService>(),
       locationService: getIt<LocationService>(),
       notificationService: getIt<NotificationService>(),
+      sosEventService: getIt<SosEventService>(),
     ),
   );
 
-  // ── BLoCs / Cubits ─────────────────────────────────────
   getIt.registerLazySingleton<ContactsCubit>(
     () => ContactsCubit(
       getIt<ContactsRepository>(),
@@ -268,6 +267,14 @@ Future<void> configureDependencies() async {
       connectivityService: getIt<ConnectivityService>(),
     ),
   );
+  // AlertsCubit registered BEFORE BatteryCubit (BatteryCubit depends on it).
+  getIt.registerLazySingleton<AlertsCubit>(
+    () => AlertsCubit(
+      alertsRepository: getIt<AlertsRepository>(),
+      notificationService: getIt<NotificationService>(),
+      alertPreferences: getIt<AlertPreferences>(),
+    ),
+  );
   getIt.registerLazySingleton<BatteryCubit>(
     () => BatteryCubit(
       batteryService: getIt<BatteryService>(),
@@ -275,13 +282,6 @@ Future<void> configureDependencies() async {
       smsService: getIt<SmsService>(),
       contactsRepository: getIt<ContactsRepository>(),
       alertsCubit: getIt<AlertsCubit>(),
-    ),
-  );
-  getIt.registerLazySingleton<AlertsCubit>(
-    () => AlertsCubit(
-      alertsRepository: getIt<AlertsRepository>(),
-      notificationService: getIt<NotificationService>(),
-      alertPreferences: getIt<AlertPreferences>(),
     ),
   );
   getIt.registerLazySingleton<ProfileCubit>(

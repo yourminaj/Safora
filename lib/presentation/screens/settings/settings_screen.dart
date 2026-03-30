@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:lottie/lottie.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../app.dart';
@@ -23,6 +24,9 @@ import '../../../core/theme/typography.dart';
 import '../../../detection/ml/crash_fall_detection_service.dart';
 import '../../../detection/ml/crash_fall_detection_engine.dart';
 import '../../../core/services/weather_feed_service.dart';
+import '../../../core/services/voice_distress_service.dart';
+import '../../../core/services/anomaly_movement_service.dart';
+import '../../../core/services/road_condition_service.dart';
 import '../../../injection.dart';
 import '../../../services/dead_man_switch_service.dart';
 import '../../blocs/contacts/contacts_cubit.dart';
@@ -58,6 +62,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _contextAlertEnabled = false;
   bool _dmsEnabled = false;
   int _dmsIntervalMinutes = 30;
+  bool _voiceDistressEnabled = false;
+  bool _anomalyMovementEnabled = false;
+  bool _roadConditionEnabled = false;
   late final ShakeDetectionService _shakeService;
   late final AppLockService _lockService;
   late final Box _appSettings;
@@ -87,6 +94,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _appSettings.get('dead_man_switch_enabled', defaultValue: false) as bool;
     _dmsIntervalMinutes =
         _appSettings.get('dms_interval_minutes', defaultValue: 30) as int;
+    _voiceDistressEnabled =
+        _appSettings.get('voice_distress_enabled', defaultValue: false) as bool;
+    _anomalyMovementEnabled =
+        _appSettings.get('anomaly_movement_enabled', defaultValue: false) as bool;
+    _roadConditionEnabled =
+        _appSettings.get('road_condition_enabled', defaultValue: false) as bool;
     // Load version from pubspec (single source of truth).
     PackageInfo.fromPlatform().then((info) {
       if (mounted) {
@@ -636,7 +649,156 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  /// Voice Distress Detection toggle — 16kHz PCM → Mel spectrogram → TFLite.
+  void _toggleVoiceDistress(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(
+          ProFeature.voiceDistressDetection,
+        )) {
+      _showUpgradeDialog();
+      return;
+    }
+    setState(() => _voiceDistressEnabled = enabled);
+    _appSettings.put('voice_distress_enabled', enabled);
+    final service = getIt<VoiceDistressService>();
+    if (enabled) {
+      service.start().then((_) {
+        service.onDistressDetected.listen((event) {
+          final alertEvent = AlertEvent(
+            id: 'voice_distress_${DateTime.now().millisecondsSinceEpoch}',
+            type: event.alertType,
+            title: 'Voice Distress Detected',
+            description:
+                'Distress vocalization detected '
+                '(confidence: ${(event.confidence * 100).toStringAsFixed(0)}%). '
+                'SOS countdown started.',
+            latitude: _lastLat,
+            longitude: _lastLon,
+            timestamp: event.detectedAt,
+            source: 'On-Device Microphone',
+            magnitude: event.confidence,
+          );
+          if (mounted) {
+            context.read<AlertsCubit>().addLocalAlert(alertEvent);
+            context.read<SosCubit>().startCountdown();
+          }
+        });
+      });
+    } else {
+      service.stop();
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          enabled
+              ? 'Voice Distress Detection enabled'
+              : 'Voice Distress Detection disabled',
+        ),
+      ),
+    );
+  }
+
+  /// Anomaly Movement Detection toggle — 24-feature accel window → TFLite.
+  void _toggleAnomalyMovement(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(
+          ProFeature.anomalyMovementDetection,
+        )) {
+      _showUpgradeDialog();
+      return;
+    }
+    setState(() => _anomalyMovementEnabled = enabled);
+    _appSettings.put('anomaly_movement_enabled', enabled);
+    final service = getIt<AnomalyMovementService>();
+    if (enabled) {
+      service.start().then((_) {
+        service.onAnomalyDetected.listen((event) {
+          final alertEvent = AlertEvent(
+            id: 'anomaly_mov_${DateTime.now().millisecondsSinceEpoch}',
+            type: event.alertType,
+            title: 'Suspicious Movement: ${event.result.predictedClass.name}',
+            description:
+                'Anomalous movement detected '
+                '(${event.result.predictedClass.name}, '
+                'confidence: ${(event.result.confidence * 100).toStringAsFixed(0)}%). '
+                'SOS countdown started.',
+            latitude: _lastLat,
+            longitude: _lastLon,
+            timestamp: event.detectedAt,
+            source: 'On-Device Accelerometer',
+            magnitude: event.result.confidence,
+          );
+          if (mounted) {
+            context.read<AlertsCubit>().addLocalAlert(alertEvent);
+            context.read<SosCubit>().startCountdown();
+          }
+        });
+      });
+    } else {
+      service.stop();
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          enabled
+              ? 'Anomaly Movement Detection enabled'
+              : 'Anomaly Movement Detection disabled',
+        ),
+      ),
+    );
+  }
+
+  /// Road Condition Detection toggle — 8-feature accel+GPS vector → TFLite.
+  void _toggleRoadCondition(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(
+          ProFeature.roadConditionDetection,
+        )) {
+      _showUpgradeDialog();
+      return;
+    }
+    setState(() => _roadConditionEnabled = enabled);
+    _appSettings.put('road_condition_enabled', enabled);
+    final service = getIt<RoadConditionService>();
+    if (enabled) {
+      service.start().then((_) {
+        service.onHazardDetected.listen((event) {
+          final alertEvent = AlertEvent(
+            id: 'road_${event.result.condition.name}_${DateTime.now().millisecondsSinceEpoch}',
+            type: event.alertType,
+            title: 'Road Hazard: ${event.result.condition.name}',
+            description:
+                'Road hazard detected at '
+                '${event.result.speedKmh.toStringAsFixed(0)} km/h '
+                '(${event.result.condition.name}, '
+                'confidence: ${(event.result.confidence * 100).toStringAsFixed(0)}%).',
+            latitude: _lastLat,
+            longitude: _lastLon,
+            timestamp: event.detectedAt,
+            source: 'On-Device Accelerometer + GPS',
+            magnitude: event.result.confidence,
+          );
+          if (mounted) {
+            context.read<AlertsCubit>().addLocalAlert(alertEvent);
+          }
+        });
+      });
+    } else {
+      service.stop();
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          enabled
+              ? 'Road Condition Detection enabled'
+              : 'Road Condition Detection disabled',
+        ),
+      ),
+    );
+  }
+
   /// Map ContextAlertType → AlertType via canonical single-source method.
+
   AlertType _mapContextAlertType(ContextAlertType type) {
     return ContextAlertService.mapToAlertType(type);
   }
@@ -1106,7 +1268,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
-              // ─── DMS Interval Picker (only when enabled) ───
               if (_dmsEnabled)
                 Padding(
                   padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
@@ -1168,12 +1329,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               _SettingsTile(
+                icon: Icons.record_voice_over_rounded, // fallback only
+                iconColor: const Color(0xFFE53935), // brand Emergency Red
+                lottiePath: 'assets/lottie/voice_distress.json',
+                title: 'Voice Distress Detection',
+                subtitle: 'ML detects screams & distress calls (microphone)',
+                onTap: () => _toggleVoiceDistress(!_voiceDistressEnabled),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!getIt<PremiumManager>().isPremium) _proBadge(),
+                    Switch(
+                      value: _voiceDistressEnabled,
+                      onChanged: _toggleVoiceDistress,
+                      activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                    ),
+                  ],
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.directions_run_rounded, // fallback only
+                iconColor: const Color(0xFF9C27B0), // brand purple
+                lottiePath: 'assets/lottie/anomaly_movement.json',
+                title: 'Anomaly Movement Detection',
+                subtitle: 'ML detects struggling, dragging & falls (accelerometer)',
+                onTap: () => _toggleAnomalyMovement(!_anomalyMovementEnabled),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!getIt<PremiumManager>().isPremium) _proBadge(),
+                    Switch(
+                      value: _anomalyMovementEnabled,
+                      onChanged: _toggleAnomalyMovement,
+                      activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                    ),
+                  ],
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.construction_rounded, // fallback only
+                iconColor: const Color(0xFFFF6F00), // brand Urgent Amber
+                lottiePath: 'assets/lottie/road_condition.json',
+                title: 'Road Condition Detection',
+                subtitle: 'ML detects potholes, rough roads & hard braking',
+                onTap: () => _toggleRoadCondition(!_roadConditionEnabled),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!getIt<PremiumManager>().isPremium) _proBadge(),
+                    Switch(
+                      value: _roadConditionEnabled,
+                      onChanged: _toggleRoadCondition,
+                      activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+                    ),
+                  ],
+                ),
+              ),
+              _SettingsTile(
                 icon: Icons.tune_rounded,
                 iconColor: const Color(0xFF7E57C2),
                 title: 'Alert Preferences',
                 subtitle: 'Choose which alerts to receive',
                 onTap: () => context.push(AppRoutes.alertPreferences),
               ),
+
 
               _SettingsTile(
                 icon: Icons.volume_up_rounded,
@@ -1307,7 +1526,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   );
                 },
               ),
-              // ── Manage Subscription (Pro users) ──────
               if (getIt<PremiumManager>().isPremium)
                 _SettingsTile(
                   icon: Icons.card_membership_rounded,
@@ -1321,7 +1539,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             ],
           ),
-          // ── Account Actions ────────────────────────────
           const Divider(height: 32),
           if (getIt<AuthService>().isSignedIn)
             _SettingsTile(
@@ -1361,7 +1578,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: l.signInSubtitle,
               onTap: () => context.go('/login'),
             ),
-          // ── Version Footer ──────────────────────────────
           const SizedBox(height: 24),
           Center(
             child: Column(
@@ -1462,6 +1678,7 @@ class _SettingsTile extends StatelessWidget {
     required this.onTap,
     this.iconColor,
     this.trailing,
+    this.lottiePath,
   });
 
   final IconData icon;
@@ -1471,17 +1688,33 @@ class _SettingsTile extends StatelessWidget {
   final VoidCallback onTap;
   final Widget? trailing;
 
+  /// When set, renders a looping Lottie animation instead of the [Icon].
+  /// Path is relative to the asset bundle, e.g. `assets/lottie/voice_distress.json`.
+  final String? lottiePath;
+
   @override
   Widget build(BuildContext context) {
     final color = iconColor ?? AppColors.primary;
+    final Widget leadingChild = lottiePath != null
+        ? Lottie.asset(
+            lottiePath!,
+            width: 34,
+            height: 34,
+            fit: BoxFit.contain,
+            repeat: true,
+          )
+        : Icon(icon, color: color, size: 22);
+
     return ListTile(
       leading: Container(
-        padding: const EdgeInsets.all(8),
+        width: 44,
+        height: 44,
+        padding: EdgeInsets.all(lottiePath != null ? 4 : 8),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: color, size: 22),
+        child: leadingChild,
       ),
       title: Text(title, style: AppTypography.titleSmall),
       subtitle: Text(

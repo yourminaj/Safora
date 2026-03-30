@@ -60,6 +60,10 @@ void main() {
     when(() => mockBox.get('context_alert_enabled', defaultValue: false)).thenReturn(false);
     when(() => mockBox.get('dead_man_switch_enabled', defaultValue: false)).thenReturn(false);
     when(() => mockBox.get('dms_interval_minutes', defaultValue: 30)).thenReturn(30);
+    // ML detection service toggles (added in last session).
+    when(() => mockBox.get('voice_distress_enabled', defaultValue: false)).thenReturn(false);
+    when(() => mockBox.get('anomaly_movement_enabled', defaultValue: false)).thenReturn(false);
+    when(() => mockBox.get('road_condition_enabled', defaultValue: false)).thenReturn(false);
     when(() => mockAuth.isSignedIn).thenReturn(false);
     when(() => mockAuth.currentUser).thenReturn(null);
     when(() => mockContacts.getAll()).thenReturn([]);
@@ -101,98 +105,115 @@ void main() {
   group('SettingsScreen Widget Tests', () {
     testWidgets('renders settings screen', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
       expect(find.byType(SettingsScreen), findsOneWidget);
     });
 
     testWidgets('displays app bar with Settings title', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
       expect(find.byType(AppBar), findsOneWidget);
     });
 
     testWidgets('has a ListView for scrolling', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
       expect(find.byType(ListView), findsOneWidget);
     });
 
     testWidgets('shows Profile tile', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
       // The Account section's first tile uses workspace_premium_rounded.
       expect(find.byIcon(Icons.workspace_premium_rounded), findsWidgets);
     });
 
     testWidgets('shows Emergency Contacts tile', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
       expect(find.byIcon(Icons.contacts_rounded), findsOneWidget);
     });
 
     testWidgets('shows Shake-to-SOS toggle', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
       expect(find.byIcon(Icons.vibration_rounded), findsOneWidget);
     });
 
     testWidgets('shows App Lock toggle', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
       expect(find.byIcon(Icons.lock_rounded), findsOneWidget);
     });
 
     testWidgets('has Switch widgets for toggles', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
       // Shake-to-SOS and App Lock have Switch toggles
       expect(find.byType(Switch), findsAtLeast(2));
     });
 
     testWidgets('shows language settings tile', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
-      // Scroll down to reveal General section
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
+      // ListView lazy-builds; scrollUntilVisible triggers item creation.
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.language_rounded),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.byIcon(Icons.language_rounded), findsOneWidget);
     });
 
     testWidgets('shows dark mode tile', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.dark_mode_rounded),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.byIcon(Icons.dark_mode_rounded), findsOneWidget);
     });
 
     testWidgets('shows about tile', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
-      // There is no About section. Verify language tile visible after short scroll.
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
+      // No About section; verify General section with language tile.
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.language_rounded),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.byIcon(Icons.language_rounded), findsOneWidget);
     });
 
     testWidgets('shows Sign In icon when user is not signed in', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
-      // Scroll to bottom to reveal Sign In tile
-      await tester.drag(find.byType(ListView), const Offset(0, -800));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
+      // login_rounded is near the bottom; scrollUntilVisible lazily builds it.
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.login_rounded),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.byIcon(Icons.login_rounded), findsOneWidget);
     });
 
     testWidgets('shows premium tile', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
       expect(find.byIcon(Icons.workspace_premium_rounded), findsOneWidget);
     });
 
     testWidgets('alert sounds tile is present', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.volume_up_rounded),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.byIcon(Icons.volume_up_rounded), findsOneWidget);
     });
   });

@@ -54,18 +54,14 @@ class RoadConditionService {
   final List<RoadSample> _window = [];
   Timer? _inferenceTimer;
 
-  // ──────────────────────────────────────────────────────────────────
   // External Speed Feed
-  // ──────────────────────────────────────────────────────────────────
 
   /// Called by SpeedAlertService on each GPS velocity update.
   void updateSpeed(double speedKmh) {
     _currentSpeedKmh = speedKmh;
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Lifecycle
-  // ──────────────────────────────────────────────────────────────────
 
   Future<void> start() async {
     if (_running) return;
@@ -92,18 +88,14 @@ class RoadConditionService {
     AppLogger.info('[RoadCondition] Monitoring stopped');
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Data Collection
-  // ──────────────────────────────────────────────────────────────────
 
   void _onAccelEvent(AccelerometerEvent event) {
     _window.add(RoadSample(x: event.x, y: event.y, z: event.z, timestamp: DateTime.now()));
     if (_window.length > _windowSize) _window.removeAt(0);
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Inference
-  // ──────────────────────────────────────────────────────────────────
 
   void _runInference() {
     if (_window.length < 20) return;
@@ -126,9 +118,7 @@ class RoadConditionService {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────
   // Feature Extraction (8-element vector)
-  // ──────────────────────────────────────────────────────────────────
 
   List<double> _extractFeatures(List<RoadSample> window, double speedKmh) {
     final zValues = window.map((s) => s.z).toList();
@@ -139,13 +129,17 @@ class RoadConditionService {
     final zMean = _mean(zValues);
     final zMax = zValues.reduce((a, b) => a > b ? a : b);
     double zVar = 0;
-    for (final z in zValues) zVar += (z - zMean) * (z - zMean);
+    for (final z in zValues) {
+      zVar += (z - zMean) * (z - zMean);
+    }
     zVar /= zValues.length;
 
     // SMV variance
     final smvMean = _mean(smvValues);
     double smvVar = 0;
-    for (final v in smvValues) smvVar += (v - smvMean) * (v - smvMean);
+    for (final v in smvValues) {
+      smvVar += (v - smvMean) * (v - smvMean);
+    }
     smvVar /= smvValues.length;
 
     // Jerk mean (rate of acceleration change)
@@ -193,13 +187,14 @@ class RoadConditionService {
     ];
   }
 
-  // ── Math utilities ────────────────────────────────────────────────
   double _mean(List<double> v) => v.isEmpty ? 0 : v.reduce((a, b) => a + b) / v.length;
   double _smv(double x, double y, double z) {
     final s = x*x + y*y + z*z;
     if (s <= 0) return 0;
     double g = s / 2;
-    for (int i = 0; i < 12; i++) g = (g + s / g) / 2;
+    for (int i = 0; i < 12; i++) {
+      g = (g + s / g) / 2;
+    }
     return g;
   }
 

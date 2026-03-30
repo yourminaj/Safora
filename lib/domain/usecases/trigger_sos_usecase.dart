@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../core/services/app_logger.dart';
 import '../../core/services/location_service.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/services/sos_event_service.dart';
@@ -65,14 +66,23 @@ class TriggerSosUseCase {
     //    who also have Safora installed.  SMS delivery is already done; a
     //    failure here MUST NOT affect the SosResult returned to SosCubit.
     if (_sosEventService != null) {
-      unawaited(
-        _sosEventService.recordSosEvent(
-          triggerType: triggerType,
-          latitude: position?.latitude,
-          longitude: position?.longitude,
-          contacts: contacts,
-        ),
-      );
+      // Use a try-catch wrapper so that both synchronous errors (e.g. service
+      // constructor failures) and async rejections are swallowed here.
+      // SMS delivery is already complete; this channel is non-fatal.
+      try {
+        unawaited(
+          _sosEventService.recordSosEvent(
+            triggerType: triggerType,
+            latitude: position?.latitude,
+            longitude: position?.longitude,
+            contacts: contacts,
+          ).catchError((Object e) {
+            AppLogger.warning('[SOS] FCM event write failed (non-fatal): $e');
+          }),
+        );
+      } catch (e) {
+        AppLogger.warning('[SOS] FCM event service error (non-fatal): $e');
+      }
     }
 
     return SosResult(

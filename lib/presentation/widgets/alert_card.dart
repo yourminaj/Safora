@@ -69,7 +69,6 @@ class AlertCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Main content row ──
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -138,7 +137,6 @@ class AlertCard extends StatelessWidget {
 
                         const SizedBox(height: 6),
 
-                        // ── Trust Center: source + confidence + time ──
                         Wrap(
                           spacing: 8,
                           runSpacing: 4,
@@ -190,7 +188,6 @@ class AlertCard extends StatelessWidget {
                 ],
               ),
 
-              // ── Action Advice banner (if available) ──
               if (alert.actionAdvice != null &&
                   alert.actionAdvice!.isNotEmpty) ...[
                 const SizedBox(height: 8),

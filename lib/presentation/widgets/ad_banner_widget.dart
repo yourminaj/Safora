@@ -1,12 +1,14 @@
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../core/services/ad_service.dart';
 import '../../core/services/app_logger.dart';
 
 /// Reusable adaptive banner ad widget.
 ///
 /// Themed to match Safora's design — shows a subtle container while loading
 /// and handles errors gracefully (collapses to zero height on failure).
+/// Completely skipped for Pro users (no network request is ever made).
 ///
 /// Usage:
 /// ```dart
@@ -28,16 +30,17 @@ class _AdBannerState extends State<AdBanner> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_bannerAd == null) _loadAd();
+    // Never load ads for premium users — no requests made, no UI shown.
+    if (_bannerAd == null && !AdService.instance.isPremium) {
+      _loadAd();
+    }
   }
 
   void _loadAd() {
     const adSize = AdSize.banner;
 
     _bannerAd = BannerAd(
-      adUnitId: kDebugMode
-          ? 'ca-app-pub-3940256099942544/6300978111' // Test banner ID
-          : widget.adUnitId,
+      adUnitId: widget.adUnitId,
       size: adSize,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -63,6 +66,8 @@ class _AdBannerState extends State<AdBanner> {
 
   @override
   Widget build(BuildContext context) {
+    // Pro users: collapse to zero height — no ad, no space.
+    if (AdService.instance.isPremium) return const SizedBox.shrink();
     if (!_isLoaded || _bannerAd == null) return const SizedBox.shrink();
 
     return Container(

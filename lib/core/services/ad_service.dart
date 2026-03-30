@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'app_logger.dart';
 
@@ -30,7 +30,6 @@ class AdService {
 
   InterstitialAd? _interstitialAd;
 
-  // ── Ad Unit IDs ──────────────────────────────────────────
   static const _bannerAlerts = 'ca-app-pub-3413399953381965/9006242267';
   static const _bannerSettings = 'ca-app-pub-3413399953381965/5258568943';
   static const _bannerContacts = 'ca-app-pub-3413399953381965/3945487274';
@@ -64,13 +63,9 @@ class AdService {
   /// Set emergency status (blocks interstitials during SOS).
   void setEmergencyActive(bool active) => _emergencyActive = active;
 
-  // ── Interstitial ─────────────────────────────────────────
-
   void _loadInterstitial() {
     InterstitialAd.load(
-      adUnitId: kDebugMode
-          ? 'ca-app-pub-3940256099942544/1033173712' // Test ID
-          : _interstitialUnit,
+      adUnitId: _interstitialUnit,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {

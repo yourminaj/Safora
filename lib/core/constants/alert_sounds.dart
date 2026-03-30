@@ -20,15 +20,12 @@ abstract final class AlertSounds {
     };
   }
 
-  // ── Available sounds (existing assets) ──────────────────
-
   /// SOS panic button siren — uses siren.mp3.
   static const String sirenSos = '$_base/siren.mp3';
 
   /// General warning tone — uses siren.mp3 (lower urgency).
   static const String generalWarning = '$_base/siren.mp3';
 
-  // ── Fallback sounds (mapped to existing assets) ─────────
   // Replace these paths when specialized sound files are added.
 
   /// Crash detection alarm.
