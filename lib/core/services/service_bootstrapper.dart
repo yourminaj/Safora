@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
 import '../../core/constants/alert_types.dart';
 import '../../data/models/alert_event.dart';
+import '../../data/models/alert_preferences.dart';
 import '../../detection/ml/crash_fall_detection_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/context_alert_service.dart';
@@ -15,6 +16,7 @@ import '../services/weather_feed_service.dart';
 import '../services/app_logger.dart';
 import '../services/sos_foreground_service.dart';
 import '../../services/dead_man_switch_service.dart';
+import '../../services/risk_score_engine.dart';
 import '../../core/services/voice_distress_service.dart';
 import '../../core/services/anomaly_movement_service.dart';
 import '../../core/services/road_condition_service.dart';
@@ -112,7 +114,13 @@ class ServiceBootstrapper {
           if (detectionAlert.alertType == AlertType.carAccident ||
               detectionAlert.alertType == AlertType.motorcycleCrash ||
               detectionAlert.alertType == AlertType.pedestrianHit) {
-            sl<SosCubit>().startCountdown();
+            final prefs = sl<AlertPreferences>();
+            if (prefs.shouldReceive(detectionAlert.alertType)) {
+              final engine = const RiskScoreEngine();
+              if (engine.computeScore(alertEvent) >= 80) {
+                sl<SosCubit>().startCountdown();
+              }
+            }
           }
         });
         AppLogger.info('[ServiceBootstrapper] CrashFallDetection re-hydrated');
@@ -154,7 +162,6 @@ class ServiceBootstrapper {
       try {
         sl<SnatchDetectionService>().start(
           onSnatchDetected: (peakG) {
-            sl<SosCubit>().startCountdown();
             final alertEvent = AlertEvent(
               id: 'snatch_${DateTime.now().millisecondsSinceEpoch}',
               type: AlertType.phoneSnatching,
@@ -170,6 +177,14 @@ class ServiceBootstrapper {
               magnitude: peakG,
             );
             sl<AlertsCubit>().addLocalAlert(alertEvent);
+
+            final prefs = sl<AlertPreferences>();
+            if (prefs.shouldReceive(alertEvent.type)) {
+              final engine = const RiskScoreEngine();
+              if (engine.computeScore(alertEvent) >= 80) {
+                sl<SosCubit>().startCountdown();
+              }
+            }
           },
         );
         AppLogger.info('[ServiceBootstrapper] SnatchDetection re-hydrated');
@@ -293,7 +308,14 @@ class ServiceBootstrapper {
             magnitude: event.confidence,
           );
           sl<AlertsCubit>().addLocalAlert(alertEvent);
-          sl<SosCubit>().startCountdown();
+
+          final prefs = sl<AlertPreferences>();
+          if (prefs.shouldReceive(alertEvent.type)) {
+            final engine = const RiskScoreEngine();
+            if (engine.computeScore(alertEvent) >= 80) {
+              sl<SosCubit>().startCountdown();
+            }
+          }
         });
         AppLogger.info('[ServiceBootstrapper] VoiceDistress re-hydrated');
       } catch (e) {
@@ -323,7 +345,14 @@ class ServiceBootstrapper {
             magnitude: event.result.confidence,
           );
           sl<AlertsCubit>().addLocalAlert(alertEvent);
-          sl<SosCubit>().startCountdown();
+
+          final prefs = sl<AlertPreferences>();
+          if (prefs.shouldReceive(alertEvent.type)) {
+            final engine = const RiskScoreEngine();
+            if (engine.computeScore(alertEvent) >= 80) {
+              sl<SosCubit>().startCountdown();
+            }
+          }
         });
         AppLogger.info('[ServiceBootstrapper] AnomalyMovement re-hydrated');
       } catch (e) {

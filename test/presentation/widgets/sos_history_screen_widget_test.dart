@@ -8,6 +8,9 @@ import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/widget_test_helpers.dart';
+import 'package:safora/core/services/premium_manager.dart';
+
+class MockPremiumManager extends Mock implements PremiumManager {}
 
 class _FakeBox extends Fake implements Box {
   final List<Map<String, dynamic>> _items = [];
@@ -38,13 +41,20 @@ class _FakeBox extends Fake implements Box {
 void main() {
   late _FakeBox fakeBox;
   late SosHistoryDatasource datasource;
+  late MockPremiumManager premiumManager;
 
   setUp(() {
     fakeBox = _FakeBox();
     datasource = SosHistoryDatasource(fakeBox);
+    premiumManager = MockPremiumManager();
+    when(() => premiumManager.historyRetentionDays).thenReturn(30);
+    
     final getIt = GetIt.instance;
     if (!getIt.isRegistered<SosHistoryDatasource>()) {
       getIt.registerSingleton<SosHistoryDatasource>(datasource);
+    }
+    if (!getIt.isRegistered<PremiumManager>()) {
+      getIt.registerSingleton<PremiumManager>(premiumManager);
     }
   });
 
@@ -52,6 +62,9 @@ void main() {
     final getIt = GetIt.instance;
     if (getIt.isRegistered<SosHistoryDatasource>()) {
       getIt.unregister<SosHistoryDatasource>();
+    }
+    if (getIt.isRegistered<PremiumManager>()) {
+      getIt.unregister<PremiumManager>();
     }
   });
 

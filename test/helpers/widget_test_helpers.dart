@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/constants/alert_types.dart';
+import 'package:safora/data/models/alert_event.dart';
 import 'package:safora/core/services/auth_service.dart';
 import 'package:safora/core/services/audio_service.dart';
 import 'package:safora/core/services/location_service.dart';
@@ -12,6 +13,7 @@ import 'package:safora/core/services/notification_service.dart';
 import 'package:safora/core/services/premium_manager.dart';
 import 'package:safora/data/datasources/contacts_cloud_sync.dart';
 import 'package:safora/data/datasources/sos_history_datasource.dart';
+import 'package:safora/core/services/sms_service.dart';
 import 'package:safora/data/models/alert_preferences.dart';
 import 'package:safora/data/models/sos_history_entry.dart';
 import 'package:safora/data/repositories/alerts_repository.dart';
@@ -20,6 +22,7 @@ import 'package:safora/data/repositories/profile_repository.dart';
 import 'package:safora/data/repositories/reminders_repository.dart';
 import 'package:safora/domain/usecases/trigger_sos_usecase.dart';
 import 'package:safora/services/dead_man_switch_service.dart';
+import 'package:safora/services/risk_score_engine.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import 'package:safora/presentation/blocs/alerts/alerts_cubit.dart';
 import 'package:safora/presentation/blocs/contacts/contacts_cubit.dart';
@@ -52,6 +55,8 @@ class MockSosHistoryDatasource extends Mock implements SosHistoryDatasource {}
 class MockLocationService extends Mock implements LocationService {}
 class MockAlertPreferences extends Mock implements AlertPreferences {}
 class MockBox extends Mock implements Box {}
+class MockSmsService extends Mock implements SmsService {}
+class MockRiskScoreEngine extends Mock implements RiskScoreEngine {}
 
 // ─── Test Wrapper ─────────────────────────────────────────────
 /// Wraps a widget under test with all required providers and
@@ -71,6 +76,14 @@ Widget buildTestableWidget({
     contactsNotified: 0,
     smsSentCount: 0,
     wasCancelled: false,
+  ));
+  registerFallbackValue(AlertEvent(
+    id: 'dummy',
+    type: AlertType.earthquake,
+    title: 'dummy',
+    latitude: 0.0,
+    longitude: 0.0,
+    timestamp: DateTime.now(),
   ));
   final mockAudio = MockAudioService();
   final mockUseCase = MockTriggerSosUseCase();
@@ -125,6 +138,25 @@ Widget buildTestableWidget({
     // Register the real singleton — it reads from Hive but gracefully
     // falls back to in-memory defaults when Hive isn't initialized in tests.
     getIt.registerSingleton<PremiumManager>(PremiumManager.instance);
+  }
+  if (!getIt.isRegistered<ContactsRepository>()) {
+    getIt.registerSingleton<ContactsRepository>(mockContacts);
+  }
+  if (!getIt.isRegistered<SmsService>()) {
+    final mockSms = MockSmsService();
+    when(() => mockSms.sendIAmSafeSms(contacts: any(named: 'contacts')))
+        .thenAnswer((_) async => 1);
+    getIt.registerSingleton<SmsService>(mockSms);
+  }
+  if (!getIt.isRegistered<RiskScoreEngine>()) {
+    final mockRiskEngine = MockRiskScoreEngine();
+    // Default fallback risk score: return the alert itself with a score of 100
+    // so tests targeting checking for critical alerts pass by default.
+    when(() => mockRiskEngine.enrichWithScore(any())).thenAnswer((inv) {
+      final alert = inv.positionalArguments[0] as AlertEvent;
+      return alert.copyWith(riskScore: 100);
+    });
+    getIt.registerSingleton<RiskScoreEngine>(mockRiskEngine);
   }
 
   // Stub commonly-called methods.

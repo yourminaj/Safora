@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/audio_service.dart';
@@ -25,6 +26,12 @@ class MockLocationService extends Mock implements LocationService {}
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('flutter_foreground_task/methods'),
+            (MethodCall methodCall) async {
+      return true;
+    });
     registerFallbackValue(SosHistoryEntry(
       timestamp: DateTime(2020),
       contactsNotified: 0,

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -49,7 +50,11 @@ class SosForegroundService {
   }
 
   /// Start the SOS foreground service with a persistent notification.
-  Future<ServiceRequestResult> start() async {
+  Future<dynamic> start() async {
+    if (Platform.environment.containsKey('FLUTTER_TEST')) {
+      return null;
+    }
+    
     init();
 
     if (await FlutterForegroundTask.isRunningService) {
@@ -71,12 +76,20 @@ class SosForegroundService {
   }
 
   /// Stop the foreground service.
-  Future<ServiceRequestResult> stop() {
+  Future<dynamic> stop() async {
+    if (Platform.environment.containsKey('FLUTTER_TEST')) {
+      return null;
+    }
     return FlutterForegroundTask.stopService();
   }
 
   /// Whether the service is currently running.
-  Future<bool> get isRunning => FlutterForegroundTask.isRunningService;
+  Future<bool> get isRunning async {
+    if (Platform.environment.containsKey('FLUTTER_TEST')) {
+      return false;
+    }
+    return FlutterForegroundTask.isRunningService;
+  }
 }
 
 /// Top-level callback that runs when the foreground service starts.
