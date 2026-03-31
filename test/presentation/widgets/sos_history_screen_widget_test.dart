@@ -5,6 +5,8 @@ import 'package:safora/data/models/sos_history_entry.dart';
 import 'package:safora/presentation/screens/settings/sos_history_screen.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
+import 'package:mocktail/mocktail.dart';
+
 import '../../helpers/widget_test_helpers.dart';
 
 class _FakeBox extends Fake implements Box {

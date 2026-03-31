@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import 'package:hive/hive.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/app_lock_service.dart';
 
-class MockBox extends Mock implements Box {}
-
 class MockLocalAuth extends Mock implements LocalAuthentication {}
+class MockBox extends Mock implements Box<dynamic> {}
 
 void main() {
   late MockBox mockBox;

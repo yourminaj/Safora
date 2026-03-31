@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/audio_service.dart';
 import 'package:safora/core/services/location_service.dart';
@@ -11,6 +12,7 @@ import 'package:safora/presentation/blocs/sos/sos_cubit.dart';
 import 'package:safora/presentation/blocs/sos/sos_state.dart';
 
 class MockAudioService extends Mock implements AudioService {}
+class MockBox extends Mock implements Box<dynamic> {}
 
 class MockTriggerSosUseCase extends Mock implements TriggerSosUseCase {}
 
@@ -21,6 +23,7 @@ class MockSosHistoryDatasource extends Mock implements SosHistoryDatasource {}
 class MockLocationService extends Mock implements LocationService {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() {
     registerFallbackValue(SosHistoryEntry(
       timestamp: DateTime(2020),
@@ -35,6 +38,7 @@ void main() {
   late MockContactsRepository mockContacts;
   late MockSosHistoryDatasource mockHistory;
   late MockLocationService mockLocation;
+  late MockBox mockBox;
 
   setUp(() {
     mockAudio = MockAudioService();
@@ -42,6 +46,12 @@ void main() {
     mockContacts = MockContactsRepository();
     mockHistory = MockSosHistoryDatasource();
     mockLocation = MockLocationService();
+    mockBox = MockBox();
+
+    when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue')))
+        .thenReturn(null);
+    when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
+    when(() => mockBox.delete(any())).thenAnswer((_) async {});
 
     when(() => mockAudio.playSiren()).thenAnswer((_) async {});
     when(() => mockAudio.stopAll()).thenAnswer((_) async {});
@@ -79,6 +89,7 @@ void main() {
       contactsRepository: mockContacts,
       sosHistoryDatasource: mockHistory,
       locationService: mockLocation,
+      settingsBox: mockBox,
     );
   });
 

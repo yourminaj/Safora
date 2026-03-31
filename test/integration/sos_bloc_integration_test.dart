@@ -28,6 +28,7 @@ library;
 
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:safora/core/services/audio_service.dart';
@@ -51,6 +52,7 @@ import 'package:safora/presentation/blocs/sos/sos_state.dart';
 class MockAudioService extends Mock implements AudioService {}
 class MockSmsService extends Mock implements SmsService {}
 class MockNotificationService extends Mock implements NotificationService {}
+class MockBox extends Mock implements Box<dynamic> {}
 class MockLocationService extends Mock implements LocationService {}
 class MockContactsRepository extends Mock implements ContactsRepository {}
 class MockSosHistoryDatasource extends Mock implements SosHistoryDatasource {}
@@ -89,6 +91,7 @@ SosCubit _buildCubit({
   required MockConnectivityService connectivity,
   required MockSosEventService sosEventService,
   required MockNotificationService notifications,
+  required MockBox settingsBox,
 }) {
   final useCase = TriggerSosUseCase(
     smsService: sms,
@@ -104,6 +107,7 @@ SosCubit _buildCubit({
     sosHistoryDatasource: history,
     locationService: location,
     connectivityService: connectivity,
+    settingsBox: settingsBox,
   );
 }
 
@@ -120,6 +124,7 @@ void main() {
   late MockConnectivityService mockConnectivity;
   late MockSosEventService mockSosEventService;
   late MockNotificationService mockNotifications;
+  late MockBox mockBox;
 
   setUp(() {
     mockAudio = MockAudioService();
@@ -130,6 +135,12 @@ void main() {
     mockConnectivity = MockConnectivityService();
     mockSosEventService = MockSosEventService();
     mockNotifications = MockNotificationService();
+    mockBox = MockBox();
+
+    when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue')))
+        .thenReturn(null);
+    when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
+    when(() => mockBox.delete(any())).thenAnswer((_) async {});
 
     // Register fallback values for mocktail
     registerFallbackValue(
@@ -198,6 +209,7 @@ void main() {
         connectivity: mockConnectivity,
         sosEventService: mockSosEventService,
         notifications: mockNotifications,
+            settingsBox: mockBox,
       );
       final states = <SosState>[];
       final sub = cubit.stream.listen(states.add);
@@ -221,6 +233,7 @@ void main() {
         connectivity: mockConnectivity,
         sosEventService: mockSosEventService,
         notifications: mockNotifications,
+            settingsBox: mockBox,
       );
       final states = <SosState>[];
       final sub = cubit.stream.listen(states.add);
@@ -243,6 +256,7 @@ void main() {
         connectivity: mockConnectivity,
         sosEventService: mockSosEventService,
         notifications: mockNotifications,
+            settingsBox: mockBox,
       );
       cubit.startCountdown();
       await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -269,6 +283,7 @@ void main() {
         connectivity: mockConnectivity,
         sosEventService: mockSosEventService,
         notifications: mockNotifications,
+            settingsBox: mockBox,
       );
       final states = <SosState>[];
       final sub = cubit.stream.listen(states.add);
@@ -305,6 +320,7 @@ void main() {
         connectivity: mockConnectivity,
         sosEventService: mockSosEventService,
         notifications: mockNotifications,
+            settingsBox: mockBox,
       );
       cubit.startCountdown();
       await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -330,6 +346,7 @@ void main() {
         connectivity: mockConnectivity,
         sosEventService: mockSosEventService,
         notifications: mockNotifications,
+            settingsBox: mockBox,
       );
 
       // Directly invoke the use case (bypasses 30-second countdown).

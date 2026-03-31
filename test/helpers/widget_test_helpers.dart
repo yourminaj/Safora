@@ -29,7 +29,7 @@ import 'package:safora/presentation/blocs/sos/sos_cubit.dart';
 
 // ─── Mocks ────────────────────────────────────────────────────
 class MockAudioService extends Mock implements AudioService {}
-class MockBox extends Mock implements Box {}
+
 
 class MockTriggerSosUseCase extends Mock implements TriggerSosUseCase {}
 
@@ -50,8 +50,8 @@ class MockContactsCloudSync extends Mock implements ContactsCloudSync {}
 class MockSosHistoryDatasource extends Mock implements SosHistoryDatasource {}
 
 class MockLocationService extends Mock implements LocationService {}
-
 class MockAlertPreferences extends Mock implements AlertPreferences {}
+class MockBox extends Mock implements Box {}
 
 // ─── Test Wrapper ─────────────────────────────────────────────
 /// Wraps a widget under test with all required providers and
@@ -96,6 +96,7 @@ Widget buildTestableWidget({
   if (!getIt.isRegistered<DeadManSwitchService>()) {
     getIt.registerSingleton<DeadManSwitchService>(DeadManSwitchService(
       onTrigger: () {},
+      settingsBox: MockBox(),
       checkInInterval: const Duration(hours: 1),
     ));
   }
@@ -163,6 +164,7 @@ Widget buildTestableWidget({
             SosCubit(
               audioService: mockAudio,
               triggerSosUseCase: mockUseCase,
+              settingsBox: MockBox(),
               contactsRepository: mockContacts,
               sosHistoryDatasource: mockHistory,
               locationService: mockLocation,

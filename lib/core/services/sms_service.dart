@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:another_telephony/telephony.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/models/emergency_contact.dart';
 import 'app_logger.dart';
@@ -107,11 +108,10 @@ class SmsService {
     try {
       final telephony = Telephony.instance;
 
-      // Request SMS permission if not already granted.
-      final hasPermission =
-          await telephony.requestPhoneAndSmsPermissions ?? false;
+      // Check permission silently; avoid UI requests from background thread!
+      final hasPermission = await Permission.sms.isGranted;
       if (!hasPermission) {
-        AppLogger.warning('[SMS] SMS permission denied, falling back');
+        AppLogger.warning('[SMS] SMS permission not granted (falling back). Required permissions must be granted via UI gate.');
         return _sendViaUrlLauncher(phone, message);
       }
 

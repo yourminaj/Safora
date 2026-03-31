@@ -1867,6 +1867,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Showing last 7 days. Upgrade to Pro for full history.'**
   String get sosHistoryFreeNote;
+
+  /// No description provided for @emergencyCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Center'**
+  String get emergencyCenter;
+
+  /// No description provided for @emergencyCenterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS, first aid, safe places & more'**
+  String get emergencyCenterSubtitle;
+
+  /// No description provided for @alertPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert Preferences'**
+  String get alertPreferences;
+
+  /// No description provided for @alertPreferencesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which alerts to receive'**
+  String get alertPreferencesSubtitle;
+
+  /// No description provided for @voiceDistressDetectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Distress Detected'**
+  String get voiceDistressDetectedTitle;
+
+  /// No description provided for @voiceDistressDetectedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Distress vocalization detected (confidence: {pct}%). SOS countdown started.'**
+  String voiceDistressDetectedDesc(String pct);
+
+  /// No description provided for @voiceDistressEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Distress Detection enabled'**
+  String get voiceDistressEnabled;
+
+  /// No description provided for @voiceDistressDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Distress Detection disabled'**
+  String get voiceDistressDisabled;
+
+  /// No description provided for @anomalyMovementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspicious Movement: {className}'**
+  String anomalyMovementTitle(String className);
+
+  /// No description provided for @anomalyMovementDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Anomalous movement detected ({className}, confidence: {pct}%). SOS countdown started.'**
+  String anomalyMovementDesc(String className, String pct);
+
+  /// No description provided for @anomalyMovementEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Anomaly Movement Detection enabled'**
+  String get anomalyMovementEnabled;
+
+  /// No description provided for @anomalyMovementDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Anomaly Movement Detection disabled'**
+  String get anomalyMovementDisabled;
+
+  /// No description provided for @roadHazardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Road Hazard: {condition}'**
+  String roadHazardTitle(String condition);
+
+  /// No description provided for @roadHazardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Road hazard detected at {speed} km/h ({condition}, confidence: {pct}%).'**
+  String roadHazardDesc(String speed, String condition, String pct);
+
+  /// No description provided for @roadConditionEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Road Condition Detection enabled'**
+  String get roadConditionEnabled;
+
+  /// No description provided for @roadConditionDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Road Condition Detection disabled'**
+  String get roadConditionDisabled;
+
+  /// No description provided for @deadManSwitchActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Dead Man\'s Switch Active'**
+  String get deadManSwitchActive;
+
+  /// No description provided for @tapToConfirmSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to confirm you\'re safe'**
+  String get tapToConfirmSafe;
+
+  /// No description provided for @imSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m Safe'**
+  String get imSafe;
+
+  /// No description provided for @checkInConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in confirmed — timer reset'**
+  String get checkInConfirmed;
 }
 
 class _AppLocalizationsDelegate

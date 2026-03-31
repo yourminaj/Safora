@@ -5,8 +5,8 @@ import 'package:safora/core/services/premium_manager.dart';
 import 'package:safora/data/datasources/contacts_local_datasource.dart';
 import 'package:safora/data/models/emergency_contact.dart';
 
-class MockBox extends Mock implements Box {}
 class MockPremiumManager extends Mock implements PremiumManager {}
+class MockBox extends Mock implements Box<dynamic> {}
 
 void main() {
   late MockBox mockBox;

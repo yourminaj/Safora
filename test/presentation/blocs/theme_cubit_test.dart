@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+
 import 'package:safora/presentation/blocs/theme/theme_cubit.dart';
 
 /// In-memory Hive box for testing.
-class _FakeBox extends Fake implements Box {
+class _FakeBox extends Fake implements Box<dynamic> {
   final Map<dynamic, dynamic> _store = {};
 
   @override

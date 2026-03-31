@@ -1,7 +1,11 @@
 import 'package:fake_async/fake_async.dart';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:safora/services/dead_man_switch_service.dart';
+
+class MockBox extends Mock implements Box {}
 
 void main() {
   group('DeadManSwitchService', () {
@@ -15,12 +19,21 @@ void main() {
       Duration interval = const Duration(seconds: 3),
       int warningBefore = 1,
       TimerFactory? createTimer,
-    }) => DeadManSwitchService(
-      onTrigger: () => triggered = true,
-      checkInInterval: interval,
-      warningBeforeSeconds: warningBefore,
-      createTimer: createTimer,
-    );
+      Box? settingsBox,
+    }) {
+      final box = settingsBox ?? MockBox();
+      when(() => box.get(any())).thenReturn(null);
+      when(() => box.delete(any())).thenAnswer((_) async {});
+      when(() => box.put(any(), any())).thenAnswer((_) async {});
+      
+      return DeadManSwitchService(
+        onTrigger: () => triggered = true,
+        settingsBox: box,
+        checkInInterval: interval,
+        warningBeforeSeconds: warningBefore,
+        createTimer: createTimer,
+      );
+    }
 
     tearDownAll(() {});
 

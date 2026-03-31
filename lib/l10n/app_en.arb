@@ -355,5 +355,32 @@
   "proFeatureTitle": "Pro Feature",
   "proFeatureMessage": "This feature requires Safora Pro. Upgrade to unlock advanced detection, unlimited contacts, and ad-free experience.",
   "upgradeToPro": "Upgrade to Pro",
-  "sosHistoryFreeNote": "Showing last 7 days. Upgrade to Pro for full history."
+  "sosHistoryFreeNote": "Showing last 7 days. Upgrade to Pro for full history.",
+
+  "emergencyCenter": "Emergency Center",
+  "emergencyCenterSubtitle": "SOS, first aid, safe places & more",
+  "alertPreferences": "Alert Preferences",
+  "alertPreferencesSubtitle": "Choose which alerts to receive",
+
+  "voiceDistressDetectedTitle": "Voice Distress Detected",
+  "voiceDistressDetectedDesc": "Distress vocalization detected (confidence: {pct}%). SOS countdown started.",
+  "@voiceDistressDetectedDesc": { "placeholders": { "pct": { "type": "String" } } },
+  "voiceDistressEnabled": "Voice Distress Detection enabled",
+  "voiceDistressDisabled": "Voice Distress Detection disabled",
+  "anomalyMovementTitle": "Suspicious Movement: {className}",
+  "@anomalyMovementTitle": { "placeholders": { "className": { "type": "String" } } },
+  "anomalyMovementDesc": "Anomalous movement detected ({className}, confidence: {pct}%). SOS countdown started.",
+  "@anomalyMovementDesc": { "placeholders": { "className": { "type": "String" }, "pct": { "type": "String" } } },
+  "anomalyMovementEnabled": "Anomaly Movement Detection enabled",
+  "anomalyMovementDisabled": "Anomaly Movement Detection disabled",
+  "roadHazardTitle": "Road Hazard: {condition}",
+  "@roadHazardTitle": { "placeholders": { "condition": { "type": "String" } } },
+  "roadHazardDesc": "Road hazard detected at {speed} km/h ({condition}, confidence: {pct}%).",
+  "@roadHazardDesc": { "placeholders": { "speed": { "type": "String" }, "condition": { "type": "String" }, "pct": { "type": "String" } } },
+  "roadConditionEnabled": "Road Condition Detection enabled",
+  "roadConditionDisabled": "Road Condition Detection disabled",
+  "deadManSwitchActive": "Dead Man's Switch Active",
+  "tapToConfirmSafe": "Tap to confirm you're safe",
+  "imSafe": "I'm Safe",
+  "checkInConfirmed": "Check-in confirmed — timer reset"
 }

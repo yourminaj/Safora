@@ -333,5 +333,27 @@
   "proFeatureTitle": "প্রো ফিচার",
   "proFeatureMessage": "এই ফিচারটি সাফোরা প্রো প্রয়োজন। উন্নত সনাক্তকরণ, সীমাহীন যোগাযোগ এবং বিজ্ঞাপনমুক্ত অভিজ্ঞতা আনলক করতে আপগ্রেড করুন।",
   "upgradeToPro": "প্রো-তে আপগ্রেড করুন",
-  "sosHistoryFreeNote": "শেষ ৭ দিন দেখানো হচ্ছে। সম্পূর্ণ ইতিহাসের জন্য প্রো-তে আপগ্রেড করুন।"
+  "sosHistoryFreeNote": "শেষ ৭ দিন দেখানো হচ্ছে। সম্পূর্ণ ইতিহাসের জন্য প্রো-তে আপগ্রেড করুন।",
+
+  "emergencyCenter": "জরুরি কেন্দ্র",
+  "emergencyCenterSubtitle": "SOS, প্রাথমিক চিকিৎসা, নিরাপদ স্থান এবং আরও",
+  "alertPreferences": "সতর্কতা পছন্দসমূহ",
+  "alertPreferencesSubtitle": "কোন সতর্কতাগুলো পেতে চান তা বেছে নিন",
+
+  "voiceDistressDetectedTitle": "কণ্ঠস্বরে কষ্ট শনাক্ত",
+  "voiceDistressDetectedDesc": "কষ্টসূচক কণ্ঠস্বর শনাক্ত হয়েছে (আত্মবিশ্বাস: {pct}%)। SOS কাউন্টডাউন শুরু হয়েছে।",
+  "voiceDistressEnabled": "কণ্ঠস্বর কষ্ট শনাক্তকরণ সক্রিয়",
+  "voiceDistressDisabled": "কণ্ঠস্বর কষ্ট শনাক্তকরণ নিষ্ক্রিয়",
+  "anomalyMovementTitle": "সন্দেহজনক নড়াচড়া: {className}",
+  "anomalyMovementDesc": "অস্বাভাবিক নড়াচড়া শনাক্ত হয়েছে ({className}, আত্মবিশ্বাস: {pct}%)। SOS কাউন্টডাউন শুরু হয়েছে।",
+  "anomalyMovementEnabled": "অস্বাভাবিক নড়াচড়া শনাক্তকরণ সক্রিয়",
+  "anomalyMovementDisabled": "অস্বাভাবিক নড়াচড়া শনাক্তকরণ নিষ্ক্রিয়",
+  "roadHazardTitle": "সড়ক বিপদ: {condition}",
+  "roadHazardDesc": "{speed} km/h-তে সড়ক বিপদ শনাক্ত ({condition}, আত্মবিশ্বাস: {pct}%)।",
+  "roadConditionEnabled": "সড়ক অবস্থা শনাক্তকরণ সক্রিয়",
+  "roadConditionDisabled": "সড়ক অবস্থা শনাক্তকরণ নিষ্ক্রিয়",
+  "deadManSwitchActive": "ডেড ম্যান সুইচ সক্রিয়",
+  "tapToConfirmSafe": "আপনি নিরাপদ তা নিশ্চিত করতে ট্যাপ করুন",
+  "imSafe": "আমি নিরাপদ",
+  "checkInConfirmed": "চেক-ইন নিশ্চিত — টাইমার রিসেট করা হয়েছে"
 }

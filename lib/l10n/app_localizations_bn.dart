@@ -962,4 +962,76 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get sosHistoryFreeNote =>
       'শেষ ৭ দিন দেখানো হচ্ছে। সম্পূর্ণ ইতিহাসের জন্য প্রো-তে আপগ্রেড করুন।';
+
+  @override
+  String get emergencyCenter => 'জরুরি কেন্দ্র';
+
+  @override
+  String get emergencyCenterSubtitle =>
+      'SOS, প্রাথমিক চিকিৎসা, নিরাপদ স্থান এবং আরও';
+
+  @override
+  String get alertPreferences => 'সতর্কতা পছন্দসমূহ';
+
+  @override
+  String get alertPreferencesSubtitle => 'কোন সতর্কতাগুলো পেতে চান তা বেছে নিন';
+
+  @override
+  String get voiceDistressDetectedTitle => 'কণ্ঠস্বরে কষ্ট শনাক্ত';
+
+  @override
+  String voiceDistressDetectedDesc(String pct) {
+    return 'কষ্টসূচক কণ্ঠস্বর শনাক্ত হয়েছে (আত্মবিশ্বাস: $pct%)। SOS কাউন্টডাউন শুরু হয়েছে।';
+  }
+
+  @override
+  String get voiceDistressEnabled => 'কণ্ঠস্বর কষ্ট শনাক্তকরণ সক্রিয়';
+
+  @override
+  String get voiceDistressDisabled => 'কণ্ঠস্বর কষ্ট শনাক্তকরণ নিষ্ক্রিয়';
+
+  @override
+  String anomalyMovementTitle(String className) {
+    return 'সন্দেহজনক নড়াচড়া: $className';
+  }
+
+  @override
+  String anomalyMovementDesc(String className, String pct) {
+    return 'অস্বাভাবিক নড়াচড়া শনাক্ত হয়েছে ($className, আত্মবিশ্বাস: $pct%)। SOS কাউন্টডাউন শুরু হয়েছে।';
+  }
+
+  @override
+  String get anomalyMovementEnabled => 'অস্বাভাবিক নড়াচড়া শনাক্তকরণ সক্রিয়';
+
+  @override
+  String get anomalyMovementDisabled =>
+      'অস্বাভাবিক নড়াচড়া শনাক্তকরণ নিষ্ক্রিয়';
+
+  @override
+  String roadHazardTitle(String condition) {
+    return 'সড়ক বিপদ: $condition';
+  }
+
+  @override
+  String roadHazardDesc(String speed, String condition, String pct) {
+    return '$speed km/h-তে সড়ক বিপদ শনাক্ত ($condition, আত্মবিশ্বাস: $pct%)।';
+  }
+
+  @override
+  String get roadConditionEnabled => 'সড়ক অবস্থা শনাক্তকরণ সক্রিয়';
+
+  @override
+  String get roadConditionDisabled => 'সড়ক অবস্থা শনাক্তকরণ নিষ্ক্রিয়';
+
+  @override
+  String get deadManSwitchActive => 'ডেড ম্যান সুইচ সক্রিয়';
+
+  @override
+  String get tapToConfirmSafe => 'আপনি নিরাপদ তা নিশ্চিত করতে ট্যাপ করুন';
+
+  @override
+  String get imSafe => 'আমি নিরাপদ';
+
+  @override
+  String get checkInConfirmed => 'চেক-ইন নিশ্চিত — টাইমার রিসেট করা হয়েছে';
 }

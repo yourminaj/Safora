@@ -261,7 +261,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
       body: SafeArea(
-        child: CustomScrollView(
+        child: BlocListener<AlertsCubit, AlertsState>(
+          listener: (context, state) {
+            if (state is AlertsLoaded && state.alerts.isNotEmpty) {
+              _checkForCriticalAlerts(state.alerts);
+            }
+          },
+          child: CustomScrollView(
           slivers: [
             SliverAppBar(
               expandedHeight: 60,
@@ -419,15 +425,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           dms.checkIn();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Row(
+                              content: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.check_circle_rounded,
+                                  const Icon(Icons.check_circle_rounded,
                                       color: Colors.white, size: 20),
-                                  SizedBox(width: 8),
+                                  const SizedBox(width: 8),
                                   Flexible(
                                     child: Text(
-                                        'Check-in confirmed — timer reset'),
+                                    l.checkInConfirmed),
                                   ),
                                 ],
                               ),
@@ -471,14 +477,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Dead Man\'s Switch Active',
+                                      l.deadManSwitchActive,
                                       style: AppTypography.labelLarge.copyWith(
                                         color: AppColors.safe,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                     Text(
-                                      'Tap to confirm you\'re safe',
+                                      l.tapToConfirmSafe,
                                       style: AppTypography.bodySmall.copyWith(
                                         color: AppColors.safe.withValues(alpha: 0.7),
                                       ),
@@ -496,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  'I\'m Safe',
+                                  l.imSafe,
                                   style: AppTypography.labelMedium.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
@@ -588,7 +594,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         _QuickAction(
                           icon: Icons.emergency_rounded,
-                          label: 'Emergency Center',
+                          label: l.emergencyCenter,
                           color: AppColors.danger,
                           onTap: () => context.push('/emergency-center'),
                         ),
@@ -645,8 +651,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     BlocBuilder<AlertsCubit, AlertsState>(
                       builder: (context, state) {
                         if (state is AlertsLoaded && state.alerts.isNotEmpty) {
-                          // Auto-trigger emergency card for critical alerts.
-                          _checkForCriticalAlerts(state.alerts);
                           final recent = state.alerts.take(3).toList();
                           return Column(
                             children: recent
@@ -699,8 +703,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _QuickAction extends StatelessWidget {

@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
+class MockBox extends Mock implements Box<dynamic> {}
+
 /// Unit tests for the onboarding persistence guard logic.
 ///
 /// Validates the two-key system introduced in splash_screen.dart:
@@ -21,7 +23,7 @@ import 'package:mocktail/mocktail.dart';
 /// without needing to pump the whole widget tree (which requires
 /// go_router, animate_do timers, PackageInfo platform channel mocking, etc.).
 
-class MockBox extends Mock implements Box {}
+
 
 void main() {
   late MockBox mockSettings;

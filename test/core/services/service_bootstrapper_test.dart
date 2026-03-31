@@ -1,14 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
+
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/service_bootstrapper.dart';
+
+class MockBox extends Mock implements Box<dynamic> {}
 
 // ── Lightweight verification tests for ServiceBootstrapper ──
 //
 // Full integration tests require GetIt + all services registered.
 // These unit tests validate the class structure and Hive key logic.
 
-class MockBox extends Mock implements Box {}
+
 
 void main() {
   group('ServiceBootstrapper', () {

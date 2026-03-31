@@ -111,6 +111,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void dispose() {
     _crashSubscription?.cancel();
+    _voiceSubscription?.cancel();
+    _anomalySubscription?.cancel();
+    _roadSubscription?.cancel();
     super.dispose();
   }
 
@@ -179,6 +182,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   StreamSubscription<DetectionAlert>? _crashSubscription;
+  StreamSubscription<VoiceDistressEvent>? _voiceSubscription;
+  StreamSubscription<AnomalyMovementEvent>? _anomalySubscription;
+  StreamSubscription<RoadConditionEvent>? _roadSubscription;
 
   /// Small PRO badge widget for premium-gated features.
   Widget _proBadge() {
@@ -663,7 +669,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final service = getIt<VoiceDistressService>();
     if (enabled) {
       service.start().then((_) {
-        service.onDistressDetected.listen((event) {
+        _voiceSubscription?.cancel();
+        _voiceSubscription = service.onDistressDetected.listen((event) {
           final alertEvent = AlertEvent(
             id: 'voice_distress_${DateTime.now().millisecondsSinceEpoch}',
             type: event.alertType,
@@ -685,6 +692,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         });
       });
     } else {
+      _voiceSubscription?.cancel();
+      _voiceSubscription = null;
       service.stop();
     }
     ScaffoldMessenger.of(context).showSnackBar(
@@ -712,7 +721,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final service = getIt<AnomalyMovementService>();
     if (enabled) {
       service.start().then((_) {
-        service.onAnomalyDetected.listen((event) {
+        _anomalySubscription?.cancel();
+        _anomalySubscription = service.onAnomalyDetected.listen((event) {
           final alertEvent = AlertEvent(
             id: 'anomaly_mov_${DateTime.now().millisecondsSinceEpoch}',
             type: event.alertType,
@@ -735,6 +745,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         });
       });
     } else {
+      _anomalySubscription?.cancel();
+      _anomalySubscription = null;
       service.stop();
     }
     ScaffoldMessenger.of(context).showSnackBar(
@@ -762,7 +774,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final service = getIt<RoadConditionService>();
     if (enabled) {
       service.start().then((_) {
-        service.onHazardDetected.listen((event) {
+        _roadSubscription?.cancel();
+        _roadSubscription = service.onHazardDetected.listen((event) {
           final alertEvent = AlertEvent(
             id: 'road_${event.result.condition.name}_${DateTime.now().millisecondsSinceEpoch}',
             type: event.alertType,
@@ -784,6 +797,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         });
       });
     } else {
+      _roadSubscription?.cancel();
+      _roadSubscription = null;
       service.stop();
     }
     ScaffoldMessenger.of(context).showSnackBar(

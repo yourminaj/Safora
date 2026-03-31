@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/app_lock_service.dart';
@@ -19,9 +20,10 @@ import 'package:safora/presentation/screens/settings/settings_screen.dart';
 import 'package:safora/presentation/widgets/safora_animated_icons.dart';
 import '../../helpers/widget_test_helpers.dart';
 
+class MockBox extends Mock implements Box {}
 class MockShakeDetectionService extends Mock implements ShakeDetectionService {}
 class MockAppLockService extends Mock implements AppLockService {}
-class MockBox extends Mock implements Box {}
+
 class MockAuthService extends Mock implements AuthService {}
 class MockContactsRepository extends Mock implements ContactsRepository {}
 class MockCrashFallDetectionService extends Mock

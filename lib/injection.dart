@@ -265,6 +265,7 @@ Future<void> configureDependencies() async {
       sosHistoryDatasource: getIt<SosHistoryDatasource>(),
       locationService: getIt<LocationService>(),
       connectivityService: getIt<ConnectivityService>(),
+      settingsBox: getIt<Box>(instanceName: 'app_settings'),
     ),
   );
   // AlertsCubit registered BEFORE BatteryCubit (BatteryCubit depends on it).
@@ -303,6 +304,7 @@ Future<void> configureDependencies() async {
   // Dead Man's Switch — periodic safety check-in timer.
   getIt.registerLazySingleton<DeadManSwitchService>(
     () => DeadManSwitchService(
+      settingsBox: appSettingsBox,
       onTrigger: () {
         // When timer expires without check-in, auto-send SOS to all contacts.
         final contacts = getIt<ContactsRepository>().getAll();

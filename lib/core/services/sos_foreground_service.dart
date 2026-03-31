@@ -1,5 +1,10 @@
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:get_it/get_it.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'app_logger.dart';
+import 'service_bootstrapper.dart';
+import '../../services/dead_man_switch_service.dart';
+import '../../injection.dart';
 
 /// SOS Foreground Service — keeps SOS monitoring alive in the background.
 ///
@@ -52,6 +57,13 @@ class SosForegroundService {
     }
 
     return FlutterForegroundTask.startService(
+      serviceId: 256,
+      serviceTypes: [
+        ForegroundServiceTypes.microphone,
+        ForegroundServiceTypes.location,
+        ForegroundServiceTypes.health,
+        ForegroundServiceTypes.dataSync,
+      ],
       notificationTitle: 'Safora is protecting you',
       notificationText: 'SOS monitoring is active',
       callback: startCallback,
@@ -80,12 +92,35 @@ class SosTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     AppLogger.info('[SosForegroundService] Background task started');
+
+    try {
+      // Background Isolate Initialization.
+      // Must re-initialize Hive and GetIt because isolates don't share memory.
+      if (!GetIt.instance.isRegistered<Box>(instanceName: 'app_settings')) {
+        await Hive.initFlutter();
+        await configureDependencies();
+
+        final settings = GetIt.instance<Box>(instanceName: 'app_settings');
+        await ServiceBootstrapper.bootstrapBackground(
+          sl: GetIt.instance,
+          settings: settings,
+        );
+      }
+    } catch (e) {
+      AppLogger.warning('[SosForegroundService] Background boot failed: $e');
+    }
   }
 
   @override
   void onRepeatEvent(DateTime timestamp) {
     // This runs every 5 seconds in the background.
-    // The actual sensor monitoring is done by CrashFallDetectionService
+
+    // 1. Evaluate Dead Man's Switch
+    if (GetIt.instance.isRegistered<DeadManSwitchService>()) {
+      GetIt.instance<DeadManSwitchService>().evaluateBackground();
+    }
+
+    // 2. The actual sensor monitoring is done by CrashFallDetectionService
     // and ShakeDetectionService which run independently via their
     // stream subscriptions. This handler just keeps the service alive.
     FlutterForegroundTask.updateService(

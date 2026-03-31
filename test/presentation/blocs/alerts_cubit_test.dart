@@ -36,6 +36,8 @@ void main() {
       () => mockNotifs.showDisasterAlert(
         title: any(named: 'title'),
         body: any(named: 'body'),
+        soundName: any(named: 'soundName'),
+        color: any(named: 'color'),
       ),
     ).thenAnswer((_) async {});
 
@@ -335,6 +337,8 @@ void main() {
         () => mockNotifs.showDisasterAlert(
           title: any(named: 'title'),
           body: any(named: 'body'),
+          soundName: any(named: 'soundName'),
+          color: any(named: 'color'),
         ),
       ).called(1);
     });
@@ -356,6 +360,8 @@ void main() {
         () => mockNotifs.showDisasterAlert(
           title: any(named: 'title'),
           body: any(named: 'body'),
+          soundName: any(named: 'soundName'),
+          color: any(named: 'color'),
         ),
       );
     });

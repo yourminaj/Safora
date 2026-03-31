@@ -5,7 +5,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:safora/data/datasources/profile_local_datasource.dart';
 import 'package:safora/data/models/user_profile.dart';
 
-class MockBox extends Mock implements Box {}
+class MockBox extends Mock implements Box<dynamic> {}
 
 void main() {
   late MockBox mockBox;

@@ -4,7 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:safora/data/datasources/sos_history_datasource.dart';
 import 'package:safora/data/models/sos_history_entry.dart';
 
-class MockBox extends Mock implements Box {}
+class MockBox extends Mock implements Box<dynamic> {}
 
 void main() {
   late MockBox mockBox;

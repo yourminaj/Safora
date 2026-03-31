@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/notification_service.dart';
 import 'package:safora/core/services/sms_service.dart';
@@ -20,6 +21,7 @@ class MockLocationService extends Mock implements LocationService {}
 class MockConnectivityService extends Mock implements ConnectivityService {}
 class MockContactsRepository extends Mock implements ContactsRepository {}
 class MockSosHistoryDatasource extends Mock implements SosHistoryDatasource {}
+class MockBox extends Mock implements Box<dynamic> {}
 
 // Let's also mock the UseCase to capture calls instead of injecting deeply if preferred.
 // OR we use the real use case with mocked services. We'll use the real use case to test integration.
@@ -32,6 +34,8 @@ void main() {
   late MockConnectivityService connectivityService;
   late MockContactsRepository contactsRepository;
   late MockSosHistoryDatasource sosHistoryDatasource;
+  late MockBox mockBox;
+
   late TriggerSosUseCase triggerSosUseCase;
   late SosCubit sosCubit;
 
@@ -52,6 +56,12 @@ void main() {
     connectivityService = MockConnectivityService();
     contactsRepository = MockContactsRepository();
     sosHistoryDatasource = MockSosHistoryDatasource();
+    mockBox = MockBox();
+
+    when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue')))
+        .thenReturn(null);
+    when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
+    when(() => mockBox.delete(any())).thenAnswer((_) async {});
 
     // Mock defaults
     when(() => notificationService.showSosNotification()).thenAnswer((_) async {});
@@ -102,6 +112,7 @@ void main() {
       sosHistoryDatasource: sosHistoryDatasource,
       locationService: locationService,
       connectivityService: connectivityService,
+      settingsBox: mockBox,
     );
   });
 

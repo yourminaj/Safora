@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive/hive.dart';
 import 'package:another_telephony/telephony.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/services/connectivity_service.dart';
@@ -22,20 +23,25 @@ class SosCubit extends Cubit<SosState> {
     required ContactsRepository contactsRepository,
     required SosHistoryDatasource sosHistoryDatasource,
     required LocationService locationService,
+    required Box settingsBox,
     ConnectivityService? connectivityService,
-  })  : _audioService = audioService,
-        _triggerSosUseCase = triggerSosUseCase,
-        _contactsRepository = contactsRepository,
-        _sosHistory = sosHistoryDatasource,
-        _locationService = locationService,
-        _connectivityService = connectivityService,
-        super(const SosIdle());
+  }) : _audioService = audioService,
+       _triggerSosUseCase = triggerSosUseCase,
+       _contactsRepository = contactsRepository,
+       _sosHistory = sosHistoryDatasource,
+       _locationService = locationService,
+       _settingsBox = settingsBox,
+       _connectivityService = connectivityService,
+       super(const SosIdle());
+
+  static const String _deadlineKey = 'sos_countdown_deadline';
 
   final AudioService _audioService;
   final TriggerSosUseCase _triggerSosUseCase;
   final ContactsRepository _contactsRepository;
   final SosHistoryDatasource _sosHistory;
   final LocationService _locationService;
+  final Box _settingsBox;
   final ConnectivityService? _connectivityService;
   Timer? _countdownTimer;
   int _secondsRemaining = 30;
@@ -62,11 +68,13 @@ class SosCubit extends Cubit<SosState> {
     final contacts = _contactsRepository.getAll();
     final contactsReady = contacts.isNotEmpty;
 
-    emit(SosPreparing(
-      gpsReady: gpsReady,
-      networkReady: networkReady,
-      contactsReady: contactsReady,
-    ));
+    emit(
+      SosPreparing(
+        gpsReady: gpsReady,
+        networkReady: networkReady,
+        contactsReady: contactsReady,
+      ),
+    );
 
     AppLogger.info(
       '[SOS] Pre-flight: GPS=$gpsReady, '
@@ -76,9 +84,7 @@ class SosCubit extends Cubit<SosState> {
 
     // Block SOS if no emergency contacts exist.
     if (!contactsReady) {
-      emit(const SosPreflightFailed(
-        reason: SosFailureReason.noContacts,
-      ));
+      emit(const SosPreflightFailed(reason: SosFailureReason.noContacts));
       // Return to idle after a brief pause.
       Future.delayed(const Duration(seconds: 3), () {
         if (!isClosed) emit(const SosIdle());
@@ -97,9 +103,11 @@ class SosCubit extends Cubit<SosState> {
         AppLogger.warning(
           '[SOS] Pre-flight: SEND_SMS permission denied — blocking SOS',
         );
-        emit(const SosPreflightFailed(
-          reason: SosFailureReason.smsPermissionDenied,
-        ));
+        emit(
+          const SosPreflightFailed(
+            reason: SosFailureReason.smsPermissionDenied,
+          ),
+        );
         Future.delayed(const Duration(seconds: 3), () {
           if (!isClosed) emit(const SosIdle());
         });
@@ -112,15 +120,48 @@ class SosCubit extends Cubit<SosState> {
       AppLogger.info('[SOS] No cached GPS — attempting quick fix...');
       try {
         await _locationService.getCurrentPosition().timeout(
-              const Duration(seconds: 3),
-            );
+          const Duration(seconds: 10),
+        );
       } catch (_) {
-        AppLogger.warning('[SOS] GPS fix timed out — proceeding without location');
+        AppLogger.warning(
+          '[SOS] GPS fix timed out — proceeding without location',
+        );
       }
     }
 
     _secondsRemaining = countdownDuration;
     emit(SosCountdown(secondsRemaining: _secondsRemaining));
+
+    final deadline = DateTime.now().add(
+      const Duration(seconds: countdownDuration),
+    );
+    _settingsBox.put(_deadlineKey, deadline.toIso8601String());
+
+    /// Start foreground service to keep the app alive during the countdown
+    /// and continues to monitor for shake/crash/fall events even when the app
+    /// is in the background or the screen is off.
+    unawaited(SosForegroundService.instance.start());
+
+    _countdownTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _tick(),
+    );
+  }
+
+  /// Resumes the countdown if the app was killed while it was active.
+  void resumeCountdown(DateTime deadline) {
+    if (state is SosActive || state is SosPreparing) return;
+
+    final remaining = deadline.difference(DateTime.now());
+    if (remaining.isNegative) {
+      _triggerSos();
+      return;
+    }
+
+    _secondsRemaining = remaining.inSeconds;
+    emit(SosCountdown(secondsRemaining: _secondsRemaining));
+
+    unawaited(SosForegroundService.instance.start());
 
     _countdownTimer = Timer.periodic(
       const Duration(seconds: 1),
@@ -142,21 +183,27 @@ class SosCubit extends Cubit<SosState> {
 
   /// Cancel the countdown and return to idle.
   void cancelCountdown() {
+    _settingsBox.delete(_deadlineKey);
     _countdownTimer?.cancel();
     _countdownTimer = null;
     _secondsRemaining = countdownDuration;
     emit(const SosCancelled());
 
+    // Stop foreground service if SOS was cancelled before trigger.
+    unawaited(SosForegroundService.instance.stop());
+
     // Log cancelled SOS in history.
     final pos = _locationService.lastPosition;
-    _sosHistory.add(SosHistoryEntry(
-      timestamp: DateTime.now(),
-      latitude: pos?.latitude,
-      longitude: pos?.longitude,
-      contactsNotified: 0,
-      smsSentCount: 0,
-      wasCancelled: true,
-    ));
+    _sosHistory.add(
+      SosHistoryEntry(
+        timestamp: DateTime.now(),
+        latitude: pos?.latitude,
+        longitude: pos?.longitude,
+        contactsNotified: 0,
+        smsSentCount: 0,
+        wasCancelled: true,
+      ),
+    );
 
     // Return to idle after a brief pause.
     Future.delayed(const Duration(seconds: 1), () {
@@ -166,13 +213,13 @@ class SosCubit extends Cubit<SosState> {
 
   /// Trigger the full SOS alert.
   Future<void> _triggerSos() async {
+    _settingsBox.delete(_deadlineKey);
     emit(const SosActive());
 
     // Play siren (fire-and-forget — siren runs independently from SMS flow).
     unawaited(_audioService.playSiren());
 
-    // Start foreground service to keep SOS alive when app goes to background.
-    unawaited(SosForegroundService.instance.start());
+    // Service is already started at countdown begin.
 
     // Send SMS + notification via use case.
     final contacts = _contactsRepository.getAll();
@@ -180,18 +227,21 @@ class SosCubit extends Cubit<SosState> {
 
     // Log successful SOS in history.
     final pos = _locationService.lastPosition;
-    await _sosHistory.add(SosHistoryEntry(
-      timestamp: DateTime.now(),
-      latitude: pos?.latitude,
-      longitude: pos?.longitude,
-      contactsNotified: result.totalContacts,
-      smsSentCount: result.smsSentCount,
-      wasCancelled: false,
-    ));
+    await _sosHistory.add(
+      SosHistoryEntry(
+        timestamp: DateTime.now(),
+        latitude: pos?.latitude,
+        longitude: pos?.longitude,
+        contactsNotified: result.totalContacts,
+        smsSentCount: result.smsSentCount,
+        wasCancelled: false,
+      ),
+    );
   }
 
   /// Deactivate SOS and stop the siren.
   Future<void> deactivateSos() async {
+    _settingsBox.delete(_deadlineKey);
     await _audioService.stopAll();
     await _triggerSosUseCase.cancel();
     await SosForegroundService.instance.stop();

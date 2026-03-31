@@ -37,6 +37,9 @@ class ServiceBootstrapper {
   ServiceBootstrapper._();
 
   static StreamSubscription<DetectionAlert>? _crashSubscription;
+  static StreamSubscription<VoiceDistressEvent>? _voiceSubscription;
+  static StreamSubscription<AnomalyMovementEvent>? _anomalySubscription;
+  static StreamSubscription<RoadConditionEvent>? _roadSubscription;
 
   /// Bootstrap all services based on persisted Hive state.
   ///
@@ -240,12 +243,30 @@ class ServiceBootstrapper {
 
     if (_isEnabled(settings, 'dead_man_switch_enabled')) {
       try {
-        final intervalMinutes =
-            settings.get('dms_interval_minutes', defaultValue: 30) as int;
-        sl<DeadManSwitchService>()
-            .startWithInterval(Duration(minutes: intervalMinutes));
-        AppLogger.info(
-            '[ServiceBootstrapper] DeadManSwitch re-hydrated (${intervalMinutes}min)');
+        final dms = sl<DeadManSwitchService>();
+        final savedDeadlineStr = settings.get('dms_next_deadline') as String?;
+
+        if (savedDeadlineStr != null) {
+          final savedDeadline = DateTime.parse(savedDeadlineStr);
+          if (savedDeadline.isBefore(DateTime.now())) {
+            // Deadline passed while app was off. Trigger immediately.
+            AppLogger.warning(
+                '[ServiceBootstrapper] DMS deadline PASSED while app was closed. Triggering SOS.');
+            dms.onTrigger();
+          } else {
+            // Restore active countdown.
+            AppLogger.info(
+                '[ServiceBootstrapper] DMS deadline RESTORED: $savedDeadline');
+            dms.restore(savedDeadline);
+          }
+        } else {
+          // No saved deadline, start a fresh one.
+          final intervalMinutes =
+              settings.get('dms_interval_minutes', defaultValue: 30) as int;
+          dms.startWithInterval(Duration(minutes: intervalMinutes));
+          AppLogger.info(
+              '[ServiceBootstrapper] DeadManSwitch started fresh (${intervalMinutes}min)');
+        }
       } catch (e) {
         AppLogger.warning('[ServiceBootstrapper] DeadManSwitch failed: $e');
       }
@@ -255,7 +276,8 @@ class ServiceBootstrapper {
       try {
         final voiceService = sl<VoiceDistressService>();
         await voiceService.start();
-        voiceService.onDistressDetected.listen((event) {
+        _voiceSubscription?.cancel();
+        _voiceSubscription = voiceService.onDistressDetected.listen((event) {
           final alertEvent = AlertEvent(
             id: 'voice_distress_${DateTime.now().millisecondsSinceEpoch}',
             type: event.alertType,
@@ -283,7 +305,8 @@ class ServiceBootstrapper {
       try {
         final movService = sl<AnomalyMovementService>();
         await movService.start();
-        movService.onAnomalyDetected.listen((event) {
+        _anomalySubscription?.cancel();
+        _anomalySubscription = movService.onAnomalyDetected.listen((event) {
           final alertEvent = AlertEvent(
             id: 'anomaly_mov_${DateTime.now().millisecondsSinceEpoch}',
             type: event.alertType,
@@ -312,7 +335,8 @@ class ServiceBootstrapper {
       try {
         final roadService = sl<RoadConditionService>();
         await roadService.start();
-        roadService.onHazardDetected.listen((event) {
+        _roadSubscription?.cancel();
+        _roadSubscription = roadService.onHazardDetected.listen((event) {
           final alertEvent = AlertEvent(
             id: 'road_${event.result.condition.name}_${DateTime.now().millisecondsSinceEpoch}',
             type: event.alertType,
@@ -364,6 +388,63 @@ class ServiceBootstrapper {
   static void dispose() {
     _crashSubscription?.cancel();
     _crashSubscription = null;
+    _voiceSubscription?.cancel();
+    _voiceSubscription = null;
+    _anomalySubscription?.cancel();
+    _anomalySubscription = null;
+    _roadSubscription?.cancel();
+    _roadSubscription = null;
+  }
+
+  /// RESTORE subset of services for background isolate (Android).
+  /// This must NOT use Cubits/UI-bound logic.
+  static Future<void> bootstrapBackground({
+    required GetIt sl,
+    required Box settings,
+  }) async {
+    AppLogger.info('[ServiceBootstrapper] Starting background re-hydration...');
+
+    if (_isEnabled(settings, 'shake_enabled')) {
+      try {
+        sl<ShakeDetectionService>().startListening(
+          onShakeDetected: () {
+            // Background trigger: Notification?
+            AppLogger.info('[ServiceBootstrapper] Shake detected in background');
+          },
+        );
+      } catch (_) {}
+    }
+
+    if (_isEnabled(settings, 'crash_fall_enabled')) {
+      try {
+        final service = sl<CrashFallDetectionService>();
+        await service.start();
+        _crashSubscription = service.alerts.listen((_) {});
+      } catch (_) {}
+    }
+
+    // Add other silent monitors here if needed.
+    if (_isEnabled(settings, 'geofence_enabled')) {
+      try {
+        final service = sl<GeofenceService>();
+        service.loadZones(settings);
+        service.start(onExitAllZones: (position) {
+          // In background, we might send SOS directly or issue a notification.
+          AppLogger.warning('[ServiceBootstrapper] Geofence exited in BACKGROUND!');
+        });
+      } catch (_) {}
+    }
+
+    if (_isEnabled(settings, 'context_alert_enabled')) {
+      try {
+        sl<WeatherFeedService>().start();
+        sl<ContextAlertService>().start(
+          onContextAlert: (ctxAlert) {
+            AppLogger.warning('[ServiceBootstrapper] Context Alert in BACKGROUND: ${ctxAlert.title}');
+          },
+        );
+      } catch (_) {}
+    }
   }
 
   static bool _isEnabled(Box settings, String key) =>

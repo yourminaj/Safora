@@ -979,4 +979,74 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sosHistoryFreeNote =>
       'Showing last 7 days. Upgrade to Pro for full history.';
+
+  @override
+  String get emergencyCenter => 'Emergency Center';
+
+  @override
+  String get emergencyCenterSubtitle => 'SOS, first aid, safe places & more';
+
+  @override
+  String get alertPreferences => 'Alert Preferences';
+
+  @override
+  String get alertPreferencesSubtitle => 'Choose which alerts to receive';
+
+  @override
+  String get voiceDistressDetectedTitle => 'Voice Distress Detected';
+
+  @override
+  String voiceDistressDetectedDesc(String pct) {
+    return 'Distress vocalization detected (confidence: $pct%). SOS countdown started.';
+  }
+
+  @override
+  String get voiceDistressEnabled => 'Voice Distress Detection enabled';
+
+  @override
+  String get voiceDistressDisabled => 'Voice Distress Detection disabled';
+
+  @override
+  String anomalyMovementTitle(String className) {
+    return 'Suspicious Movement: $className';
+  }
+
+  @override
+  String anomalyMovementDesc(String className, String pct) {
+    return 'Anomalous movement detected ($className, confidence: $pct%). SOS countdown started.';
+  }
+
+  @override
+  String get anomalyMovementEnabled => 'Anomaly Movement Detection enabled';
+
+  @override
+  String get anomalyMovementDisabled => 'Anomaly Movement Detection disabled';
+
+  @override
+  String roadHazardTitle(String condition) {
+    return 'Road Hazard: $condition';
+  }
+
+  @override
+  String roadHazardDesc(String speed, String condition, String pct) {
+    return 'Road hazard detected at $speed km/h ($condition, confidence: $pct%).';
+  }
+
+  @override
+  String get roadConditionEnabled => 'Road Condition Detection enabled';
+
+  @override
+  String get roadConditionDisabled => 'Road Condition Detection disabled';
+
+  @override
+  String get deadManSwitchActive => 'Dead Man\'s Switch Active';
+
+  @override
+  String get tapToConfirmSafe => 'Tap to confirm you\'re safe';
+
+  @override
+  String get imSafe => 'I\'m Safe';
+
+  @override
+  String get checkInConfirmed => 'Check-in confirmed — timer reset';
 }

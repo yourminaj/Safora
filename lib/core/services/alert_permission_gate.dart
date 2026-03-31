@@ -56,14 +56,52 @@ class AlertPermissionGate {
     return _notificationCategories.contains(category);
   }
 
+  /// Whether the given alert type requires microphone (Voice Distress).
+  static bool needsMicrophone(AlertType type) {
+    return type == AlertType.voiceDistressSos;
+  }
+
+  /// Whether the given alert type requires device sensors (Accelerometer).
+  static bool needsSensors(AlertType type) {
+    return type == AlertType.elderlyFall ||
+        type == AlertType.carAccident ||
+        type == AlertType.motorcycleCrash ||
+        type == AlertType.pedestrianHit ||
+        type == AlertType.phoneSnatching ||
+        type == AlertType.suspiciousActivity; // fallback for shake
+  }
+
+  /// Whether the given alert type is a background SOS trigger requiring SMS & Battery optimization ignoring.
+  static bool needsBackgroundEmergency(AlertType type) {
+    return needsMicrophone(type) || needsSensors(type) || type == AlertType.geofenceExit;
+  }
+
   /// Get all permissions required for an alert type.
   static Set<Permission> requiredPermissions(AlertType type) {
     final perms = <Permission>{};
     if (needsLocation(type.category)) {
       perms.add(Permission.location);
+      // For full SOS functionality, background location is also necessary,
+      // but usually requested separately. We add it to the required list if background emergency.
+      if (needsBackgroundEmergency(type)) {
+        perms.add(Permission.locationAlways);
+      }
     }
     if (needsNotification(type.category)) {
       perms.add(Permission.notification);
+    }
+    if (needsMicrophone(type)) {
+      perms.add(Permission.microphone);
+    }
+    if (needsSensors(type)) {
+      perms.add(Permission.sensors);
+      // Activity recognition is often needed alongside sensors on newer Android
+      perms.add(Permission.activityRecognition);
+    }
+    if (needsBackgroundEmergency(type)) {
+      perms.add(Permission.sms);
+      perms.add(Permission.contacts);
+      perms.add(Permission.ignoreBatteryOptimizations);
     }
     return perms;
   }
@@ -130,7 +168,14 @@ class PermissionResult {
   List<String> get deniedNames {
     return denied.map((p) {
       if (p == Permission.location) return 'Location';
+      if (p == Permission.locationAlways) return 'Background Location';
       if (p == Permission.notification) return 'Notification';
+      if (p == Permission.microphone) return 'Microphone';
+      if (p == Permission.sensors) return 'Body Sensors';
+      if (p == Permission.activityRecognition) return 'Motion & Fitness';
+      if (p == Permission.sms) return 'SMS';
+      if (p == Permission.contacts) return 'Contacts';
+      if (p == Permission.ignoreBatteryOptimizations) return 'Battery Optimization Exemption';
       return p.toString();
     }).toList();
   }

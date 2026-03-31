@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/services/audio_service.dart';
 import 'package:safora/core/services/location_service.dart';
@@ -11,6 +12,7 @@ import 'package:safora/presentation/blocs/sos/sos_state.dart';
 import 'package:safora/presentation/widgets/countdown_overlay.dart';
 import '../../helpers/widget_test_helpers.dart';
 
+class MockBox extends Mock implements Box<dynamic> {}
 class MockAudioService extends Mock implements AudioService {}
 class MockTriggerSosUseCase extends Mock implements TriggerSosUseCase {}
 class MockContactsRepository extends Mock implements ContactsRepository {}
@@ -26,12 +28,18 @@ void main() {
     when(() => mockAudio.stopAll()).thenAnswer((_) async {});
     when(() => mockAudio.playSiren()).thenAnswer((_) async {});
 
+    final mockBox = MockBox();
+    when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue'))).thenReturn(null);
+    when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
+    when(() => mockBox.delete(any())).thenAnswer((_) async {});
+
     cubit = SosCubit(
       audioService: mockAudio,
       triggerSosUseCase: MockTriggerSosUseCase(),
       contactsRepository: MockContactsRepository(),
       sosHistoryDatasource: MockSosHistoryDatasource(),
       locationService: MockLocationService(),
+      settingsBox: mockBox,
     );
   });
 
