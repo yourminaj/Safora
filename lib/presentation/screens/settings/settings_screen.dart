@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
-import 'package:lottie/lottie.dart';
+import '../../widgets/safora_animated_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../app.dart';
@@ -1329,9 +1329,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               _SettingsTile(
-                icon: Icons.record_voice_over_rounded, // fallback only
-                iconColor: const Color(0xFFE53935), // brand Emergency Red
-                lottiePath: 'assets/lottie/voice_distress.json',
+                icon: Icons.record_voice_over_rounded,
+                iconColor: const Color(0xFFE53935),
+                customIcon: const SaforaVoiceDistressIcon(size: 30, animated: true),
                 title: 'Voice Distress Detection',
                 subtitle: 'ML detects screams & distress calls (microphone)',
                 onTap: () => _toggleVoiceDistress(!_voiceDistressEnabled),
@@ -1348,9 +1348,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               _SettingsTile(
-                icon: Icons.directions_run_rounded, // fallback only
-                iconColor: const Color(0xFF9C27B0), // brand purple
-                lottiePath: 'assets/lottie/anomaly_movement.json',
+                icon: Icons.directions_run_rounded,
+                iconColor: const Color(0xFF9C27B0),
+                customIcon: const SaforaAnomalyMovementIcon(size: 30, animated: true),
                 title: 'Anomaly Movement Detection',
                 subtitle: 'ML detects struggling, dragging & falls (accelerometer)',
                 onTap: () => _toggleAnomalyMovement(!_anomalyMovementEnabled),
@@ -1367,9 +1367,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               _SettingsTile(
-                icon: Icons.construction_rounded, // fallback only
-                iconColor: const Color(0xFFFF6F00), // brand Urgent Amber
-                lottiePath: 'assets/lottie/road_condition.json',
+                icon: Icons.construction_rounded,
+                iconColor: const Color(0xFFFF6F00),
+                customIcon: const SaforaRoadConditionIcon(size: 30, animated: true),
                 title: 'Road Condition Detection',
                 subtitle: 'ML detects potholes, rough roads & hard braking',
                 onTap: () => _toggleRoadCondition(!_roadConditionEnabled),
@@ -1678,7 +1678,7 @@ class _SettingsTile extends StatelessWidget {
     required this.onTap,
     this.iconColor,
     this.trailing,
-    this.lottiePath,
+    this.customIcon,
   });
 
   final IconData icon;
@@ -1688,28 +1688,21 @@ class _SettingsTile extends StatelessWidget {
   final VoidCallback onTap;
   final Widget? trailing;
 
-  /// When set, renders a looping Lottie animation instead of the [Icon].
-  /// Path is relative to the asset bundle, e.g. `assets/lottie/voice_distress.json`.
-  final String? lottiePath;
+  /// When set, renders a custom branded widget (e.g. [SaforaVoiceDistressIcon])
+  /// instead of the default [Icon]. Size it to ≈30×30 for best fit in the tile.
+  final Widget? customIcon;
 
   @override
   Widget build(BuildContext context) {
     final color = iconColor ?? AppColors.primary;
-    final Widget leadingChild = lottiePath != null
-        ? Lottie.asset(
-            lottiePath!,
-            width: 34,
-            height: 34,
-            fit: BoxFit.contain,
-            repeat: true,
-          )
-        : Icon(icon, color: color, size: 22);
+    final Widget leadingChild =
+        customIcon ?? Icon(icon, color: color, size: 22);
 
     return ListTile(
       leading: Container(
         width: 44,
         height: 44,
-        padding: EdgeInsets.all(lottiePath != null ? 4 : 8),
+        padding: EdgeInsets.all(customIcon != null ? 6 : 8),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),

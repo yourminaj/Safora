@@ -76,7 +76,6 @@ dependencies:
 
   # Intl / Date
   intl: ^0.20.2
-  lottie: ^3.3.2
   google_mobile_ads: ^7.0.0
   uuid: ^4.5.3
   another_telephony: ^0.4.1
@@ -110,7 +109,6 @@ flutter:
   assets:
     - assets/sounds/
     - assets/images/
-    - assets/lottie/
     - assets/ml_models/
 
 flutter_launcher_icons:

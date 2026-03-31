@@ -78,13 +78,20 @@ class _SosIconPainter extends CustomPainter {
     final cx = w / 2;
     final cy = h / 2;
 
-    final pulseRadius = w * 0.42 + (w * 0.06 * math.sin(progress * 2 * math.pi));
-    final ringPaint = Paint()
-      ..color = _BrandPalette.shieldRed.withValues(
-          alpha: 0.15 + 0.1 * math.sin(progress * 2 * math.pi))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = w * 0.02;
-    canvas.drawCircle(Offset(cx, cy), pulseRadius, ringPaint);
+    // Concentric sonar-style pulse rings (3 phase-offset expanding rings).
+    for (int i = 0; i < 3; i++) {
+      final ringProgress = (progress + i * 0.33) % 1.0;
+      final pulseRadius = w * 0.30 + (w * 0.18 * ringProgress);
+      final ringAlpha = (1.0 - ringProgress) * 0.25;
+      canvas.drawCircle(
+        Offset(cx, cy),
+        pulseRadius,
+        Paint()
+          ..color = _BrandPalette.shieldRed.withValues(alpha: ringAlpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * 0.012,
+      );
+    }
 
     final shieldPaint = Paint()
       ..shader = const LinearGradient(
@@ -445,6 +452,23 @@ class _MedicalIconPainter extends CustomPainter {
       ..lineTo(cx + w * 0.05, ecgY)
       ..lineTo(cx + w * 0.12, ecgY);
     canvas.drawPath(ecgPath, ecgPaint);
+
+    // Orbiting monitoring particles — 6 dots circling the green orb.
+    const particleCount = 6;
+    final orbitRadius = w * 0.36;
+    for (int i = 0; i < particleCount; i++) {
+      final angle =
+          (i / particleCount) * 2 * math.pi + progress * 2 * math.pi;
+      final px = cx + orbitRadius * math.cos(angle);
+      final py = cy + orbitRadius * math.sin(angle);
+      final dotAlpha = 0.3 + 0.25 * math.sin(progress * 2 * math.pi + i);
+      canvas.drawCircle(
+        Offset(px, py),
+        w * 0.018,
+        Paint()
+          ..color = Colors.white.withValues(alpha: dotAlpha),
+      );
+    }
   }
 
   @override
@@ -1082,6 +1106,18 @@ class _ContactsIconPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
     final cx = w / 2;
+
+    // Depth shadow — soft ellipse under the shield for floating effect.
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(cx, h * 0.92),
+        width: w * 0.50,
+        height: h * 0.06,
+      ),
+      Paint()
+        ..color = _BrandPalette.infoBlue.withValues(alpha: 0.15)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
 
     final shield = Path()
       ..moveTo(w * 0.5, h * 0.08)
@@ -1829,4 +1865,512 @@ class _LiveLocationIconPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_LiveLocationIconPainter old) => old.progress != progress;
+}
+
+// 14. SAFORA VOICE DISTRESS ICON — Pulsing mic with concentric alert rings
+//     Used: Settings — Voice Distress Detection tile
+
+class SaforaVoiceDistressIcon extends StatefulWidget {
+  const SaforaVoiceDistressIcon({
+    super.key,
+    this.size = 60,
+    this.animated = true,
+  });
+
+  final double size;
+  final bool animated;
+
+  @override
+  State<SaforaVoiceDistressIcon> createState() =>
+      _SaforaVoiceDistressIconState();
+}
+
+class _SaforaVoiceDistressIconState extends State<SaforaVoiceDistressIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      duration: const Duration(milliseconds: 1600),
+      vsync: this,
+    );
+    if (widget.animated) _ctrl.repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        return CustomPaint(
+          size: Size(widget.size, widget.size),
+          painter: _VoiceDistressIconPainter(progress: _ctrl.value),
+        );
+      },
+    );
+  }
+}
+
+class _VoiceDistressIconPainter extends CustomPainter {
+  _VoiceDistressIconPainter({required this.progress});
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+
+    // --- Pulsing alert rings (emanate outward from center) ---
+    for (int i = 0; i < 3; i++) {
+      final ringProgress = (progress + i * 0.33) % 1.0;
+      final radius = w * 0.14 + w * 0.30 * ringProgress;
+      final alpha = (1.0 - ringProgress) * 0.35;
+      canvas.drawCircle(
+        Offset(cx, h * 0.44),
+        radius,
+        Paint()
+          ..color = _BrandPalette.shieldRed.withValues(alpha: alpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * 0.018,
+      );
+    }
+
+    // --- Mic capsule body ---
+    final micPaint = Paint()..color = _BrandPalette.shieldRed;
+    final pulse = 1.0 + 0.07 * math.sin(progress * 2 * math.pi);
+    canvas.save();
+    canvas.translate(cx, h * 0.36);
+    canvas.scale(pulse);
+    canvas.translate(-cx, -h * 0.36);
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(cx, h * 0.30),
+          width: w * 0.20,
+          height: w * 0.28,
+        ),
+        Radius.circular(w * 0.10),
+      ),
+      micPaint,
+    );
+    canvas.restore();
+
+    // --- Mic arc / open bracket ---
+    final arcPaint = Paint()
+      ..color = _BrandPalette.shieldRed
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.045
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawArc(
+      Rect.fromCenter(
+        center: Offset(cx, h * 0.42),
+        width: w * 0.38,
+        height: w * 0.22,
+      ),
+      0,
+      math.pi,
+      false,
+      arcPaint,
+    );
+
+    // --- Mic stand (vertical line) ---
+    canvas.drawLine(
+      Offset(cx, h * 0.52),
+      Offset(cx, h * 0.65),
+      Paint()
+        ..color = _BrandPalette.shieldRed
+        ..strokeWidth = w * 0.045
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // --- Mic base (horizontal line) ---
+    canvas.drawLine(
+      Offset(cx - w * 0.14, h * 0.65),
+      Offset(cx + w * 0.14, h * 0.65),
+      Paint()
+        ..color = _BrandPalette.shieldRed
+        ..strokeWidth = w * 0.045
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_VoiceDistressIconPainter old) =>
+      old.progress != progress;
+}
+
+// 15. SAFORA ANOMALY MOVEMENT ICON — Running figure with accelerometer arcs
+//     Used: Settings — Anomaly Movement Detection tile
+
+class SaforaAnomalyMovementIcon extends StatefulWidget {
+  const SaforaAnomalyMovementIcon({
+    super.key,
+    this.size = 60,
+    this.animated = true,
+  });
+
+  final double size;
+  final bool animated;
+
+  @override
+  State<SaforaAnomalyMovementIcon> createState() =>
+      _SaforaAnomalyMovementIconState();
+}
+
+class _SaforaAnomalyMovementIconState extends State<SaforaAnomalyMovementIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      duration: const Duration(milliseconds: 1800),
+      vsync: this,
+    );
+    if (widget.animated) _ctrl.repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        return CustomPaint(
+          size: Size(widget.size, widget.size),
+          painter: _AnomalyMovementIconPainter(progress: _ctrl.value),
+        );
+      },
+    );
+  }
+}
+
+class _AnomalyMovementIconPainter extends CustomPainter {
+  _AnomalyMovementIconPainter({required this.progress});
+  final double progress;
+
+  // Brand purple for anomaly movement (matches Settings iconColor)
+  static const _accentColor = Color(0xFF9C27B0);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+
+    final bodyPaint = Paint()..color = _accentColor;
+    final strokePaint = Paint()
+      ..color = _accentColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.055
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // --- Motion streak lines (behind figure) ---
+    final streakAlpha = 0.25 + 0.20 * math.sin(progress * 2 * math.pi);
+    final streakPaint = Paint()
+      ..color = _accentColor.withValues(alpha: streakAlpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.03
+      ..strokeCap = StrokeCap.round;
+
+    for (int i = 0; i < 3; i++) {
+      final yOffset = h * (0.30 + i * 0.14);
+      final xEnd = cx - w * (0.22 + i * 0.04);
+      canvas.drawLine(
+        Offset(xEnd - w * 0.10, yOffset),
+        Offset(xEnd, yOffset),
+        streakPaint,
+      );
+    }
+
+    // --- Head ---
+    canvas.drawCircle(
+      Offset(cx + w * 0.04, h * 0.14),
+      w * 0.085,
+      bodyPaint,
+    );
+
+    // --- Body / torso (leaning forward) ---
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx + w * 0.04, h * 0.24)
+        ..lineTo(cx - w * 0.06, h * 0.50),
+      strokePaint,
+    );
+
+    // --- Forward arm ---
+    final armSwing = math.sin(progress * 2 * math.pi) * w * 0.06;
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx + w * 0.01, h * 0.30)
+        ..lineTo(cx + w * 0.14 + armSwing, h * 0.42),
+      strokePaint,
+    );
+
+    // --- Back arm ---
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx + w * 0.01, h * 0.30)
+        ..lineTo(cx - w * 0.14 - armSwing, h * 0.38),
+      strokePaint,
+    );
+
+    // --- Forward leg ---
+    final legSwing = math.sin(progress * 2 * math.pi) * w * 0.08;
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx - w * 0.06, h * 0.50)
+        ..lineTo(cx + w * 0.06 + legSwing, h * 0.68)
+        ..lineTo(cx + w * 0.12 + legSwing, h * 0.82),
+      strokePaint,
+    );
+
+    // --- Back leg ---
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx - w * 0.06, h * 0.50)
+        ..lineTo(cx - w * 0.14 - legSwing, h * 0.68)
+        ..lineTo(cx - w * 0.08 - legSwing, h * 0.82),
+      strokePaint,
+    );
+
+    // --- Alert badge (top-right exclamation) ---
+    final badgeCx = cx + w * 0.28;
+    final badgeCy = h * 0.14;
+    canvas.drawCircle(
+      Offset(badgeCx, badgeCy),
+      w * 0.12,
+      Paint()..color = _BrandPalette.shieldRed,
+    );
+    // Exclamation dot
+    canvas.drawCircle(
+      Offset(badgeCx, badgeCy + w * 0.045),
+      w * 0.018,
+      Paint()..color = Colors.white,
+    );
+    // Exclamation bar
+    canvas.drawLine(
+      Offset(badgeCx, badgeCy - w * 0.055),
+      Offset(badgeCx, badgeCy + w * 0.015),
+      Paint()
+        ..color = Colors.white
+        ..strokeWidth = w * 0.028
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_AnomalyMovementIconPainter old) =>
+      old.progress != progress;
+}
+
+// 16. SAFORA ROAD CONDITION ICON — Road with pothole bump + warning indicator
+//     Used: Settings — Road Condition Detection tile
+
+class SaforaRoadConditionIcon extends StatefulWidget {
+  const SaforaRoadConditionIcon({
+    super.key,
+    this.size = 60,
+    this.animated = true,
+  });
+
+  final double size;
+  final bool animated;
+
+  @override
+  State<SaforaRoadConditionIcon> createState() =>
+      _SaforaRoadConditionIconState();
+}
+
+class _SaforaRoadConditionIconState extends State<SaforaRoadConditionIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+    if (widget.animated) _ctrl.repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        return CustomPaint(
+          size: Size(widget.size, widget.size),
+          painter: _RoadConditionIconPainter(progress: _ctrl.value),
+        );
+      },
+    );
+  }
+}
+
+class _RoadConditionIconPainter extends CustomPainter {
+  _RoadConditionIconPainter({required this.progress});
+  final double progress;
+
+  // Brand amber-orange for road condition (matches Settings iconColor)
+  static const _accentColor = Color(0xFFFF6F00);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+
+    // --- Road surface (dark asphalt rectangle) ---
+    final roadRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(w * 0.08, h * 0.48, w * 0.84, h * 0.38),
+      Radius.circular(w * 0.04),
+    );
+    canvas.drawRRect(
+      roadRect,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF424242), Color(0xFF212121)],
+        ).createShader(Rect.fromLTWH(0, 0, w, h)),
+    );
+
+    // --- Center dashed lane divider ---
+    final dashPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.6)
+      ..strokeWidth = w * 0.025
+      ..strokeCap = StrokeCap.round;
+    for (int i = 0; i < 3; i++) {
+      final xStart = w * 0.18 + i * w * 0.24;
+      canvas.drawLine(
+        Offset(xStart, h * 0.67),
+        Offset(xStart + w * 0.12, h * 0.67),
+        dashPaint,
+      );
+    }
+
+    // --- Pothole bump (rises and falls on the road) ---
+    final bumpOffset = math.sin(progress * 2 * math.pi) * h * 0.04;
+    final bumpPath = Path()
+      ..moveTo(cx - w * 0.18, h * 0.48)
+      ..quadraticBezierTo(cx, h * 0.48 - h * 0.16 + bumpOffset, cx + w * 0.18, h * 0.48);
+    canvas.drawPath(
+      bumpPath,
+      Paint()
+        ..color = _accentColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.055
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // --- Car silhouette (simple) above the road ---
+    final carY = h * 0.24 - math.sin(progress * 2 * math.pi) * h * 0.03;
+    // Car body
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(cx - w * 0.24, carY, w * 0.48, h * 0.18),
+        Radius.circular(w * 0.04),
+      ),
+      Paint()..color = _accentColor,
+    );
+    // Cabin roof
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(cx - w * 0.14, carY - h * 0.10, w * 0.28, h * 0.12),
+        Radius.circular(w * 0.03),
+      ),
+      Paint()..color = _accentColor,
+    );
+    // Windshields (light windows)
+    final windowPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.5);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(cx - w * 0.12, carY - h * 0.085, w * 0.10, h * 0.075),
+        Radius.circular(w * 0.02),
+      ),
+      windowPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(cx + w * 0.02, carY - h * 0.085, w * 0.10, h * 0.075),
+        Radius.circular(w * 0.02),
+      ),
+      windowPaint,
+    );
+    // Wheels
+    for (final xOff in [cx - w * 0.16, cx + w * 0.16]) {
+      canvas.drawCircle(
+        Offset(xOff, carY + h * 0.18),
+        w * 0.065,
+        Paint()..color = const Color(0xFF212121),
+      );
+      canvas.drawCircle(
+        Offset(xOff, carY + h * 0.18),
+        w * 0.035,
+        Paint()..color = _accentColor,
+      );
+    }
+
+    // --- Alert flash (top-right warning badge) ---
+    final flashAlpha = 0.6 + 0.4 * math.sin(progress * 2 * math.pi * 2);
+    canvas.drawCircle(
+      Offset(w * 0.80, h * 0.16),
+      w * 0.13,
+      Paint()..color = _BrandPalette.shieldRed.withValues(alpha: flashAlpha),
+    );
+    // Warning triangle
+    final triPaint = Paint()..color = Colors.white;
+    final triPath = Path()
+      ..moveTo(w * 0.80, h * 0.07)
+      ..lineTo(w * 0.86, h * 0.22)
+      ..lineTo(w * 0.74, h * 0.22)
+      ..close();
+    canvas.drawPath(triPath, triPaint);
+    // Exclamation in triangle
+    canvas.drawLine(
+      Offset(w * 0.80, h * 0.10),
+      Offset(w * 0.80, h * 0.17),
+      Paint()
+        ..color = _BrandPalette.shieldRed
+        ..strokeWidth = w * 0.022
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawCircle(
+      Offset(w * 0.80, h * 0.195),
+      w * 0.012,
+      Paint()..color = _BrandPalette.shieldRed,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_RoadConditionIconPainter old) =>
+      old.progress != progress;
 }

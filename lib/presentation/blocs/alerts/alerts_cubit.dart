@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/alert_sounds.dart';
 import '../../../core/constants/alert_types.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../data/models/alert_event.dart';
@@ -27,6 +28,7 @@ class AlertsCubit extends Cubit<AlertsState> {
   final NotificationService _notificationService;
   final AlertPreferences _prefs;
   static const _riskEngine = RiskScoreEngine();
+  final Map<AlertType, DateTime> _lastLocalAlertTime = {};
   Timer? _refreshTimer;
 
   static const Duration refreshInterval = Duration(minutes: 15);
@@ -103,11 +105,22 @@ class AlertsCubit extends Cubit<AlertsState> {
     // Notify if critical.
     if (enriched.type.priority == AlertPriority.critical ||
         (enriched.riskScore ?? 0) >= 80) {
-      _notificationService.showDisasterAlert(
-        title: '${enriched.type.category.label}: ${enriched.title}',
-        body: enriched.description ??
-            'Critical alert from ${enriched.source ?? "on-device detection"}',
-      );
+      final now = DateTime.now();
+      final lastTime = _lastLocalAlertTime[enriched.type];
+      if (lastTime == null || now.difference(lastTime) > const Duration(seconds: 10)) {
+        _lastLocalAlertTime[enriched.type] = now;
+        
+        // e.g. 'sounds/siren.mp3' -> 'siren'
+        final soundPath = AlertSounds.forType(enriched.type);
+        final soundName = soundPath.split('/').last.split('.').first;
+
+        _notificationService.showDisasterAlert(
+          title: '${enriched.type.category.label}: ${enriched.title}',
+          body: enriched.description ??
+              'Critical alert from ${enriched.source ?? "on-device detection"}',
+          soundName: soundName,
+        );
+      }
     }
   }
 
@@ -203,10 +216,15 @@ class AlertsCubit extends Cubit<AlertsState> {
       final id = alert.id ?? '${alert.title}_${alert.timestamp}';
       if (!cachedIds.contains(id) &&
           alert.type.priority == AlertPriority.critical) {
+        
+        final soundPath = AlertSounds.forType(alert.type);
+        final soundName = soundPath.split('/').last.split('.').first;
+
         _notificationService.showDisasterAlert(
           title: '${alert.type.category.label}: ${alert.title}',
           body: alert.description ??
               'Critical alert from ${alert.source ?? "unknown source"}',
+          soundName: soundName,
         );
         notificationCount++;
       }

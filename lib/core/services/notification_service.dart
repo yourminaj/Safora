@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -22,7 +23,7 @@ class NotificationService {
     if (_isInitialized) return;
 
     const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/ic_stat_safora');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -121,6 +122,8 @@ class NotificationService {
       playSound: true,
       enableVibration: true,
       category: AndroidNotificationCategory.alarm,
+      icon: '@drawable/ic_stat_safora',
+      color: Color(0xFFEF4444),
     );
 
     const details = NotificationDetails(
@@ -150,6 +153,8 @@ class NotificationService {
       channelDescription: 'Low battery warning notifications',
       importance: Importance.high,
       priority: Priority.high,
+      icon: '@drawable/ic_stat_safora',
+      color: Color(0xFFF59E0B),
     );
 
     const details = NotificationDetails(
@@ -173,9 +178,15 @@ class NotificationService {
   Future<void> showDisasterAlert({
     required String title,
     required String body,
+    String? soundName,
+    Color? color,
   }) async {
     await init();
-    const androidDetails = AndroidNotificationDetails(
+    
+    // Setup audio logic if soundName is provided
+    final String? androidSound = soundName; // e.g. "siren" (without extension)
+    
+    final androidDetails = AndroidNotificationDetails(
       'disaster_channel',
       'Disaster Alerts',
       channelDescription: 'Disaster and weather alert notifications',
@@ -183,14 +194,19 @@ class NotificationService {
       priority: Priority.high,
       playSound: true,
       enableVibration: true,
+      icon: '@drawable/ic_stat_safora',
+      color: color ?? const Color(0xFF1E3A8A),
+      styleInformation: BigTextStyleInformation(body),
+      sound: androidSound != null ? RawResourceAndroidNotificationSound(androidSound) : null,
     );
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        sound: androidSound != null ? '$androidSound.mp3' : null,
       ),
     );
 
@@ -253,6 +269,8 @@ class NotificationService {
       priority: Priority.high,
       playSound: true,
       enableVibration: true,
+      icon: '@drawable/ic_stat_safora',
+      color: Color(0xFF10B981),
     );
 
     const details = NotificationDetails(

@@ -419,7 +419,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           dms.checkIn();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text('✓ Check-in confirmed — timer reset'),
+                              content: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.check_circle_rounded,
+                                      color: Colors.white, size: 20),
+                                  SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                        'Check-in confirmed — timer reset'),
+                                  ),
+                                ],
+                              ),
                               backgroundColor: AppColors.safe,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(

@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:hive/hive.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:safora/l10n/app_localizations.dart';
+import '../../../core/services/app_logger.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../widgets/safora_brand_mark.dart';
@@ -33,12 +36,45 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     final settingsBox = getIt<Box>(instanceName: 'app_settings');
+
+    // DEV ONLY: Reset onboarding on every debug launch for testing.
+    // Set 'debug_force_onboarding' to true in Hive to re-trigger onboarding
+    // without clearing app data. Ignored in release builds.
+    if (kDebugMode) {
+      final forceOnboarding =
+          settingsBox.get('debug_force_onboarding', defaultValue: false) as bool;
+      if (forceOnboarding) {
+        await settingsBox.delete('onboarding_completed');
+        await settingsBox.delete('onboarding_build');
+        await settingsBox.put('debug_force_onboarding', false);
+        AppLogger.info('[Splash] DEBUG: Forced onboarding reset');
+      }
+    }
+
+    // Guard: if this installation has never completed onboarding (no build
+    // token stored), treat the session as a fresh install and show onboarding.
+    // This fixes the case where a previous debug session left
+    // onboarding_completed=true in Hive but the user did a fresh install
+    // without a clean data wipe.
+    final info = await PackageInfo.fromPlatform();
+    final currentBuild = info.buildNumber;
+    final storedBuild =
+        settingsBox.get('onboarding_build', defaultValue: '') as String;
     final onboardingDone =
         settingsBox.get('onboarding_completed', defaultValue: false) as bool;
 
+    AppLogger.info(
+      '[Splash] onboarding_completed=$onboardingDone '
+      'storedBuild=$storedBuild currentBuild=$currentBuild',
+    );
+
+    // If onboarding was never stamped with a build number it means the flag
+    // came from an old / migrated install — reset and re-show onboarding.
+    final needsOnboarding = !onboardingDone || storedBuild.isEmpty;
+
     if (!mounted) return;
 
-    if (onboardingDone) {
+    if (!needsOnboarding) {
       final authService = getIt<AuthService>();
       if (authService.isSignedIn) {
         // Reload to ensure emailVerified flag is fresh from Firebase.

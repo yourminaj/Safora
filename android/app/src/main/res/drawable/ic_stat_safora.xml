@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24.0"
+    android:viewportHeight="24.0">
+    <!-- Solid shield path with S cutout in the middle for Safora branding -->
+    <path
+        android:fillColor="#ffffff"
+        android:pathData="M12,1L3,5v6c0,5.55 3.84,10.74 9,12c5.16,-1.26 9,-6.45 9,-12V5L12,1z M15.65,13.84c-0.29,1.72 -1.78,3.13 -3.65,3.13c-1.89,0 -3.42,-1.4 -3.68,-3.18h1.8c0.23,0.76 0.99,1.38 1.88,1.38s1.63,-0.6 1.63,-1.35c0,-0.84 -0.68,-1.2 -1.89,-1.59c-1.82,-0.57 -2.97,-1.42 -2.97,-3c0,-1.65 1.48,-3.02 3.42,-3.02c1.8,0 3.23,1.31 3.53,2.94h-1.8c-0.23,-0.63 -0.87,-1.14 -1.73,-1.14c-0.89,0 -1.5,0.57 -1.5,1.26c0,0.83 0.65,1.13 1.93,1.55c1.87,0.61 2.92,1.54 2.92,3.02 C15.89,13.84 15.65,13.84 15.65,13.84z"/>
+</vector>
