@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:math' show sin, cos, sqrt, atan2, pi;
+import 'dart:io';
+import 'dart:math' show Random, sin, cos, sqrt, atan2, pi;
 import 'package:http/http.dart' as http;
 import '../models/emergency_poi.dart';
 import '../../core/services/app_logger.dart';
@@ -10,21 +12,32 @@ import '../../core/services/app_logger.dart';
 /// pharmacies, shelters) within a given radius of a location.
 ///
 /// Uses the public Overpass API. Rate limited but free. No API key needed.
+/// Implements exponential backoff with jitter for transient failures (504s).
 class OverpassApiClient {
   OverpassApiClient({http.Client? httpClient})
       : _client = httpClient ?? http.Client();
 
   final http.Client _client;
+  final _random = Random();
 
   static const String _endpoint = 'https://overpass-api.de/api/interpreter';
 
   /// Maximum radius in meters (5 km default).
   static const int defaultRadiusMeters = 5000;
 
+  /// Retry configuration for transient failures.
+  static const int _maxAttempts = 3;
+  static const Duration _baseDelay = Duration(seconds: 2);
+  static const Duration _maxDelay = Duration(seconds: 16);
+
+  /// HTTP status codes that warrant a retry (transient server errors).
+  static const _retryableStatusCodes = {429, 500, 502, 503, 504};
+
   /// Fetch all emergency POIs near the given coordinates.
   ///
   /// Returns a combined list of hospitals, police, fire stations, etc.
   /// Sorted by distance from the center point.
+  /// Retries up to [_maxAttempts] times on transient server errors.
   Future<List<EmergencyPoi>> fetchNearbyPois({
     required double latitude,
     required double longitude,
@@ -33,15 +46,20 @@ class OverpassApiClient {
     final query = _buildQuery(latitude, longitude, radiusMeters);
 
     try {
-      final response = await _client.post(
-        Uri.parse(_endpoint),
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: {'data': query},
-      ).timeout(const Duration(seconds: 15));
+      final response = await _retryWithBackoff(() async {
+        return await _client.post(
+          Uri.parse(_endpoint),
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: {'data': query},
+        ).timeout(const Duration(seconds: 15));
+      });
 
       if (response.statusCode != 200) {
+        final snippet = response.body.length > 200
+            ? response.body.substring(0, 200)
+            : response.body;
         AppLogger.error(
-          '[Overpass] HTTP ${response.statusCode}: ${response.body.substring(0, 200)}',
+          '[Overpass] HTTP ${response.statusCode}: $snippet',
         );
         return [];
       }
@@ -75,6 +93,67 @@ class OverpassApiClient {
       AppLogger.error('[Overpass] Failed to fetch POIs: $e');
       return [];
     }
+  }
+
+  /// Execute [operation] with exponential backoff and full jitter.
+  ///
+  /// Retries on:
+  /// - [SocketException] (network unreachable)
+  /// - [TimeoutException] (request timed out)
+  /// - HTTP responses with retryable status codes (429, 500-504)
+  ///
+  /// Uses "Full Jitter" strategy (AWS best practice) to prevent
+  /// thundering herd when the Overpass API recovers from an outage.
+  Future<http.Response> _retryWithBackoff(
+    Future<http.Response> Function() operation,
+  ) async {
+    for (var attempt = 1; attempt <= _maxAttempts; attempt++) {
+      try {
+        final response = await operation();
+
+        // Success or non-retryable error — return immediately.
+        if (!_retryableStatusCodes.contains(response.statusCode) ||
+            attempt == _maxAttempts) {
+          return response;
+        }
+
+        // Retryable HTTP error — log and wait.
+        final delay = _calculateDelay(attempt);
+        AppLogger.warning(
+          '[Overpass] HTTP ${response.statusCode} on attempt $attempt/$_maxAttempts. '
+          'Retrying in ${delay.inMilliseconds}ms...',
+        );
+        await Future.delayed(delay);
+      } on SocketException {
+        if (attempt == _maxAttempts) rethrow;
+        final delay = _calculateDelay(attempt);
+        AppLogger.warning(
+          '[Overpass] Network error on attempt $attempt/$_maxAttempts. '
+          'Retrying in ${delay.inMilliseconds}ms...',
+        );
+        await Future.delayed(delay);
+      } on TimeoutException {
+        if (attempt == _maxAttempts) rethrow;
+        final delay = _calculateDelay(attempt);
+        AppLogger.warning(
+          '[Overpass] Timeout on attempt $attempt/$_maxAttempts. '
+          'Retrying in ${delay.inMilliseconds}ms...',
+        );
+        await Future.delayed(delay);
+      }
+    }
+
+    // Should never reach here, but satisfy the type system.
+    throw StateError('[Overpass] Exhausted all retry attempts');
+  }
+
+  /// Calculate delay with full jitter: random(0, min(maxDelay, base * 2^attempt))
+  Duration _calculateDelay(int attempt) {
+    final exponentialMs =
+        _baseDelay.inMilliseconds * (1 << (attempt - 1)); // 2^(attempt-1)
+    final cappedMs = exponentialMs.clamp(0, _maxDelay.inMilliseconds);
+    final jitteredMs = _random.nextInt(cappedMs + 1); // Full jitter: [0, cap]
+    return Duration(milliseconds: jitteredMs);
   }
 
   /// Build the Overpass QL query for emergency amenities.

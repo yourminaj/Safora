@@ -65,16 +65,42 @@ class NotificationService {
       _persistFcmToken(newToken);
     });
 
-    // Handle foreground messages.
+    // Handle foreground messages — gated by alert priority for correct sound.
+    //
+    // The FCM data payload may include 'alert_type' or 'priority' fields.
+    // If present, we resolve the correct sound (siren vs phone_ring).
+    // If absent, we default to the notification ring (NOT siren) to prevent
+    // false siren triggers from generic/test push notifications.
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final notification = message.notification;
-      if (notification != null) {
-        showDisasterAlert(
-          title: notification.title ?? 'Safora Alert',
-          body: notification.body ?? '',
-        );
-      }
+      if (notification == null) return;
+
+      // Resolve sound from data payload, defaulting to notification ring.
+      final soundName = _resolveFcmSoundName(message.data);
+
+      showDisasterAlert(
+        title: notification.title ?? 'Safora Alert',
+        body: notification.body ?? '',
+        soundName: soundName,
+      );
     });
+  }
+
+  /// Resolve the notification sound name from the FCM data payload.
+  ///
+  /// **Sound policy:**
+  /// - If `data['priority']` is `'critical'` → `'siren'` (emergency siren).
+  /// - Everything else → `'phone_ring'` (notification ring).
+  ///
+  /// This prevents the siren from firing for generic, test, or non-critical
+  /// push notifications sent from Firebase Console or backend.
+  String _resolveFcmSoundName(Map<String, dynamic> data) {
+    final priority = data['priority']?.toString().toLowerCase();
+    if (priority == 'critical') {
+      return 'siren';
+    }
+    // Default: safe notification ring — NEVER default to siren.
+    return 'phone_ring';
   }
 
   /// Save FCM token to Firestore for targeted push notifications.

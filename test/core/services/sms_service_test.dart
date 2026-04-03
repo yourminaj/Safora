@@ -7,6 +7,8 @@ import 'package:safora/data/models/emergency_contact.dart';
 class MockLocationService extends Mock implements LocationService {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late MockLocationService mockLocation;
   late SmsService service;
 

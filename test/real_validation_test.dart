@@ -656,7 +656,7 @@ void main() {
     test('all sound paths use consistent prefix', () {
       // All should start with 'sounds/' for audioplayers to locate them.
       expect(AlertSounds.sirenSos, startsWith('sounds/'));
-      expect(AlertSounds.generalWarning, startsWith('sounds/'));
+      expect(AlertSounds.notificationRing, startsWith('sounds/'));
       expect(AlertSounds.crashAlarm, startsWith('sounds/'));
       expect(AlertSounds.earthquakeAlert, startsWith('sounds/'));
       expect(AlertSounds.floodWarning, startsWith('sounds/'));
@@ -683,12 +683,26 @@ void main() {
       }
     });
 
+    test('critical alerts use siren, non-critical use phone_ring', () {
+      // Sound policy: ONLY critical → siren.mp3, everything else → phone_ring.mp3
+      for (final type in AlertType.values) {
+        final path = AlertSounds.forType(type);
+        if (type.priority == AlertPriority.critical) {
+          expect(path, AlertSounds.sirenSos,
+              reason: '${type.name} is critical, should use siren');
+        } else {
+          expect(path, AlertSounds.notificationRing,
+              reason: '${type.name} is ${type.priority.name}, should use notification ring');
+        }
+      }
+    });
+
     test('all sound constants reference actual files (not ghost paths)', () {
-      // After the fix, all should map to siren.mp3 or phone_ring.mp3.
+      // All should map to siren.mp3 or phone_ring.mp3.
       final validFiles = {'sounds/siren.mp3', 'sounds/phone_ring.mp3'};
 
       expect(validFiles.contains(AlertSounds.sirenSos), true);
-      expect(validFiles.contains(AlertSounds.generalWarning), true);
+      expect(validFiles.contains(AlertSounds.notificationRing), true);
       expect(validFiles.contains(AlertSounds.phoneRing), true);
       expect(validFiles.contains(AlertSounds.crashAlarm), true);
     });

@@ -34,6 +34,8 @@ import '../../blocs/contacts/contacts_state.dart';
 import '../../blocs/alerts/alerts_cubit.dart';
 import '../../blocs/sos/sos_cubit.dart';
 import '../../blocs/theme/theme_cubit.dart';
+import '../../../data/models/alert_preferences.dart';
+import '../../../services/risk_score_engine.dart';
 
 /// Functional settings screen with real navigation and state.
 ///
@@ -124,8 +126,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (enabled) {
       _shakeService.startListening(
         onShakeDetected: () {
-          // Trigger SOS countdown when device is shaken.
-          context.read<SosCubit>().startCountdown();
+          final alertEvent = AlertEvent(
+            id: 'shake_${DateTime.now().millisecondsSinceEpoch}',
+            type: AlertType.shakeSos,
+            title: 'Aggressive Shake Detected',
+            description: 'A critical shake SOS pattern was recognized indicating distress.',
+            latitude: _lastLat,
+            longitude: _lastLon,
+            timestamp: DateTime.now(),
+            source: 'On-Device Accelerometer',
+            magnitude: 15.0, // Fixed default or placeholder magnitude
+          );
+          
+          if (mounted) {
+            context.read<AlertsCubit>().addLocalAlert(alertEvent);
+
+            // SOS gated by preferences + risk score threshold
+            final prefs = getIt<AlertPreferences>();
+            if (prefs.shouldReceive(alertEvent.type)) {
+              const engine = RiskScoreEngine();
+              if (engine.computeScore(alertEvent) >= 80) {
+                context.read<SosCubit>().startCountdown();
+              }
+            }
+          }
         },
       );
     } else {
@@ -239,11 +263,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         if (mounted) {
           context.read<AlertsCubit>().addLocalAlert(alertEvent);
 
-          // Auto-trigger SOS for vehicle crashes and hard impacts.
+          // Auto-trigger SOS for vehicle crashes — gated by preferences + risk score.
+          // Mirrors the exact guard from ServiceBootstrapper.
           if (detectionAlert.alertType == AlertType.carAccident ||
               detectionAlert.alertType == AlertType.motorcycleCrash ||
               detectionAlert.alertType == AlertType.pedestrianHit) {
-            context.read<SosCubit>().startCountdown();
+            final prefs = getIt<AlertPreferences>();
+            if (prefs.shouldReceive(detectionAlert.alertType)) {
+              const engine = RiskScoreEngine();
+              if (engine.computeScore(alertEvent) >= 80) {
+                context.read<SosCubit>().startCountdown();
+              }
+            }
           }
         }
       });
@@ -521,11 +552,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       service.start(
         onSnatchDetected: (confidence) {
           final l = AppLocalizations.of(context)!;
-          // Snatch is critical — auto-trigger SOS countdown.
-          if (mounted) {
-            context.read<SosCubit>().startCountdown();
-          }
-          // Also inject into alert pipeline.
+          // Build alert event first, then gate SOS behind preferences + risk score.
+          // Mirrors the exact guard from ServiceBootstrapper.
           final pct = (confidence * 100).toStringAsFixed(0);
           final alertEvent = AlertEvent(
             id: 'snatch_${DateTime.now().millisecondsSinceEpoch}',
@@ -540,6 +568,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           );
           if (mounted) {
             context.read<AlertsCubit>().addLocalAlert(alertEvent);
+
+            // SOS gated by preferences + risk score threshold.
+            final prefs = getIt<AlertPreferences>();
+            if (prefs.shouldReceive(alertEvent.type)) {
+              const engine = RiskScoreEngine();
+              if (engine.computeScore(alertEvent) >= 80) {
+                context.read<SosCubit>().startCountdown();
+              }
+            }
           }
         },
       );
@@ -687,7 +724,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           );
           if (mounted) {
             context.read<AlertsCubit>().addLocalAlert(alertEvent);
-            context.read<SosCubit>().startCountdown();
+
+            // SOS gated by preferences + risk score threshold.
+            // Mirrors the exact guard from ServiceBootstrapper.
+            final prefs = getIt<AlertPreferences>();
+            if (prefs.shouldReceive(alertEvent.type)) {
+              const engine = RiskScoreEngine();
+              if (engine.computeScore(alertEvent) >= 80) {
+                context.read<SosCubit>().startCountdown();
+              }
+            }
           }
         });
       });
@@ -740,7 +786,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           );
           if (mounted) {
             context.read<AlertsCubit>().addLocalAlert(alertEvent);
-            context.read<SosCubit>().startCountdown();
+
+            // SOS gated by preferences + risk score threshold.
+            // Mirrors the exact guard from ServiceBootstrapper.
+            final prefs = getIt<AlertPreferences>();
+            if (prefs.shouldReceive(alertEvent.type)) {
+              const engine = RiskScoreEngine();
+              if (engine.computeScore(alertEvent) >= 80) {
+                context.read<SosCubit>().startCountdown();
+              }
+            }
           }
         });
       });

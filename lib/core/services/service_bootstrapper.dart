@@ -71,19 +71,43 @@ class ServiceBootstrapper {
       await sl<SosContactAlertListener>().startListening();
       AppLogger.info('[ServiceBootstrapper] SosContactAlertListener started');
     } catch (e) {
-      AppLogger.warning('[ServiceBootstrapper] SosContactAlertListener failed: $e');
+      AppLogger.warning(
+        '[ServiceBootstrapper] SosContactAlertListener failed: $e',
+      );
     }
 
     // Helper to get current GPS coordinates.
-    double lastLat() =>
-        sl<LocationService>().lastPosition?.latitude ?? 0.0;
-    double lastLon() =>
-        sl<LocationService>().lastPosition?.longitude ?? 0.0;
+    double lastLat() => sl<LocationService>().lastPosition?.latitude ?? 0.0;
+    double lastLon() => sl<LocationService>().lastPosition?.longitude ?? 0.0;
 
     if (_isEnabled(settings, 'shake_enabled')) {
       try {
         sl<ShakeDetectionService>().startListening(
-          onShakeDetected: () => sl<SosCubit>().startCountdown(),
+          onShakeDetected: () {
+            final alertEvent = AlertEvent(
+              id: 'shake_${DateTime.now().millisecondsSinceEpoch}',
+              type: AlertType.shakeSos,
+              title: 'Shake Detected',
+              description: 'Aggressive phone shake pattern detected.',
+              latitude: lastLat(),
+              longitude: lastLon(),
+              timestamp: DateTime.now(),
+              source: 'On-Device Accelerometer',
+              magnitude: 15.0,
+            );
+
+            // Add alert silently to history
+            sl<AlertsCubit>().addLocalAlert(alertEvent);
+
+            // Guard background countdown behind preferences and risk engine
+            final prefs = sl<AlertPreferences>();
+            if (prefs.shouldReceive(alertEvent.type)) {
+              const engine = RiskScoreEngine();
+              if (engine.computeScore(alertEvent) >= 80) {
+                sl<SosCubit>().startCountdown();
+              }
+            }
+          },
         );
         AppLogger.info('[ServiceBootstrapper] ShakeDetection re-hydrated');
       } catch (e) {
@@ -97,7 +121,7 @@ class ServiceBootstrapper {
         await service.start();
         _crashSubscription?.cancel();
         _crashSubscription = service.alerts.listen((detectionAlert) {
-          print('[DEBUG] Crash listener triggered!');
+          AppLogger.info('[ServiceBootstrapper] Crash/Fall alert received');
           try {
             final alertEvent = AlertEvent(
               id: 'crash_${DateTime.now().millisecondsSinceEpoch}',
@@ -109,11 +133,9 @@ class ServiceBootstrapper {
               timestamp: detectionAlert.timestamp,
               source: 'On-Device Accelerometer',
               magnitude: detectionAlert.peakGForce,
+              confidenceLevel: detectionAlert.confidence,
             );
-            print('[DEBUG] AlertEvent created: $alertEvent');
-            print('[DEBUG] AlertsCubit from sl hashCode: ${sl<AlertsCubit>().hashCode}');
             sl<AlertsCubit>().addLocalAlert(alertEvent);
-            print('[DEBUG] addLocalAlert called');
 
             // Auto-trigger SOS for vehicle crashes.
             if (detectionAlert.alertType == AlertType.carAccident ||
@@ -121,20 +143,23 @@ class ServiceBootstrapper {
                 detectionAlert.alertType == AlertType.pedestrianHit) {
               final prefs = sl<AlertPreferences>();
               if (prefs.shouldReceive(detectionAlert.alertType)) {
-                final engine = const RiskScoreEngine();
+                const engine = RiskScoreEngine();
                 if (engine.computeScore(alertEvent) >= 80) {
                   sl<SosCubit>().startCountdown();
                 }
               }
             }
-          } catch(e, st) {
-            print('[DEBUG] Listener threw error: $e');
-            print(st);
+          } catch (e, st) {
+            AppLogger.warning(
+              '[ServiceBootstrapper] Crash listener error: $e\n$st',
+            );
           }
         });
         AppLogger.info('[ServiceBootstrapper] CrashFallDetection re-hydrated');
       } catch (e) {
-        AppLogger.warning('[ServiceBootstrapper] CrashFallDetection failed: $e');
+        AppLogger.warning(
+          '[ServiceBootstrapper] CrashFallDetection failed: $e',
+        );
       }
     }
 
@@ -142,25 +167,26 @@ class ServiceBootstrapper {
       try {
         final service = sl<GeofenceService>();
         service.loadZones(settings);
-        service.start(onExitAllZones: (position) {
-          // Build zone name from the service's loaded zones.
-          final zoneNames = service.zones.map((z) => z.name).join(', ');
-          final displayName =
-              zoneNames.isNotEmpty ? zoneNames : 'Safe Zone';
-          final alertEvent = AlertEvent(
-            id: 'geofence_exit_${DateTime.now().millisecondsSinceEpoch}',
-            type: AlertType.geofenceExit,
-            title: 'Left Safe Zone: $displayName',
-            description:
-                'You have left the designated safe zone "$displayName". '
-                'Your emergency contacts have been notified.',
-            latitude: position.latitude,
-            longitude: position.longitude,
-            timestamp: DateTime.now(),
-            source: 'On-Device GPS',
-          );
-          sl<AlertsCubit>().addLocalAlert(alertEvent);
-        });
+        service.start(
+          onExitAllZones: (position) {
+            // Build zone name from the service's loaded zones.
+            final zoneNames = service.zones.map((z) => z.name).join(', ');
+            final displayName = zoneNames.isNotEmpty ? zoneNames : 'Safe Zone';
+            final alertEvent = AlertEvent(
+              id: 'geofence_exit_${DateTime.now().millisecondsSinceEpoch}',
+              type: AlertType.geofenceExit,
+              title: 'Left Safe Zone: $displayName',
+              description:
+                  'You have left the designated safe zone "$displayName". '
+                  'Your emergency contacts have been notified.',
+              latitude: position.latitude,
+              longitude: position.longitude,
+              timestamp: DateTime.now(),
+              source: 'On-Device GPS',
+            );
+            sl<AlertsCubit>().addLocalAlert(alertEvent);
+          },
+        );
         AppLogger.info('[ServiceBootstrapper] Geofence re-hydrated');
       } catch (e) {
         AppLogger.warning('[ServiceBootstrapper] Geofence failed: $e');
@@ -189,7 +215,7 @@ class ServiceBootstrapper {
 
             final prefs = sl<AlertPreferences>();
             if (prefs.shouldReceive(alertEvent.type)) {
-              final engine = const RiskScoreEngine();
+              const engine = RiskScoreEngine();
               if (engine.computeScore(alertEvent) >= 80) {
                 sl<SosCubit>().startCountdown();
               }
@@ -234,7 +260,9 @@ class ServiceBootstrapper {
             sl<RoadConditionService>().updateSpeed(speedKmh);
           },
         );
-        AppLogger.info('[ServiceBootstrapper] SpeedAlert re-hydrated (+ crash feed)');
+        AppLogger.info(
+          '[ServiceBootstrapper] SpeedAlert re-hydrated (+ crash feed)',
+        );
       } catch (e) {
         AppLogger.warning('[ServiceBootstrapper] SpeedAlert failed: $e');
       }
@@ -275,12 +303,14 @@ class ServiceBootstrapper {
           if (savedDeadline.isBefore(DateTime.now())) {
             // Deadline passed while app was off. Trigger immediately.
             AppLogger.warning(
-                '[ServiceBootstrapper] DMS deadline PASSED while app was closed. Triggering SOS.');
+              '[ServiceBootstrapper] DMS deadline PASSED while app was closed. Triggering SOS.',
+            );
             dms.onTrigger();
           } else {
             // Restore active countdown.
             AppLogger.info(
-                '[ServiceBootstrapper] DMS deadline RESTORED: $savedDeadline');
+              '[ServiceBootstrapper] DMS deadline RESTORED: $savedDeadline',
+            );
             dms.restore(savedDeadline);
           }
         } else {
@@ -289,7 +319,8 @@ class ServiceBootstrapper {
               settings.get('dms_interval_minutes', defaultValue: 30) as int;
           dms.startWithInterval(Duration(minutes: intervalMinutes));
           AppLogger.info(
-              '[ServiceBootstrapper] DeadManSwitch started fresh (${intervalMinutes}min)');
+            '[ServiceBootstrapper] DeadManSwitch started fresh (${intervalMinutes}min)',
+          );
         }
       } catch (e) {
         AppLogger.warning('[ServiceBootstrapper] DeadManSwitch failed: $e');
@@ -320,7 +351,7 @@ class ServiceBootstrapper {
 
           final prefs = sl<AlertPreferences>();
           if (prefs.shouldReceive(alertEvent.type)) {
-            final engine = const RiskScoreEngine();
+            const engine = RiskScoreEngine();
             if (engine.computeScore(alertEvent) >= 80) {
               sl<SosCubit>().startCountdown();
             }
@@ -357,7 +388,7 @@ class ServiceBootstrapper {
 
           final prefs = sl<AlertPreferences>();
           if (prefs.shouldReceive(alertEvent.type)) {
-            final engine = const RiskScoreEngine();
+            const engine = RiskScoreEngine();
             if (engine.computeScore(alertEvent) >= 80) {
               sl<SosCubit>().startCountdown();
             }
@@ -447,7 +478,9 @@ class ServiceBootstrapper {
         sl<ShakeDetectionService>().startListening(
           onShakeDetected: () {
             // Background trigger: Notification?
-            AppLogger.info('[ServiceBootstrapper] Shake detected in background');
+            AppLogger.info(
+              '[ServiceBootstrapper] Shake detected in background',
+            );
           },
         );
       } catch (_) {}
@@ -466,10 +499,14 @@ class ServiceBootstrapper {
       try {
         final service = sl<GeofenceService>();
         service.loadZones(settings);
-        service.start(onExitAllZones: (position) {
-          // In background, we might send SOS directly or issue a notification.
-          AppLogger.warning('[ServiceBootstrapper] Geofence exited in BACKGROUND!');
-        });
+        service.start(
+          onExitAllZones: (position) {
+            // In background, we might send SOS directly or issue a notification.
+            AppLogger.warning(
+              '[ServiceBootstrapper] Geofence exited in BACKGROUND!',
+            );
+          },
+        );
       } catch (_) {}
     }
 
@@ -478,7 +515,9 @@ class ServiceBootstrapper {
         sl<WeatherFeedService>().start();
         sl<ContextAlertService>().start(
           onContextAlert: (ctxAlert) {
-            AppLogger.warning('[ServiceBootstrapper] Context Alert in BACKGROUND: ${ctxAlert.title}');
+            AppLogger.warning(
+              '[ServiceBootstrapper] Context Alert in BACKGROUND: ${ctxAlert.title}',
+            );
           },
         );
       } catch (_) {}

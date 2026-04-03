@@ -64,9 +64,9 @@ void main() {
     );
   });
 
-  setUp(() {
+  setUp(() async {
     sl = GetIt.instance;
-    sl.reset();
+    await sl.reset();
 
     mockSettings = MockBox();
     mockCrashService = MockCrashFallDetectionService();
@@ -123,10 +123,7 @@ void main() {
         'Then risk score is high, local alert added, and SOS countdown automatically starts',
         () async {
       // 1. Arrange: Bootstrap the environment (wires up listeners)
-      print('[DEBUG-TEST] mockAlertsCubit in test: ${mockAlertsCubit.hashCode}');
       await ServiceBootstrapper.bootstrap(sl: sl, settings: mockSettings);
-
-      print('Has listener: ${crashAlertController.hasListener}');
 
       crashAlertController.add(DetectionAlert(
         alertType: AlertType.carAccident,
@@ -141,8 +138,6 @@ void main() {
 
       // Allow stream to process
       await Future.delayed(const Duration(milliseconds: 100));
-
-      print('[DEBUG-TEST] Are they identical? ${identical(sl<AlertsCubit>(), mockAlertsCubit)}');
 
       // 3. Assert:
       // A local alert should be saved for history/UI

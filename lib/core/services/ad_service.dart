@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'app_logger.dart';
 
@@ -30,6 +31,7 @@ class AdService {
 
   InterstitialAd? _interstitialAd;
 
+  // ── Production Ad Unit IDs (from AdMob Dashboard) ──
   static const _bannerAlerts = 'ca-app-pub-3413399953381965/9006242267';
   static const _bannerSettings = 'ca-app-pub-3413399953381965/5258568943';
   static const _bannerContacts = 'ca-app-pub-3413399953381965/3945487274';
@@ -37,14 +39,26 @@ class AdService {
   static const _interstitialUnit = 'ca-app-pub-3413399953381965/3778470893';
   static const _nativeAlertsFeed = 'ca-app-pub-3413399953381965/6150921784';
 
-  /// Ad unit IDs for each screen with a banner.
-  static String get bannerAlerts => _bannerAlerts;
-  static String get bannerSettings => _bannerSettings;
-  static String get bannerContacts => _bannerContacts;
-  static String get bannerProfile => _bannerProfile;
+  // ── Google's Official Test Ad Unit IDs (Android) ──
+  // Must be used during development to avoid policy violations.
+  // See: https://developers.google.com/admob/android/test-ads
+  static const _testBanner = 'ca-app-pub-3940256099942544/6300978111';
+  static const _testInterstitial = 'ca-app-pub-3940256099942544/1033173712';
+  static const _testNative = 'ca-app-pub-3940256099942544/2247696110';
+
+  /// Ad unit IDs — returns test IDs in debug, production IDs in release.
+  static String get bannerAlerts =>
+      kDebugMode ? _testBanner : _bannerAlerts;
+  static String get bannerSettings =>
+      kDebugMode ? _testBanner : _bannerSettings;
+  static String get bannerContacts =>
+      kDebugMode ? _testBanner : _bannerContacts;
+  static String get bannerProfile =>
+      kDebugMode ? _testBanner : _bannerProfile;
 
   /// Native ad unit ID for alerts feed.
-  static String get nativeAlertsFeed => _nativeAlertsFeed;
+  static String get nativeAlertsFeed =>
+      kDebugMode ? _testNative : _nativeAlertsFeed;
 
   /// Initialize the Mobile Ads SDK.
   static Future<void> initialize() async {
@@ -65,7 +79,7 @@ class AdService {
 
   void _loadInterstitial() {
     InterstitialAd.load(
-      adUnitId: _interstitialUnit,
+      adUnitId: kDebugMode ? _testInterstitial : _interstitialUnit,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {

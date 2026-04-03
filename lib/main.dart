@@ -186,13 +186,23 @@ class _SaforaAppState extends State<SaforaApp> {
       onResume: _onAppResumed,
       // App Open Ad on foreground restore.
       onShow: _onAppShown,
+      // Clean up detection service subscriptions on app termination.
+      onStateChange: _onLifecycleStateChange,
     );
   }
 
   @override
   void dispose() {
     _lifecycleListener.dispose();
+    ServiceBootstrapper.dispose();
     super.dispose();
+  }
+
+  /// Release detection stream subscriptions when the app is being destroyed.
+  void _onLifecycleStateChange(AppLifecycleState state) {
+    if (state == AppLifecycleState.detached) {
+      ServiceBootstrapper.dispose();
+    }
   }
 
   /// Called when the app is sent to background (task switcher, home button).

@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get_it/get_it.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:safora/l10n/app_localizations.dart';
+import '../../../core/services/app_logger.dart';
 import '../../../core/services/geofence_service.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/theme/colors.dart';
@@ -153,6 +155,14 @@ class _LiveMapScreenState extends State<LiveMapScreen>
                     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.digitaldrive.safora',
                 maxZoom: 19,
+                errorTileCallback: (tile, error, stackTrace) {
+                  // Suppress SocketException (offline/no route) silently.
+                  // These flood the console at ~20/sec when offline but
+                  // are non-fatal — flutter_map shows grey tiles instead.
+                  if (error is SocketException) return;
+                  // Log unexpected tile errors for debugging.
+                  AppLogger.warning('[Map] Tile load error: $error');
+                },
               ),
 
               // Geofence safe zone circles.

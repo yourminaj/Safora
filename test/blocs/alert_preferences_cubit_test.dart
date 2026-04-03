@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
-import 'package:mocktail/mocktail.dart';
 
 import 'package:safora/core/constants/alert_types.dart';
 import 'package:safora/core/services/alert_permission_gate.dart';
@@ -36,7 +35,10 @@ void main() {
     box = await Hive.openBox<dynamic>('test_cubit_prefs');
     prefs = AlertPreferences(box);
     gate = _FakeGate();
-    cubit = AlertPreferencesCubit(alertPreferences: prefs, permissionGate: gate);
+    cubit = AlertPreferencesCubit(
+      alertPreferences: prefs,
+      permissionGate: gate,
+    );
   });
 
   tearDown(() async {
@@ -49,15 +51,21 @@ void main() {
   group('Initial state', () {
     test('free alerts are enabled by default', () {
       for (final type in AlertType.values.where((t) => t.isFree)) {
-        expect(cubit.state.preferences[type], isTrue,
-            reason: '${type.name} should default to enabled');
+        expect(
+          cubit.state.preferences[type],
+          isTrue,
+          reason: '${type.name} should default to enabled',
+        );
       }
     });
 
     test('premium alerts are disabled by default', () {
       for (final type in AlertType.values.where((t) => !t.isFree)) {
-        expect(cubit.state.preferences[type], isFalse,
-            reason: '${type.name} should default to disabled');
+        expect(
+          cubit.state.preferences[type],
+          isFalse,
+          reason: '${type.name} should default to disabled',
+        );
       }
     });
 
@@ -73,8 +81,11 @@ void main() {
       final grouped = cubit.state.groupedByCategory;
       final presentCategories = AlertType.values.map((t) => t.category).toSet();
       for (final cat in presentCategories) {
-        expect(grouped.containsKey(cat), isTrue,
-            reason: '${cat.name} not found in groupedByCategory');
+        expect(
+          grouped.containsKey(cat),
+          isTrue,
+          reason: '${cat.name} not found in groupedByCategory',
+        );
       }
     });
 
@@ -83,8 +94,7 @@ void main() {
     });
 
     test('enabledCount matches preferences map', () {
-      final manual =
-          cubit.state.preferences.values.where((v) => v).length;
+      final manual = cubit.state.preferences.values.where((v) => v).length;
       expect(cubit.state.enabledCount, equals(manual));
     });
   });
@@ -99,52 +109,67 @@ void main() {
       expect(cubit.state.preferences[freeType], isFalse);
     });
 
-    test('enabling alert with permission granted → alert becomes enabled',
-        () async {
-      gate.grantAll = true;
-      final premType = AlertType.values.firstWhere((t) => !t.isFree);
+    test(
+      'enabling alert with permission granted → alert becomes enabled',
+      () async {
+        gate.grantAll = true;
+        final premType = AlertType.values.firstWhere((t) => !t.isFree);
 
-      await cubit.toggleAlert(premType);
+        await cubit.toggleAlert(premType);
 
-      expect(cubit.state.preferences[premType], isTrue);
-      expect(cubit.state.permissionDeniedMessage, isNull);
-      expect(cubit.state.isLoading, isFalse);
-    });
+        expect(cubit.state.preferences[premType], isTrue);
+        expect(cubit.state.permissionDeniedMessage, isNull);
+        expect(cubit.state.isLoading, isFalse);
+      },
+    );
 
-    test('enabling alert with permission denied → alert stays disabled',
-        () async {
-      gate.grantAll = false;
-      final premType = AlertType.values.firstWhere((t) => !t.isFree);
+    test(
+      'enabling alert with permission denied → alert stays disabled',
+      () async {
+        gate.grantAll = false;
+        final premType = AlertType.values.firstWhere((t) => !t.isFree);
 
-      await cubit.toggleAlert(premType);
+        await cubit.toggleAlert(premType);
 
-      expect(cubit.state.preferences[premType], isFalse,
-          reason: 'Alert must stay disabled when permission is denied');
-      expect(cubit.state.permissionDeniedMessage, isNotNull,
-          reason: 'Must surface a user-facing permission denial message');
-    });
+        expect(
+          cubit.state.preferences[premType],
+          isFalse,
+          reason: 'Alert must stay disabled when permission is denied',
+        );
+        expect(
+          cubit.state.permissionDeniedMessage,
+          isNotNull,
+          reason: 'Must surface a user-facing permission denial message',
+        );
+      },
+    );
 
     // REGRESSION: The original code emitted isLoading:true before calling
     // requestForAlert. Combined with the OS permission dialog, this caused
     // the screen to appear dim/frozen — reported as a "crash" in production.
-    test('toggleAlert NEVER emits isLoading:true (dim-screen regression)',
-        () async {
-      gate.grantAll = true;
-      final premType = AlertType.values.firstWhere((t) => !t.isFree);
+    test(
+      'toggleAlert NEVER emits isLoading:true (dim-screen regression)',
+      () async {
+        gate.grantAll = true;
+        final premType = AlertType.values.firstWhere((t) => !t.isFree);
 
-      var sawLoadingTrue = false;
-      final sub = cubit.stream.listen((s) {
-        if (s.isLoading) sawLoadingTrue = true;
-      });
+        var sawLoadingTrue = false;
+        final sub = cubit.stream.listen((s) {
+          if (s.isLoading) sawLoadingTrue = true;
+        });
 
-      await cubit.toggleAlert(premType);
-      await sub.cancel();
+        await cubit.toggleAlert(premType);
+        await sub.cancel();
 
-      expect(sawLoadingTrue, isFalse,
+        expect(
+          sawLoadingTrue,
+          isFalse,
           reason:
               'toggleAlert must never emit isLoading:true — '
-              'doing so behind an OS dialog causes the dim/crash visual bug');
-    });
+              'doing so behind an OS dialog causes the dim/crash visual bug',
+        );
+      },
+    );
   });
 
   // ── enableCategory ────────────────────────────────────────────────────────
@@ -156,8 +181,11 @@ void main() {
       await cubit.enableCategory(cat);
 
       for (final t in AlertType.values.where((t) => t.category == cat)) {
-        expect(cubit.state.preferences[t], isTrue,
-            reason: '${t.name} should be enabled after enableCategory');
+        expect(
+          cubit.state.preferences[t],
+          isTrue,
+          reason: '${t.name} should be enabled after enableCategory',
+        );
       }
       expect(cubit.state.isLoading, isFalse);
     });
@@ -169,18 +197,23 @@ void main() {
       await cubit.enableCategory(cat);
 
       for (final t in AlertType.values.where((t) => t.category == cat)) {
-        expect(cubit.state.preferences[t], isFalse,
-            reason:
-                '${t.name} must stay disabled when category permission denied');
+        expect(
+          cubit.state.preferences[t],
+          isFalse,
+          reason:
+              '${t.name} must stay disabled when category permission denied',
+        );
       }
       expect(cubit.state.permissionDeniedMessage, isNotNull);
-      expect(cubit.state.isLoading, isFalse,
-          reason: 'isLoading must not remain true after permission denied');
+      expect(
+        cubit.state.isLoading,
+        isFalse,
+        reason: 'isLoading must not remain true after permission denied',
+      );
     });
 
     // REGRESSION: Same dim-screen bug for enableCategory.
-    test(
-        'enableCategory NEVER emits isLoading:true '
+    test('enableCategory NEVER emits isLoading:true '
         '(Health & Medical dim-screen regression)', () async {
       gate.grantAll = true;
 
@@ -192,10 +225,13 @@ void main() {
       await cubit.enableCategory(AlertCategory.healthMedical);
       await sub.cancel();
 
-      expect(sawLoadingTrue, isFalse,
-          reason:
-              'enableCategory must never emit isLoading:true — '
-              'this was the root cause of the Health & Medical frozen-UI bug');
+      expect(
+        sawLoadingTrue,
+        isFalse,
+        reason:
+            'enableCategory must never emit isLoading:true — '
+            'this was the root cause of the Health & Medical frozen-UI bug',
+      );
     });
 
     test('successive enable then disable leaves category disabled', () async {
@@ -213,20 +249,22 @@ void main() {
 
   // ── disableCategory ───────────────────────────────────────────────────────
   group('disableCategory', () {
-    test('disables all alerts in category without permission request',
-        () async {
-      gate.grantAll = true;
-      const cat = AlertCategory.naturalDisaster;
-      // First enable everything.
-      await cubit.enableCategory(cat);
+    test(
+      'disables all alerts in category without permission request',
+      () async {
+        gate.grantAll = true;
+        const cat = AlertCategory.naturalDisaster;
+        // First enable everything.
+        await cubit.enableCategory(cat);
 
-      // Now disable.
-      await cubit.disableCategory(cat);
+        // Now disable.
+        await cubit.disableCategory(cat);
 
-      for (final t in AlertType.values.where((t) => t.category == cat)) {
-        expect(cubit.state.preferences[t], isFalse);
-      }
-    });
+        for (final t in AlertType.values.where((t) => t.category == cat)) {
+          expect(cubit.state.preferences[t], isFalse);
+        }
+      },
+    );
   });
 
   // ── setSeverity ───────────────────────────────────────────────────────────

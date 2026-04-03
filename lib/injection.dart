@@ -314,6 +314,7 @@ Future<void> configureDependencies() async {
         getIt<NotificationService>().showDisasterAlert(
           title: 'Dead Man\'s Switch Triggered',
           body: 'You did not check in. Emergency SOS sent to your contacts.',
+          soundName: 'phone_ring',
         );
       },
     ),

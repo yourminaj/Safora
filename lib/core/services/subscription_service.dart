@@ -115,6 +115,20 @@ class SubscriptionService {
   /// Get the lifetime package price string (convenience).
   String? get lifetimePriceString => getPriceString(PackageType.lifetime);
 
+  /// Check if the device supports in-app purchases.
+  ///
+  /// Returns `false` on emulators without Google Play Billing,
+  /// devices without Play Store, or restricted profiles.
+  /// Call this before presenting purchase UI to avoid errors.
+  Future<bool> canMakePayments() async {
+    try {
+      return await Purchases.canMakePayments();
+    } catch (e) {
+      AppLogger.warning('[Subscription] canMakePayments check failed: $e');
+      return false;
+    }
+  }
+
   /// Initialize RevenueCat SDK and sync subscription status.
   Future<void> init() async {
     if (_initialized) return;
@@ -214,6 +228,17 @@ class SubscriptionService {
 
       if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
         AppLogger.info('[Subscription] User cancelled purchase');
+        return false;
+      }
+
+      // Billing unavailable — emulator or device without Google Play.
+      if (errorCode == PurchasesErrorCode.storeProblemError ||
+          errorCode == PurchasesErrorCode.purchaseNotAllowedError) {
+        AppLogger.warning(
+          '[Subscription] Billing unavailable on this device. '
+          'Error: ${errorCode.name}. This is expected on emulators '
+          'without Google Play Billing support.',
+        );
         return false;
       }
 

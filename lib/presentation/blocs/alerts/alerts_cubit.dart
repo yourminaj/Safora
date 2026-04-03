@@ -209,6 +209,7 @@ class AlertsCubit extends Cubit<AlertsState> {
         .map((a) => a.id ?? '${a.title}_${a.timestamp}')
         .toSet();
 
+    final now = DateTime.now();
     int notificationCount = 0;
     for (final alert in fresh) {
       if (notificationCount >= _maxNotificationsPerRefresh) break;
@@ -216,7 +217,17 @@ class AlertsCubit extends Cubit<AlertsState> {
       final id = alert.id ?? '${alert.title}_${alert.timestamp}';
       if (!cachedIds.contains(id) &&
           alert.type.priority == AlertPriority.critical) {
-        
+
+        // Cross-method dedup: respect the per-type throttle from addLocalAlert.
+        // If addLocalAlert already fired a notification for this type within 10s,
+        // don't fire again — prevents duplicate siren/notification.
+        final lastTime = _lastLocalAlertTime[alert.type];
+        if (lastTime != null &&
+            now.difference(lastTime) < const Duration(seconds: 10)) {
+          continue;
+        }
+        _lastLocalAlertTime[alert.type] = now;
+
         final soundPath = AlertSounds.forType(alert.type);
         final soundName = soundPath.split('/').last.split('.').first;
 
