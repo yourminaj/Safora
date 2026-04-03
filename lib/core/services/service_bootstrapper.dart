@@ -97,30 +97,39 @@ class ServiceBootstrapper {
         await service.start();
         _crashSubscription?.cancel();
         _crashSubscription = service.alerts.listen((detectionAlert) {
-          final alertEvent = AlertEvent(
-            id: 'crash_${DateTime.now().millisecondsSinceEpoch}',
-            type: detectionAlert.alertType,
-            title: detectionAlert.title,
-            description: detectionAlert.message,
-            latitude: lastLat(),
-            longitude: lastLon(),
-            timestamp: detectionAlert.timestamp,
-            source: 'On-Device Accelerometer',
-            magnitude: detectionAlert.peakGForce,
-          );
-          sl<AlertsCubit>().addLocalAlert(alertEvent);
+          print('[DEBUG] Crash listener triggered!');
+          try {
+            final alertEvent = AlertEvent(
+              id: 'crash_${DateTime.now().millisecondsSinceEpoch}',
+              type: detectionAlert.alertType,
+              title: detectionAlert.title,
+              description: detectionAlert.message,
+              latitude: lastLat(),
+              longitude: lastLon(),
+              timestamp: detectionAlert.timestamp,
+              source: 'On-Device Accelerometer',
+              magnitude: detectionAlert.peakGForce,
+            );
+            print('[DEBUG] AlertEvent created: $alertEvent');
+            print('[DEBUG] AlertsCubit from sl hashCode: ${sl<AlertsCubit>().hashCode}');
+            sl<AlertsCubit>().addLocalAlert(alertEvent);
+            print('[DEBUG] addLocalAlert called');
 
-          // Auto-trigger SOS for vehicle crashes.
-          if (detectionAlert.alertType == AlertType.carAccident ||
-              detectionAlert.alertType == AlertType.motorcycleCrash ||
-              detectionAlert.alertType == AlertType.pedestrianHit) {
-            final prefs = sl<AlertPreferences>();
-            if (prefs.shouldReceive(detectionAlert.alertType)) {
-              final engine = const RiskScoreEngine();
-              if (engine.computeScore(alertEvent) >= 80) {
-                sl<SosCubit>().startCountdown();
+            // Auto-trigger SOS for vehicle crashes.
+            if (detectionAlert.alertType == AlertType.carAccident ||
+                detectionAlert.alertType == AlertType.motorcycleCrash ||
+                detectionAlert.alertType == AlertType.pedestrianHit) {
+              final prefs = sl<AlertPreferences>();
+              if (prefs.shouldReceive(detectionAlert.alertType)) {
+                final engine = const RiskScoreEngine();
+                if (engine.computeScore(alertEvent) >= 80) {
+                  sl<SosCubit>().startCountdown();
+                }
               }
             }
+          } catch(e, st) {
+            print('[DEBUG] Listener threw error: $e');
+            print(st);
           }
         });
         AppLogger.info('[ServiceBootstrapper] CrashFallDetection re-hydrated');
