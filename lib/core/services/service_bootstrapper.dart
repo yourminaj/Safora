@@ -483,7 +483,9 @@ class ServiceBootstrapper {
             );
           },
         );
-      } catch (_) {}
+      } catch (e) {
+        AppLogger.warning('[ServiceBootstrapper] BG ShakeDetection failed: $e');
+      }
     }
 
     if (_isEnabled(settings, 'crash_fall_enabled')) {
@@ -491,7 +493,9 @@ class ServiceBootstrapper {
         final service = sl<CrashFallDetectionService>();
         await service.start();
         _crashSubscription = service.alerts.listen((_) {});
-      } catch (_) {}
+      } catch (e) {
+        AppLogger.warning('[ServiceBootstrapper] BG CrashFallDetection failed: $e');
+      }
     }
 
     // Add other silent monitors here if needed.
@@ -507,7 +511,9 @@ class ServiceBootstrapper {
             );
           },
         );
-      } catch (_) {}
+      } catch (e) {
+        AppLogger.warning('[ServiceBootstrapper] BG Geofence failed: $e');
+      }
     }
 
     if (_isEnabled(settings, 'context_alert_enabled')) {
@@ -520,7 +526,9 @@ class ServiceBootstrapper {
             );
           },
         );
-      } catch (_) {}
+      } catch (e) {
+        AppLogger.warning('[ServiceBootstrapper] BG ContextAlert failed: $e');
+      }
     }
   }
 

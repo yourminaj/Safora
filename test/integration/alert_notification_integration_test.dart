@@ -140,10 +140,19 @@ void main() {
       expect((alertsCubit.state as AlertsLoaded).alerts, isEmpty);
     });
 
-    test('Flood gate limits to 3 notifications per refresh (assuming tsunamis are critical)', () async {
+    test('Flood gate limits to 3 notifications per refresh (different critical types)', () async {
+      // Use different critical alert types to avoid the per-type 10s throttle.
+      // The flood gate (max 3) applies across all types per refresh.
+      final criticalTypes = [
+        AlertType.tsunami,
+        AlertType.earthquake,
+        AlertType.carAccident,
+        AlertType.motorcycleCrash,
+        AlertType.pedestrianHit,
+      ];
       final alerts = List.generate(5, (index) => createAlert(
         id: 'bulk_$index', 
-        type: AlertType.tsunami, // tsunami is critical
+        type: criticalTypes[index],
       ));
       
       when(() => alertsRepository.fetchLatestAlerts()).thenAnswer(
@@ -152,7 +161,7 @@ void main() {
 
       await alertsCubit.loadAlerts();
       
-      // Should cap at 3 calls
+      // Should cap at 3 calls (flood gate) even though all 5 are critical
       verify(() => notificationService.showDisasterAlert(
         title: any(named: 'title'),
         body: any(named: 'body'),
