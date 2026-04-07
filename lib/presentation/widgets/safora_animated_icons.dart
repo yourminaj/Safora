@@ -1756,10 +1756,12 @@ class SaforaLiveLocationIcon extends StatefulWidget {
     super.key,
     this.size = 60,
     this.animated = true,
+    this.color,
   });
 
   final double size;
   final bool animated;
+  final Color? color;
 
   @override
   State<SaforaLiveLocationIcon> createState() => _SaforaLiveLocationIconState();
@@ -1792,7 +1794,10 @@ class _SaforaLiveLocationIconState extends State<SaforaLiveLocationIcon>
       builder: (context, child) {
         return CustomPaint(
           size: Size(widget.size, widget.size),
-          painter: _LiveLocationIconPainter(progress: _ctrl.value),
+          painter: _LiveLocationIconPainter(
+            progress: _ctrl.value,
+            color: widget.color,
+          ),
         );
       },
     );
@@ -1800,14 +1805,19 @@ class _SaforaLiveLocationIconState extends State<SaforaLiveLocationIcon>
 }
 
 class _LiveLocationIconPainter extends CustomPainter {
-  _LiveLocationIconPainter({required this.progress});
+  _LiveLocationIconPainter({
+    required this.progress,
+    this.color,
+  });
   final double progress;
+  final Color? color;
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final cx = w / 2;
     final cy = w / 2;
+    final baseColor = color ?? _BrandPalette.successGreen;
 
     for (int i = 0; i < 3; i++) {
       final ringAt = (progress + i * 0.33) % 1.0;
@@ -1817,7 +1827,7 @@ class _LiveLocationIconPainter extends CustomPainter {
         Offset(cx, cy),
         radius,
         Paint()
-          ..color = _BrandPalette.successGreen.withValues(alpha: alpha)
+          ..color = baseColor.withValues(alpha: alpha)
           ..style = PaintingStyle.stroke
           ..strokeWidth = w * 0.015,
       );
@@ -1826,7 +1836,7 @@ class _LiveLocationIconPainter extends CustomPainter {
     canvas.drawCircle(
       Offset(cx, cy - w * 0.04),
       w * 0.055,
-      Paint()..color = _BrandPalette.successGreen,
+      Paint()..color = baseColor,
     );
 
     // Person body
@@ -1840,12 +1850,12 @@ class _LiveLocationIconPainter extends CustomPainter {
       math.pi,
       false,
       Paint()
-        ..color = _BrandPalette.successGreen
+        ..color = baseColor
         ..style = PaintingStyle.fill,
     );
 
     final arrowPaint = Paint()
-      ..color = _BrandPalette.successGreen.withValues(alpha: 0.8)
+      ..color = baseColor.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = w * 0.025
       ..strokeCap = StrokeCap.round;
@@ -1864,7 +1874,8 @@ class _LiveLocationIconPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LiveLocationIconPainter old) => old.progress != progress;
+  bool shouldRepaint(_LiveLocationIconPainter old) => 
+      old.progress != progress || old.color != color;
 }
 
 // 14. SAFORA VOICE DISTRESS ICON — Pulsing mic with concentric alert rings

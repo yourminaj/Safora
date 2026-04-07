@@ -48,7 +48,7 @@ class EmergencyCenterScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: _ActionCard(
-                    icon: const SaforaLiveLocationIcon(size: 36, animated: true),
+                    icon: const SaforaLiveLocationIcon(size: 36, animated: true, color: Colors.white),
                     title: 'Share Location',
                     subtitle: 'Send live GPS to contacts',
                     gradientColors: const [Color(0xFF43A047), Color(0xFF2E7D32)],
