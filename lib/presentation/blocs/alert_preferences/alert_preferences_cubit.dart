@@ -13,6 +13,8 @@ class AlertPreferencesState extends Equatable {
     this.severityThreshold = AlertPriority.info,
     this.isLoading = false,
     this.permissionDeniedMessage,
+    this.successMessage,
+    this.infoMessage,
   });
 
   /// Map of all alert types to their enabled status.
@@ -26,6 +28,12 @@ class AlertPreferencesState extends Equatable {
 
   /// Set when a permission was denied — cleared on next action.
   final String? permissionDeniedMessage;
+
+  /// Set when an action (like bulk enable) succeeds — cleared on next action.
+  final String? successMessage;
+
+  /// Set when an action was partially successful OR informational (e.g. Pro alerts skipped).
+  final String? infoMessage;
 
   /// Helper: grouped by category for UI.
   Map<AlertCategory, List<AlertTypeStatus>> get groupedByCategory {
@@ -51,11 +59,20 @@ class AlertPreferencesState extends Equatable {
       severityThreshold: severityThreshold ?? this.severityThreshold,
       isLoading: isLoading ?? this.isLoading,
       permissionDeniedMessage: permissionDeniedMessage,
+      successMessage: successMessage,
+      infoMessage: infoMessage,
     );
   }
 
   @override
-  List<Object?> get props => [preferences, severityThreshold, isLoading, permissionDeniedMessage];
+  List<Object?> get props => [
+        preferences,
+        severityThreshold,
+        isLoading,
+        permissionDeniedMessage,
+        successMessage,
+        infoMessage,
+      ];
 }
 
 /// Cubit managing per-alert enable/disable preferences.
@@ -94,10 +111,16 @@ class AlertPreferencesCubit extends Cubit<AlertPreferencesState> {
       return;
     }
 
+    if (!type.isFree && !GetIt.instance<PremiumManager>().isPremium) {
+      emit(AlertPreferencesState(
+        preferences: _buildInitial(_prefs),
+        severityThreshold: _prefs.minimumSeverity,
+        permissionDeniedMessage: 'Pro subscription required for ${type.label}',
+      ));
+      return;
+    }
+
     // Enabling — check permissions WITHOUT showing loading overlay.
-    // The system permission dialog appears on top of the app naturally;
-    // showing our own loading overlay underneath causes the app to look
-    // dim/crashed while the OS dialog is displayed.
     final result = await _gate.requestForAlert(type);
 
     if (!result.granted) {
@@ -112,7 +135,11 @@ class AlertPreferencesCubit extends Cubit<AlertPreferencesState> {
     }
 
     await _prefs.setEnabled(type, true);
-    _emitUpdated();
+    emit(AlertPreferencesState(
+      preferences: _buildInitial(_prefs),
+      severityThreshold: _prefs.minimumSeverity,
+      successMessage: '${type.label} enabled',
+    ));
   }
 
   /// Enable all alerts in a category (requests permissions first).
@@ -140,14 +167,45 @@ class AlertPreferencesCubit extends Cubit<AlertPreferencesState> {
     }
 
     final isPro = GetIt.instance<PremiumManager>().isPremium;
-    await _prefs.enableCategory(category, isUserPremium: isPro);
-    _emitUpdated();
+    final enabledCount = await _prefs.enableCategory(category, isUserPremium: isPro);
+
+    String message = 'Enabled $enabledCount alerts in ${category.label}';
+    int proCount = 0;
+    if (!isPro) {
+      proCount = AlertType.values
+          .where((t) => t.category == category && !t.isFree)
+          .length;
+      if (proCount > 0) {
+        message += '. Upgrade to PRO for all ${category.label} alerts.';
+      }
+    }
+
+    emit(AlertPreferencesState(
+      preferences: _buildInitial(_prefs),
+      severityThreshold: _prefs.minimumSeverity,
+      successMessage: (!isPro && proCount > 0) ? null : message,
+      infoMessage: (!isPro && proCount > 0) ? message : null,
+    ));
   }
 
   /// Disable all alerts in a category.
   Future<void> disableCategory(AlertCategory category) async {
-    await _prefs.disableCategory(category);
-    _emitUpdated();
+    final disabledCount = await _prefs.disableCategory(category);
+    emit(AlertPreferencesState(
+      preferences: _buildInitial(_prefs),
+      severityThreshold: _prefs.minimumSeverity,
+      successMessage: 'Disabled $disabledCount alerts in ${category.label}',
+    ));
+  }
+
+  /// Enable all free alerts.
+  Future<void> enableAllFree() async {
+    final count = await _prefs.enableAllFree();
+    emit(AlertPreferencesState(
+      preferences: _buildInitial(_prefs),
+      severityThreshold: _prefs.minimumSeverity,
+      successMessage: 'Enabled $count free alerts',
+    ));
   }
 
   /// Check if a specific alert is enabled.

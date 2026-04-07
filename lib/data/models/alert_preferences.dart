@@ -90,22 +90,48 @@ class AlertPreferences {
 
   /// Enable all alerts in a category.
   /// If the user is on the Free tier, it explicitly avoids enabling Pro-only alerts.
-  Future<void> enableCategory(AlertCategory category, {required bool isUserPremium}) async {
+  /// Returns the number of alerts that were newly enabled.
+  Future<int> enableCategory(AlertCategory category,
+      {required bool isUserPremium}) async {
+    int count = 0;
     for (final type in AlertType.values) {
       if (type.category == category) {
-        if (!type.isFree && !isUserPremium) continue; // Deny Free users from bulk-enabling Pro alerts
-        await setEnabled(type, true);
+        if (!type.isFree && !isUserPremium) continue;
+        if (!isEnabled(type)) {
+          await setEnabled(type, true);
+          count++;
+        }
       }
     }
+    return count;
   }
 
   /// Disable all alerts in a category.
-  Future<void> disableCategory(AlertCategory category) async {
+  /// Returns the number of alerts that were newly disabled.
+  Future<int> disableCategory(AlertCategory category) async {
+    int count = 0;
     for (final type in AlertType.values) {
       if (type.category == category) {
-        await setEnabled(type, false);
+        if (isEnabled(type)) {
+          await setEnabled(type, false);
+          count++;
+        }
       }
     }
+    return count;
+  }
+
+  /// Enable all free alerts.
+  /// Returns the number of alerts that were newly enabled.
+  Future<int> enableAllFree() async {
+    int count = 0;
+    for (final type in AlertType.values) {
+      if (type.isFree && !isEnabled(type)) {
+        await setEnabled(type, true);
+        count++;
+      }
+    }
+    return count;
   }
 
   /// Group all alert types by category with their enabled status.

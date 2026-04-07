@@ -35,16 +35,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
   Future<void> _handleCloudSync(String action, BuildContext ctx) async {
     final cloudSync = getIt<ContactsCloudSync>();
-    final messenger = ScaffoldMessenger.of(ctx);
     final l = AppLocalizations.of(ctx)!;
-
-    // Show loading.
-    showDialog(
-      context: ctx,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
     try {
       if (action == 'backup') {
         final state = ctx.read<ContactsCubit>().state;
@@ -52,30 +43,34 @@ class _ContactsScreenState extends State<ContactsScreen> {
             ? state.contacts
             : <EmergencyContact>[];
         await cloudSync.syncToCloud(contacts);
-        if (ctx.mounted) Navigator.pop(ctx);
-        SaforaToast.showSuccess(ctx, '${contacts.length} contacts backed up successfully');
+        if (ctx.mounted) {
+          Navigator.pop(ctx);
+          SaforaToast.showSuccess(ctx, '${contacts.length} contacts backed up successfully');
+        }
       } else if (action == 'restore') {
         final cloudContacts = await cloudSync.syncFromCloud();
-        if (ctx.mounted) Navigator.pop(ctx);
-        if (cloudContacts.isEmpty) {
-          SaforaToast.showInfo(ctx, l.noContactsInCloud);
-        } else {
-          // Add each cloud contact locally.
-          for (final contact in cloudContacts) {
-            if (ctx.mounted) {
+        if (ctx.mounted) {
+          Navigator.pop(ctx);
+          if (cloudContacts.isEmpty) {
+            SaforaToast.showInfo(ctx, l.noContactsInCloud);
+          } else {
+            // Add each cloud contact locally.
+            for (final contact in cloudContacts) {
               ctx.read<ContactsCubit>().addContact(
                 name: contact.name,
                 phone: contact.phone,
                 relationship: contact.relationship,
               );
             }
+            SaforaToast.showSuccess(ctx, '${cloudContacts.length} contacts restored successfully');
           }
-          SaforaToast.showSuccess(ctx, '${cloudContacts.length} contacts restored successfully');
         }
       }
     } catch (e) {
-      if (ctx.mounted) Navigator.pop(ctx);
-      SaforaToast.showError(ctx, '${l.syncFailed}: $e');
+      if (ctx.mounted) {
+        Navigator.pop(ctx);
+        SaforaToast.showError(ctx, '${l.syncFailed}: $e');
+      }
     }
   }
 

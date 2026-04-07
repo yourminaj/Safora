@@ -39,14 +39,14 @@ void main() {
     throw Exception('Platform channel error');
   }
 
-  final primaryContact = const EmergencyContact(
+  const primaryContact = EmergencyContact(
     id: '1',
     name: 'Mom',
     phone: '+8801712345678',
     isPrimary: true,
   );
 
-  final secondaryContact = const EmergencyContact(
+  const secondaryContact = EmergencyContact(
     id: '2',
     name: 'Brother',
     phone: '+8801787654321',

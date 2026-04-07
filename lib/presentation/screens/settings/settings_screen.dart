@@ -23,8 +23,6 @@ import '../../../core/services/speed_alert_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../detection/ml/crash_fall_detection_service.dart';
-import '../../../detection/ml/crash_fall_detection_engine.dart';
-import '../../../core/services/weather_feed_service.dart';
 import '../../../core/services/voice_distress_service.dart';
 import '../../../core/services/anomaly_movement_service.dart';
 import '../../../core/services/road_condition_service.dart';
@@ -676,6 +674,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (result == true && firstPin != null) {
       pinController.clear();
+      if (!mounted) return null;
       final confirmResult = await showDialog<bool>(
         context: context,
         barrierDismissible: false,

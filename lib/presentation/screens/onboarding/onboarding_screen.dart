@@ -1,10 +1,8 @@
 import 'package:safora/presentation/widgets/safora_toast.dart';
-import 'dart:math' as math;
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
@@ -218,137 +216,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  SATELLITE BUBBLE
-//  A white circle with colored border ring + icon inside.
-// ═══════════════════════════════════════════════════════════
-
-class _SatelliteBubble extends StatelessWidget {
-  const _SatelliteBubble({required this.icon, required this.color});
-
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    // ── FIX 4: Enhanced satellite bubbles ──
-    // 50px with radial gradient depth, inner glow ring, and premium shadows.
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        // Radial gradient: white center → subtle color tint at edges.
-        gradient: RadialGradient(
-          center: Alignment.center,
-          radius: 0.85,
-          colors: [
-            Colors.white,
-            color.withValues(alpha: 0.06),
-          ],
-        ),
-        shape: BoxShape.circle,
-        // Dual-layer border: inner glow ring + outer colored ring.
-        border: Border.all(
-          color: color.withValues(alpha: 0.30),
-          width: 1.8,
-        ),
-        boxShadow: [
-          // Primary colored shadow — gives the bubble a lifted, branded feel.
-          BoxShadow(
-            color: color.withValues(alpha: 0.18),
-            blurRadius: 14,
-            spreadRadius: 2,
-            offset: const Offset(0, 4),
-          ),
-          // Ambient shadow — subtle depth grounding.
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-          // Inner glow — faint inner radiance for glassmorphism depth.
-          BoxShadow(
-            color: color.withValues(alpha: 0.08),
-            blurRadius: 4,
-            spreadRadius: -1,
-          ),
-        ],
-      ),
-      child: ShaderMask(
-        shaderCallback: (bounds) => LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color,
-            color.withValues(alpha: 0.70),
-          ],
-        ).createShader(bounds),
-        child: Icon(
-          icon,
-          size: 24,
-          color: Colors.white, // ShaderMask applies the gradient over white.
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  GLOW RING PAINTER
-//  Soft animated gradient ring that pulses around the circle.
-// ═══════════════════════════════════════════════════════════
-
-class _GlowRingPainter extends CustomPainter {
-  const _GlowRingPainter({required this.progress, required this.glowColor});
-  final double progress;
-  final Color glowColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final baseRadius = size.width * 0.44;
-    final pulse = baseRadius + 3 * math.sin(progress * 2 * math.pi);
-
-    // Outer glow ring.
-    canvas.drawCircle(
-      Offset(cx, cy),
-      pulse,
-      Paint()
-        ..color = glowColor.withValues(
-            alpha: 0.10 + 0.06 * math.sin(progress * 2 * math.pi))
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.5
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-    );
-
-    // Inner subtle ring.
-    canvas.drawCircle(
-      Offset(cx, cy),
-      baseRadius - 8,
-      Paint()
-        ..color = glowColor.withValues(
-            alpha: 0.05 + 0.03 * math.sin(progress * 2 * math.pi + 1.5))
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-    );
-  }
-
-  @override
-  bool shouldRepaint(_GlowRingPainter old) => old.progress != progress;
-}
-
-// ═══════════════════════════════════════════════════════════
-//  SATELLITE POSITION
-// ═══════════════════════════════════════════════════════════
-
-class _SatellitePosition {
-  const _SatellitePosition(this.x, this.y);
-  final double x;
-  final double y;
 }
 
 // ═══════════════════════════════════════════════════════════

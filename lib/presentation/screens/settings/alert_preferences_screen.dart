@@ -2,7 +2,6 @@ import 'package:safora/presentation/widgets/safora_toast.dart';
 // dart:ui import removed — BackdropFilter was removed for performance reasons.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../../core/constants/alert_types.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
@@ -44,6 +43,12 @@ class _AlertPreferencesScreenState extends State<AlertPreferencesScreen> {
         listener: (context, state) {
           if (state.permissionDeniedMessage != null) {
             SaforaToast.showError(context, state.permissionDeniedMessage!);
+          }
+          if (state.successMessage != null) {
+            SaforaToast.showSuccess(context, state.successMessage!);
+          }
+          if (state.infoMessage != null) {
+            SaforaToast.showInfo(context, state.infoMessage!);
           }
         },
         builder: (context, state) {
@@ -362,14 +367,7 @@ class _QuickActions extends StatelessWidget {
             icon: Icons.check_circle_outline_rounded,
             color: AppColors.success,
             isDark: isDark,
-            onTap: () {
-              // Enable all free alert types.
-              for (final type in AlertType.values) {
-                if (type.isFree && !cubit.isEnabled(type)) {
-                  cubit.toggleAlert(type);
-                }
-              }
-            },
+            onTap: () => cubit.enableAllFree(),
           ),
           const SizedBox(width: 8),
           BlocBuilder<AlertPreferencesCubit, AlertPreferencesState>(

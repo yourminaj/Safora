@@ -39,8 +39,9 @@ void main() {
     when(() => mockPrefs.enabledCountByCategory()).thenReturn({});
     when(() => mockPrefs.groupedByCategory()).thenReturn({});
     when(() => mockPrefs.setEnabled(any(), any())).thenAnswer((_) async {});
-    when(() => mockPrefs.enableCategory(any(), isUserPremium: any(named: 'isUserPremium'))).thenAnswer((_) async {});
-    when(() => mockPrefs.disableCategory(any())).thenAnswer((_) async {});
+    when(() => mockPrefs.enableCategory(any(), isUserPremium: any(named: 'isUserPremium'))).thenAnswer((_) async => 0);
+    when(() => mockPrefs.disableCategory(any())).thenAnswer((_) async => 0);
+    when(() => mockPrefs.enableAllFree()).thenAnswer((_) async => 0);
     when(() => mockPrefs.setMinimumSeverity(any())).thenAnswer((_) async {});
 
     cubit = AlertPreferencesCubit(
