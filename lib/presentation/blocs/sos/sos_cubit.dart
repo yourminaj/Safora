@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
-import 'package:another_telephony/telephony.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../../core/services/location_service.dart';
@@ -96,9 +96,9 @@ class SosCubit extends Cubit<SosState> {
     // If it's denied, emit a non-fatal failure so the UI can direct the
     // user to grant it.  iOS uses url_launcher fallback — no check needed.
     if (Platform.isAndroid) {
-      final telephony = Telephony.instance;
-      final hasPermission =
-          await telephony.requestPhoneAndSmsPermissions ?? false;
+      // FIX: Silent permission check — avoids showing a native dialog mid-emergency.
+      // Permission should be requested proactively in Settings when shake is enabled.
+      final hasPermission = await Permission.sms.isGranted;
       if (!hasPermission) {
         AppLogger.warning(
           '[SOS] Pre-flight: SEND_SMS permission denied — blocking SOS',

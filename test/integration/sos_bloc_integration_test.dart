@@ -81,6 +81,9 @@ const _secondaryContact = EmergencyContact(
 // HELPERS
 // ────────────────────────────────────────────────────────────────
 
+/// Captured tel: URIs from the injected phone call launcher.
+List<Uri> capturedCallUris = [];
+
 /// Builds a fully-wired [SosCubit] with all dependencies mocked.
 SosCubit _buildCubit({
   required MockAudioService audio,
@@ -92,12 +95,17 @@ SosCubit _buildCubit({
   required MockSosEventService sosEventService,
   required MockNotificationService notifications,
   required MockBox settingsBox,
+  PhoneCallLauncher? phoneCallLauncher,
 }) {
   final useCase = TriggerSosUseCase(
     smsService: sms,
     locationService: location,
     notificationService: notifications,
     sosEventService: sosEventService,
+    phoneCallLauncher: phoneCallLauncher ?? (uri) async {
+      capturedCallUris.add(uri);
+      return true;
+    },
   );
 
   return SosCubit(
@@ -141,6 +149,8 @@ void main() {
         .thenReturn(null);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
     when(() => mockBox.delete(any())).thenAnswer((_) async {});
+    
+    capturedCallUris.clear();
 
     // Register fallback values for mocktail
     registerFallbackValue(
@@ -355,6 +365,7 @@ void main() {
         locationService: mockLocation,
         notificationService: mockNotifications,
         sosEventService: mockSosEventService,
+        phoneCallLauncher: (uri) async => true,
       );
 
       final result = await useCase.execute(
@@ -392,6 +403,7 @@ void main() {
         locationService: mockLocation,
         notificationService: mockNotifications,
         sosEventService: mockSosEventService,
+        phoneCallLauncher: (uri) async => true,
       );
 
       final result = await useCase.execute(
@@ -411,6 +423,7 @@ void main() {
         locationService: mockLocation,
         notificationService: mockNotifications,
         sosEventService: mockSosEventService,
+        phoneCallLauncher: (uri) async => true,
       );
 
       final result = await useCase.execute(
@@ -468,6 +481,7 @@ void main() {
         locationService: mockLocation,
         notificationService: mockNotifications,
         sosEventService: mockSosEventService,
+        phoneCallLauncher: (uri) async => true,
       );
 
       final stopwatch = Stopwatch()..start();
@@ -498,6 +512,7 @@ void main() {
         locationService: mockLocation,
         notificationService: mockNotifications,
         sosEventService: mockSosEventService,
+        phoneCallLauncher: (uri) async => true,
       );
 
       // Even though SosEventService throws, execute() should complete normally.
@@ -519,6 +534,7 @@ void main() {
         locationService: mockLocation,
         notificationService: mockNotifications,
         // sosEventService intentionally omitted — optional
+        phoneCallLauncher: (uri) async => true,
       );
 
       final result = await useCase.execute(
@@ -535,5 +551,195 @@ void main() {
             contacts: any(named: 'contacts'),
           ));
     });
+  });
+
+  // ── GROUP 5: Countdown expiry → contact wiring ────────────────────────────
+  //
+  // Strategy: resumeCountdown(pastDeadline) calls _triggerSos() immediately,
+  // bypassing the 30-second real-time wait while exercising the exact same code
+  // path that fires when the Timer.periodic countdown reaches zero.
+  //
+  // This group proves that the contacts fetched from ContactsRepository are
+  // forwarded correctly all the way to SmsService.sendEmergencySms().
+
+  group('SOS BLoC Integration — Countdown Expiry Contact Wiring', () {
+    test(
+      'GIVEN two contacts in repository, '
+      'WHEN countdown expires, '
+      'THEN sendEmergencySms is called with BOTH contacts',
+      () async {
+        // setUp already stubs getAll() → [_primaryContact, _secondaryContact]
+        final cubit = _buildCubit(
+          audio: mockAudio,
+          sms: mockSms,
+          location: mockLocation,
+          contacts: mockContacts,
+          history: mockHistory,
+          connectivity: mockConnectivity,
+          sosEventService: mockSosEventService,
+          notifications: mockNotifications,
+          settingsBox: mockBox,
+        );
+
+        final states = <SosState>[];
+        final sub = cubit.stream.listen(states.add);
+
+        // resumeCountdown with a past deadline fires _triggerSos() immediately
+        cubit.resumeCountdown(
+          DateTime.now().subtract(const Duration(seconds: 1)),
+        );
+
+        // Allow _triggerSos() async operations to complete
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        await sub.cancel();
+        await cubit.close();
+
+        // 1. State became SosActive
+        expect(
+          states.any((s) => s is SosActive),
+          isTrue,
+          reason: 'Expired countdown must emit SosActive',
+        );
+
+        // 2. SMS was sent with the EXACT two contacts from getAll()
+        verify(
+          () => mockSms.sendEmergencySms(
+            contacts: [_primaryContact, _secondaryContact],
+            userName: any(named: 'userName'),
+          ),
+        ).called(1);
+
+        // 3. Notification shown
+        verify(() => mockNotifications.showSosNotification()).called(1);
+
+        // 4. SOS event written for FCM
+        verify(
+          () => mockSosEventService.recordSosEvent(
+            triggerType: any(named: 'triggerType'),
+            latitude: any(named: 'latitude'),
+            longitude: any(named: 'longitude'),
+            contacts: any(named: 'contacts'),
+          ),
+        ).called(1);
+
+        // 5. History logged with correct counts and wasCancelled=false
+        verify(
+          () => mockHistory.add(
+            any(
+              that: predicate<SosHistoryEntry>(
+                (e) => e.contactsNotified == 2 && !e.wasCancelled,
+                'contactsNotified=2 and wasCancelled=false',
+              ),
+            ),
+          ),
+        ).called(1);
+        
+        // 6. Auto-call initiated to primary contact
+        expect(capturedCallUris, hasLength(1));
+        expect(capturedCallUris.first.toString(), 'tel:+8801712345678');
+      },
+    );
+
+    test(
+      'GIVEN only primary contact, '
+      'WHEN countdown expires, '
+      'THEN sendEmergencySms is called with primary contact only',
+      () async {
+        when(() => mockContacts.getAll()).thenReturn([_primaryContact]);
+        when(() => mockSms.sendEmergencySms(
+              contacts: any(named: 'contacts'),
+              userName: any(named: 'userName'),
+            )).thenAnswer((_) async => 1);
+
+        final cubit = _buildCubit(
+          audio: mockAudio,
+          sms: mockSms,
+          location: mockLocation,
+          contacts: mockContacts,
+          history: mockHistory,
+          connectivity: mockConnectivity,
+          sosEventService: mockSosEventService,
+          notifications: mockNotifications,
+          settingsBox: mockBox,
+        );
+
+        cubit.resumeCountdown(
+          DateTime.now().subtract(const Duration(seconds: 1)),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        await cubit.close();
+
+        verify(
+          () => mockSms.sendEmergencySms(
+            contacts: [_primaryContact], // ← only the one contact
+            userName: any(named: 'userName'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'GIVEN countdown expires, '
+      'THEN siren plays AND SMS is sent (both fire-and-forget + awaited)',
+      () async {
+        final cubit = _buildCubit(
+          audio: mockAudio,
+          sms: mockSms,
+          location: mockLocation,
+          contacts: mockContacts,
+          history: mockHistory,
+          connectivity: mockConnectivity,
+          sosEventService: mockSosEventService,
+          notifications: mockNotifications,
+          settingsBox: mockBox,
+        );
+
+        cubit.resumeCountdown(
+          DateTime.now().subtract(const Duration(seconds: 1)),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        await cubit.close();
+
+        // Both audio and SMS must be triggered
+        verify(() => mockAudio.playSiren()).called(1);
+        verify(
+          () => mockSms.sendEmergencySms(
+            contacts: any(named: 'contacts'),
+            userName: any(named: 'userName'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'GIVEN countdown is cancelled before expiry, '
+      'THEN sendEmergencySms is NEVER called',
+      () async {
+        final cubit = _buildCubit(
+          audio: mockAudio,
+          sms: mockSms,
+          location: mockLocation,
+          contacts: mockContacts,
+          history: mockHistory,
+          connectivity: mockConnectivity,
+          sosEventService: mockSosEventService,
+          notifications: mockNotifications,
+          settingsBox: mockBox,
+        );
+
+        cubit.startCountdown();
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        cubit.cancelCountdown();
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await cubit.close();
+
+        verifyNever(
+          () => mockSms.sendEmergencySms(
+            contacts: any(named: 'contacts'),
+            userName: any(named: 'userName'),
+          ),
+        );
+      },
+    );
   });
 }

@@ -21,6 +21,8 @@ import '../../core/services/voice_distress_service.dart';
 import '../../core/services/anomaly_movement_service.dart';
 import '../../core/services/road_condition_service.dart';
 import '../../core/services/sos_contact_alert_listener.dart';
+import '../../data/repositories/contacts_repository.dart';
+import '../../domain/usecases/trigger_sos_usecase.dart';
 import '../../presentation/blocs/alerts/alerts_cubit.dart';
 import '../../presentation/blocs/battery/battery_cubit.dart';
 import '../../presentation/blocs/sos/sos_cubit.dart';
@@ -94,6 +96,10 @@ class ServiceBootstrapper {
               timestamp: DateTime.now(),
               source: 'On-Device Accelerometer',
               magnitude: 15.0,
+              // FIX: confidenceLevel=1.0 → risk score 78→88, passes ≥80 gate.
+              // Shake is user-initiated — confidence is always 100%.
+              confidenceLevel: 1.0,
+              isUserTriggered: true,
             );
 
             // Add alert silently to history
@@ -477,10 +483,34 @@ class ServiceBootstrapper {
       try {
         sl<ShakeDetectionService>().startListening(
           onShakeDetected: () {
-            // Background trigger: Notification?
+            // FIX: Trigger SOS directly in background.
+            // SosCubit is UI-bound and unavailable here, but
+            // TriggerSosUseCase + ContactsRepository are accessible
+            // because configureDependencies() was called on isolate start.
             AppLogger.info(
-              '[ServiceBootstrapper] Shake detected in background',
+              '[ServiceBootstrapper] BG Shake detected → triggering SOS directly',
             );
+            try {
+              final contacts = sl<ContactsRepository>().getAll();
+              if (contacts.isNotEmpty) {
+                sl<TriggerSosUseCase>().execute(
+                  contacts: contacts,
+                  triggerType: 'shake_background',
+                );
+                AppLogger.info(
+                  '[ServiceBootstrapper] BG SOS triggered for '
+                  '${contacts.length} contact(s)',
+                );
+              } else {
+                AppLogger.warning(
+                  '[ServiceBootstrapper] BG Shake: no emergency contacts found',
+                );
+              }
+            } catch (e) {
+              AppLogger.warning(
+                '[ServiceBootstrapper] BG Shake SOS error: $e',
+              );
+            }
           },
         );
       } catch (e) {

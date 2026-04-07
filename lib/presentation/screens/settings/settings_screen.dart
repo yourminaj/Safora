@@ -135,7 +135,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             longitude: _lastLon,
             timestamp: DateTime.now(),
             source: 'On-Device Accelerometer',
-            magnitude: 15.0, // Fixed default or placeholder magnitude
+            magnitude: 15.0,
+            // FIX D: confidenceLevel=1.0 → risk score 78→88, passes ≥80 gate.
+            // Must match ServiceBootstrapper.bootstrap() shake callback.
+            confidenceLevel: 1.0,
+            isUserTriggered: true,
           );
           
           if (mounted) {

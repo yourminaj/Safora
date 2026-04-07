@@ -205,7 +205,10 @@ class AlertsCubit extends Cubit<AlertsState> {
     List<AlertEvent> fresh,
     List<AlertEvent> cached,
   ) {
-    final cachedIds = cached
+    // Check against ALL known history to prevent old API alerts from falling out 
+    // of the 50-item cache and re-triggering as "new".
+    final allHistory = _alertsRepository.getAlertHistory(limit: 500);
+    final cachedIds = allHistory
         .map((a) => a.id ?? '${a.title}_${a.timestamp}')
         .toSet();
 
@@ -216,7 +219,7 @@ class AlertsCubit extends Cubit<AlertsState> {
 
       final id = alert.id ?? '${alert.title}_${alert.timestamp}';
       if (!cachedIds.contains(id) &&
-          alert.type.priority == AlertPriority.critical) {
+          (alert.riskScore ?? 0) >= 80) {
 
         // Cross-method dedup: respect the per-type throttle from addLocalAlert.
         // If addLocalAlert already fired a notification for this type within 10s,

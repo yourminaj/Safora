@@ -138,7 +138,7 @@ class NotificationService {
   Future<void> showSosNotification() async {
     await init();
     const androidDetails = AndroidNotificationDetails(
-      'sos_channel',
+      'sos_channel_v2',
       'SOS Alerts',
       channelDescription: 'Emergency SOS alert notifications',
       importance: Importance.max,
@@ -150,6 +150,9 @@ class NotificationService {
       category: AndroidNotificationCategory.alarm,
       icon: '@drawable/ic_stat_safora',
       color: Color(0xFFEF4444),
+      sound: RawResourceAndroidNotificationSound('siren'),
+      // fullScreenIntent ensures it pops up over the lockscreen.
+      fullScreenIntent: true,
     );
 
     const details = NotificationDetails(
@@ -158,6 +161,7 @@ class NotificationService {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        sound: 'siren.mp3',
         interruptionLevel: InterruptionLevel.critical,
       ),
     );
@@ -207,6 +211,7 @@ class NotificationService {
     String? soundName,
     Color? color,
   }) async {
+    AppLogger.info('[NotificationService] showDisasterAlert: $title (sound: $soundName)');
     await init();
     
     // Setup audio logic if soundName is provided

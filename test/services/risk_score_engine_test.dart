@@ -130,4 +130,87 @@ void main() {
       expect(sorted.first.riskScore, greaterThan(sorted.last.riskScore ?? 0));
     });
   });
+
+  // ── shakeSos Bug Fix Validation ───────────────────────────────────────────
+  //
+  // Bug: AlertEvent for shakeSos had no confidenceLevel set (null → 0.5 neutral).
+  // This caused the risk score to be 78, just below the ≥80 gate in
+  // ServiceBootstrapper — so SosCubit.startCountdown() was NEVER called.
+  //
+  // Fix: Set confidenceLevel=1.0 on the shake AlertEvent (user-initiated = 100%).
+  // New score: 88 ≥ 80 → gate passes → SOS countdown starts.
+  //
+  // Score formula:
+  //   severity  (40%) × 1.0  [critical]
+  //   proximity (25%) × 0.5  [null distance → neutral]
+  //   confidence(20%) × X    [0.5 = bug, 1.0 = fix]
+  //   recency   (15%) × 1.0  [just now]
+  //
+  // Without fix: 0.40 + 0.125 + 0.10 + 0.15 = 0.775 × 100 = 77.5 → 78
+  // With fix:    0.40 + 0.125 + 0.20 + 0.15 = 0.875 × 100 = 87.5 → 88
+
+  group('shakeSos AlertEvent scoring — Bug Fix Validation', () {
+    test(
+      'REGRESSION: shakeSos WITHOUT confidenceLevel scores 78 (the original bug)',
+      () {
+        // This test documents the bug that was fixed.
+        // If this score ever rises to ≥80 due to other changes, the fix
+        // is no longer needed — but update this test accordingly.
+        final event = makeEvent(
+          type: AlertType.shakeSos,
+          // confidenceLevel intentionally NOT set — simulates the original bug
+        );
+        final score = engine.computeScore(event);
+        expect(
+          score,
+          lessThan(80),
+          reason:
+              'Without confidenceLevel, shakeSos scores $score < 80 — '
+              'this is the original bug that prevented SOS from firing.',
+        );
+        expect(score, equals(78)); // Exact pre-fix value
+      },
+    );
+
+    test(
+      'FIX: shakeSos WITH confidenceLevel=1.0 scores 88 — passes ≥80 gate',
+      () {
+        final event = makeEvent(
+          type: AlertType.shakeSos,
+          confidence: 1.0, // ← what ServiceBootstrapper now sets
+        );
+        final score = engine.computeScore(event);
+        expect(
+          score,
+          greaterThanOrEqualTo(80),
+          reason:
+              'shakeSos with confidence=1.0 must score ≥80 to pass the '
+              'risk gate in ServiceBootstrapper.bootstrap().',
+        );
+        expect(score, equals(88)); // Exact post-fix value
+      },
+    );
+
+    test(
+      'shakeSos with confidenceLevel=1.0 is labeled Extreme (≥80)',
+      () {
+        final event = makeEvent(type: AlertType.shakeSos, confidence: 1.0);
+        final score = engine.computeScore(event);
+        expect(RiskScoreEngine.scoreLabel(score), equals('Extreme'));
+      },
+    );
+
+    test(
+      'shakeSos without confidenceLevel is labeled High (60–79, not Extreme)',
+      () {
+        final event = makeEvent(
+          type: AlertType.shakeSos,
+          // no confidence
+        );
+        final score = engine.computeScore(event);
+        // score = 78 → "High" tier (60–79)
+        expect(RiskScoreEngine.scoreLabel(score), equals('High'));
+      },
+    );
+  });
 }

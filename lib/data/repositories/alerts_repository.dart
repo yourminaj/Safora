@@ -3,6 +3,7 @@ import '../datasources/disaster_api_client.dart';
 import '../datasources/military_alert_client.dart';
 import '../datasources/alerts_local_datasource.dart';
 import '../../core/services/location_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 /// Abstract repository for disaster alert events.
 abstract class AlertsRepository {
@@ -49,13 +50,29 @@ class AlertsRepositoryImpl implements AlertsRepository {
       allAlerts.addAll(list);
     }
 
-    // Deduplicate by ID.
+    // Fetch user position to calculate distances.
+    final position = await _locationService.getCurrentPosition();
+
+    // Deduplicate by ID, enforce deterministic key, and compute distance.
     final seen = <String>{};
     final unique = <AlertEvent>[];
     for (final alert in allAlerts) {
       final key = alert.id ?? '${alert.title}_${alert.timestamp}';
       if (seen.add(key)) {
-        unique.add(alert);
+        double? distance;
+        if (position != null) {
+          try {
+            // Distance in meters converted to km.
+            distance = Geolocator.distanceBetween(
+                  position.latitude,
+                  position.longitude,
+                  alert.latitude,
+                  alert.longitude,
+                ) /
+                1000.0;
+          } catch (_) {}
+        }
+        unique.add(alert.copyWith(id: key, distanceKm: distance));
       }
     }
 

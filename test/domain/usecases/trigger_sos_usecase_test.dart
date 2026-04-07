@@ -19,18 +19,44 @@ void main() {
   late MockLocationService mockLocation;
   late MockNotificationService mockNotification;
 
-  final testContacts = [
-    const EmergencyContact(
-      id: '1',
-      name: 'Mom',
-      phone: '+8801712345678',
-      isPrimary: true,
-    ),
-    const EmergencyContact(
-      id: '2',
-      name: 'Brother',
-      phone: '+8801787654321',
-    ),
+  /// Captured tel: URIs from the injected phone call launcher.
+  late List<Uri> capturedCallUris;
+
+  /// Stub phone call launcher that always succeeds.
+  Future<bool> fakeCallLauncher(Uri uri) async {
+    capturedCallUris.add(uri);
+    return true;
+  }
+
+  /// Stub phone call launcher that always fails.
+  Future<bool> failingCallLauncher(Uri uri) async {
+    capturedCallUris.add(uri);
+    return false;
+  }
+
+  /// Stub phone call launcher that throws.
+  Future<bool> throwingCallLauncher(Uri uri) async {
+    throw Exception('Platform channel error');
+  }
+
+  final primaryContact = const EmergencyContact(
+    id: '1',
+    name: 'Mom',
+    phone: '+8801712345678',
+    isPrimary: true,
+  );
+
+  final secondaryContact = const EmergencyContact(
+    id: '2',
+    name: 'Brother',
+    phone: '+8801787654321',
+  );
+
+  final testContacts = [primaryContact, secondaryContact];
+
+  final noPrimaryContacts = [
+    const EmergencyContact(id: '3', name: 'Friend', phone: '+8801799999999'),
+    const EmergencyContact(id: '4', name: 'Colleague', phone: '+8801788888888'),
   ];
 
   final testPosition = Position(
@@ -50,11 +76,13 @@ void main() {
     mockSms = MockSmsService();
     mockLocation = MockLocationService();
     mockNotification = MockNotificationService();
+    capturedCallUris = [];
 
     useCase = TriggerSosUseCase(
       smsService: mockSms,
       locationService: mockLocation,
       notificationService: mockNotification,
+      phoneCallLauncher: fakeCallLauncher,
     );
 
     // Default stubs.
@@ -71,7 +99,9 @@ void main() {
         .thenAnswer((_) async {});
   });
 
-  group('TriggerSosUseCase', () {
+  // ── GROUP 1: Core SOS Flow ────────────────────────────────────────────────
+
+  group('TriggerSosUseCase — Core Flow', () {
     test('execute fetches GPS location before sending SMS', () async {
       await useCase.execute(contacts: testContacts);
 
@@ -106,7 +136,7 @@ void main() {
       verify(() => mockNotification.showSosNotification()).called(1);
     });
 
-    test('execute with empty contacts skips SMS', () async {
+    test('execute with empty contacts skips SMS and call', () async {
       final result = await useCase.execute(contacts: []);
 
       verifyNever(() => mockSms.sendEmergencySms(
@@ -115,6 +145,7 @@ void main() {
           ));
       expect(result.smsSentCount, 0);
       expect(result.totalContacts, 0);
+      expect(result.callInitiated, false);
     });
 
     test('execute reports hasLocation correctly', () async {
@@ -145,5 +176,170 @@ void main() {
 
       verify(() => mockNotification.cancelSosNotification()).called(1);
     });
+  });
+
+  // ── GROUP 2: Auto-Call Primary Contact (Fix E) ────────────────────────────
+
+  group('TriggerSosUseCase — Auto-Call Primary Contact', () {
+    test(
+      'GIVEN contacts with isPrimary=true, '
+      'WHEN execute() runs, '
+      'THEN tel: URI is launched for the primary contact',
+      () async {
+        final result = await useCase.execute(contacts: testContacts);
+
+        expect(result.callInitiated, true);
+        expect(capturedCallUris, hasLength(1));
+        expect(
+          capturedCallUris.first.toString(),
+          'tel:+8801712345678', // Mom's number (primary)
+        );
+      },
+    );
+
+    test(
+      'GIVEN no contact has isPrimary=true, '
+      'WHEN execute() runs, '
+      'THEN tel: URI is launched for the FIRST contact (fallback)',
+      () async {
+        final result = await useCase.execute(contacts: noPrimaryContacts);
+
+        expect(result.callInitiated, true);
+        expect(capturedCallUris, hasLength(1));
+        expect(
+          capturedCallUris.first.toString(),
+          'tel:+8801799999999', // Friend's number (first in list)
+        );
+      },
+    );
+
+    test(
+      'GIVEN primary contact exists, '
+      'WHEN execute() runs, '
+      'THEN SMS is sent BEFORE call is initiated (order matters)',
+      () async {
+        // Track ordering via side effects.
+        final callOrder = <String>[];
+
+        when(() => mockSms.sendEmergencySms(
+              contacts: any(named: 'contacts'),
+              userName: any(named: 'userName'),
+            )).thenAnswer((_) async {
+          callOrder.add('sms');
+          return 2;
+        });
+
+        useCase = TriggerSosUseCase(
+          smsService: mockSms,
+          locationService: mockLocation,
+          notificationService: mockNotification,
+          phoneCallLauncher: (uri) async {
+            callOrder.add('call');
+            return true;
+          },
+        );
+
+        await useCase.execute(contacts: testContacts);
+
+        expect(callOrder, ['sms', 'call']);
+      },
+    );
+
+    test(
+      'GIVEN phone call launcher returns false, '
+      'WHEN execute() runs, '
+      'THEN callInitiated is false but SMS still delivered',
+      () async {
+        useCase = TriggerSosUseCase(
+          smsService: mockSms,
+          locationService: mockLocation,
+          notificationService: mockNotification,
+          phoneCallLauncher: failingCallLauncher,
+        );
+
+        final result = await useCase.execute(contacts: testContacts);
+
+        expect(result.callInitiated, false);
+        expect(result.smsSentCount, 2); // SMS still sent
+        verify(() => mockSms.sendEmergencySms(
+              contacts: any(named: 'contacts'),
+              userName: any(named: 'userName'),
+            )).called(1);
+      },
+    );
+
+    test(
+      'GIVEN phone call launcher throws, '
+      'WHEN execute() runs, '
+      'THEN callInitiated is false but SOS flow completes',
+      () async {
+        useCase = TriggerSosUseCase(
+          smsService: mockSms,
+          locationService: mockLocation,
+          notificationService: mockNotification,
+          phoneCallLauncher: throwingCallLauncher,
+        );
+
+        final result = await useCase.execute(contacts: testContacts);
+
+        expect(result.callInitiated, false);
+        expect(result.smsSentCount, 2); // SMS still sent
+        verify(() => mockNotification.showSosNotification()).called(1);
+      },
+    );
+
+    test(
+      'GIVEN empty contacts, '
+      'WHEN execute() runs, '
+      'THEN phone call is NOT attempted',
+      () async {
+        final result = await useCase.execute(contacts: []);
+
+        expect(result.callInitiated, false);
+        expect(capturedCallUris, isEmpty);
+      },
+    );
+
+    test(
+      'GIVEN contact phone contains formatting characters, '
+      'WHEN call is initiated, '
+      'THEN phone number is cleaned (only digits and +)',
+      () async {
+        final formattedContacts = [
+          const EmergencyContact(
+            id: '5',
+            name: 'Formatted',
+            phone: '+880 171-234 5678',
+            isPrimary: true,
+          ),
+        ];
+
+        when(() => mockSms.sendEmergencySms(
+              contacts: any(named: 'contacts'),
+              userName: any(named: 'userName'),
+            )).thenAnswer((_) async => 1);
+
+        await useCase.execute(contacts: formattedContacts);
+
+        expect(capturedCallUris, hasLength(1));
+        expect(
+          capturedCallUris.first.toString(),
+          'tel:+8801712345678', // Spaces and dashes removed
+        );
+      },
+    );
+
+    test(
+      'SosResult.callInitiated defaults to false for backward compatibility',
+      () {
+        const result = SosResult(
+          smsSentCount: 1,
+          totalContacts: 1,
+          hasLocation: true,
+          // callInitiated not specified — defaults to false
+        );
+        expect(result.callInitiated, false);
+      },
+    );
   });
 }
