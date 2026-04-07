@@ -26,6 +26,8 @@ import '../../domain/usecases/trigger_sos_usecase.dart';
 import '../../presentation/blocs/alerts/alerts_cubit.dart';
 import '../../presentation/blocs/battery/battery_cubit.dart';
 import '../../presentation/blocs/sos/sos_cubit.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/services/premium_manager.dart';
 
 /// Restores all detection services on app startup based on persisted Hive state.
 ///
@@ -54,6 +56,31 @@ class ServiceBootstrapper {
     required Box settings,
   }) async {
     AppLogger.info('[ServiceBootstrapper] Starting service re-hydration...');
+
+    // Phase 0: Direct Seeding (Pro vs Free)
+    // Automatically upgrade the seeded test account to Pro without UI toggle.
+    // 1. Check current user on startup
+    try {
+      final auth = sl<AuthService>();
+      final initialUser = auth.currentUser;
+      final pm = sl<PremiumManager>();
+      
+      await pm.checkAndSeedPro(initialUser?.email);
+
+      // 2. Listen for future logins to apply seed immediately
+      auth.authStateChanges.listen((user) async {
+        if (user != null) {
+          await pm.checkAndSeedPro(user.email);
+        } else {
+          // Sign-out: Reset to Free so the next user (or guest) starts clean.
+          // Real subscriptions are restored by SubscriptionService if they exist.
+          await pm.setPremium(false);
+          AppLogger.info('[ServiceBootstrapper] Resetting to Free on sign-out');
+        }
+      });
+    } catch (e) {
+      AppLogger.warning('[ServiceBootstrapper] Direct Seeding failed: $e');
+    }
 
     try {
       sl<ConnectivityService>().startMonitoring(

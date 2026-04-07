@@ -20,6 +20,10 @@ class PremiumManager {
   static const String _boxName = 'app_settings';
   static const String _premiumKey = 'is_premium';
 
+  /// The specific email account that is pre-seeded with a Pro subscription for testing.
+  /// This allows reviewing Pro features (Alert Preferences, etc.) by simply logging in.
+  static const String proSeedEmail = 'pro@safora.app';
+
   bool _isPremium = false;
 
   /// Whether the user has an active Pro subscription.
@@ -34,6 +38,16 @@ class PremiumManager {
       _isPremium = box.get(_premiumKey, defaultValue: false) as bool;
     } catch (_) {
       // Hive not initialized — keep in-memory default (false).
+    }
+  }
+
+  /// Direct Database Seeding: If the provided email matches the [proSeedEmail],
+  /// automatically upgrades the account to Pro in the local database.
+  Future<void> checkAndSeedPro(String? email) async {
+    if (email != null && email.toLowerCase() == proSeedEmail) {
+      if (!_isPremium) {
+        await setPremium(true);
+      }
     }
   }
 
