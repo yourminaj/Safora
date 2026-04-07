@@ -63,7 +63,7 @@ void main() {
       for (final t in AlertType.values.where((t) => t.category == category)) {
         expect(prefs.isEnabled(t), isFalse);
       }
-      await prefs.enableCategory(category);
+      await prefs.enableCategory(category, isUserPremium: true);
       // Verify all enabled.
       for (final t in AlertType.values.where((t) => t.category == category)) {
         expect(prefs.isEnabled(t), isTrue);
@@ -72,7 +72,7 @@ void main() {
 
     test('disableCategory disables all alerts in category', () async {
       const category = AlertCategory.healthMedical;
-      await prefs.enableCategory(category);
+      await prefs.enableCategory(category, isUserPremium: true);
       await prefs.disableCategory(category);
       for (final t in AlertType.values.where((t) => t.category == category)) {
         expect(prefs.isEnabled(t), isFalse);

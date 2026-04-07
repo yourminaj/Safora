@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -127,15 +128,7 @@ class MoreScreen extends StatelessWidget {
     // Show a hint after navigation completes.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.remindersAccessedFromHome,
-            ),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        SaforaToast.showInfo(context, AppLocalizations.of(context)!.remindersSubtitle);
       }
     });
   }

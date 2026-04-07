@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -52,22 +53,12 @@ class _ContactsScreenState extends State<ContactsScreen> {
             : <EmergencyContact>[];
         await cloudSync.syncToCloud(contacts);
         if (ctx.mounted) Navigator.pop(ctx);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('${contacts.length} contacts backed up successfully'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        SaforaToast.showSuccess(ctx, '${contacts.length} contacts backed up successfully');
       } else if (action == 'restore') {
         final cloudContacts = await cloudSync.syncFromCloud();
         if (ctx.mounted) Navigator.pop(ctx);
         if (cloudContacts.isEmpty) {
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(l.noContactsInCloud),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          SaforaToast.showInfo(ctx, l.noContactsInCloud);
         } else {
           // Add each cloud contact locally.
           for (final contact in cloudContacts) {
@@ -79,24 +70,12 @@ class _ContactsScreenState extends State<ContactsScreen> {
               );
             }
           }
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(
-                '${cloudContacts.length} contacts restored successfully',
-              ),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          SaforaToast.showSuccess(ctx, '${cloudContacts.length} contacts restored successfully');
         }
       }
     } catch (e) {
       if (ctx.mounted) Navigator.pop(ctx);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('${l.syncFailed}: $e'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      SaforaToast.showError(ctx, '${l.syncFailed}: $e');
     }
   }
 
@@ -148,9 +127,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                       _showLimitDialog(context);
                     }
                     if (state is ContactsError) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(state.message)));
+                      SaforaToast.showError(context, state.message);
                     }
                   },
                   builder: (context, state) {

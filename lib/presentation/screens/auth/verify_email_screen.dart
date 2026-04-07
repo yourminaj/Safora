@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -71,24 +72,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       await _authService.sendEmailVerification();
       if (!mounted) return;
       _startCooldown();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Verification email sent to ${_authService.currentUser?.email ?? ''}',
-          ),
-          backgroundColor: AppColors.safe,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      SaforaToast.showSuccess(context, 'Verification email sent to ${_authService.currentUser?.email ?? ''}',);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to send email: $e'),
-          backgroundColor: AppColors.danger,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      SaforaToast.showError(context, 'Failed to send email: $e');
     } finally {
       if (mounted) setState(() => _isSending = false);
     }

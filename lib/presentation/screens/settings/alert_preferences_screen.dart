@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 // dart:ui import removed — BackdropFilter was removed for performance reasons.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,21 +43,7 @@ class _AlertPreferencesScreenState extends State<AlertPreferencesScreen> {
       body: BlocConsumer<AlertPreferencesCubit, AlertPreferencesState>(
         listener: (context, state) {
           if (state.permissionDeniedMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.permissionDeniedMessage!),
-                backgroundColor: AppColors.danger,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                action: SnackBarAction(
-                  label: 'Settings',
-                  textColor: Colors.white,
-                  onPressed: () => openAppSettings(),
-                ),
-              ),
-            );
+            SaforaToast.showError(context, state.permissionDeniedMessage!);
           }
         },
         builder: (context, state) {

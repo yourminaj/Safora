@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
@@ -828,14 +829,7 @@ class _FalseAlertReportSheetState extends State<_FalseAlertReportSheet> {
     if (!mounted) return;
     Navigator.pop(context);
     HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text(
-            'Report submitted — thank you for improving alert accuracy'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    SaforaToast.showInfo(context, 'Notification');
   }
 }
 

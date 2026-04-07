@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -75,12 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (contacts.isNotEmpty) {
       GetIt.instance<SmsService>().sendIAmSafeSms(contacts: contacts);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('"I Am Safe" sent to emergency contacts'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        SaforaToast.showSuccess(context, '"I Am Safe" sent to emergency contacts');
       }
     }
   }
@@ -423,27 +419,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(16),
                         onTap: () {
                           dms.checkIn();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.check_circle_rounded,
-                                      color: Colors.white, size: 20),
-                                  const SizedBox(width: 8),
-                                  Flexible(
-                                    child: Text(
-                                    l.checkInConfirmed),
-                                  ),
-                                ],
-                              ),
-                              backgroundColor: AppColors.safe,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          );
+                          SaforaToast.showSuccess(context, 'Notification');
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(

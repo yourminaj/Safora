@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:safora/l10n/app_localizations.dart';
@@ -69,50 +70,13 @@ class _SosButtonState extends State<SosButton>
     return BlocListener<SosCubit, SosState>(
       listener: (context, state) {
         if (state is SosActive) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l.sosAlertActivated),
-              backgroundColor: AppColors.danger,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 5),
-              action: SnackBarAction(
-                label: l.stop,
-                textColor: Colors.white,
-                onPressed: () {
-                  context.read<SosCubit>().deactivateSos();
-                },
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
+          SaforaToast.showError(context, l.sosAlertActivated);
         }
         if (state is SosCancelled) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l.sosCancelled),
-              backgroundColor: AppColors.safe,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
+          SaforaToast.showSuccess(context, l.sosCancelled);
         }
         if (state is SosPreflightFailed) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(_localizeFailureReason(context, state.reason)),
-              backgroundColor: AppColors.danger,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 4),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
+          SaforaToast.showError(context, _localizeFailureReason(context, state.reason));
         }
       },
       child: Center(

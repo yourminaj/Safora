@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'package:flutter/material.dart';
 import '../../../core/services/app_logger.dart';
 import '../../../core/services/subscription_service.dart';
@@ -605,22 +606,7 @@ class _PaywallScreenState extends State<PaywallScreen>
       if (mounted) {
         if (success) {
           Navigator.pop(context, true);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
-                  Text('Welcome to Safora Pro!'),
-                ],
-              ),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
+          SaforaToast.showSuccess(context, 'Notification');
         } else {
           setState(() => _isPurchasing = false);
         }
@@ -648,22 +634,7 @@ class _PaywallScreenState extends State<PaywallScreen>
       if (mounted) {
         if (restored) {
           Navigator.pop(context, true);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
-                  Text('Pro subscription restored!'),
-                ],
-              ),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
+          SaforaToast.showSuccess(context, 'Notification');
         } else {
           setState(() {
             _isRestoring = false;

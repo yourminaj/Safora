@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/auth_service.dart';
@@ -298,20 +299,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (!ctx.mounted) return;
                 Navigator.pop(ctx);
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Password reset email sent!'),
-                  ),
-                );
+                SaforaToast.showSuccess(context, 'Password reset email sent!');
               } catch (e) {
                 if (!ctx.mounted) return;
                 Navigator.pop(ctx);
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed: ${_friendlyError(e.toString())}'),
-                  ),
-                );
+                SaforaToast.showError(context, 'Failed: ${_friendlyError(e.toString())}');
               }
               // Dispose after the dialog is fully closed (not inside the try block).
             },

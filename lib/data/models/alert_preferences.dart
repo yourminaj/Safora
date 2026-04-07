@@ -89,9 +89,11 @@ class AlertPreferences {
   }
 
   /// Enable all alerts in a category.
-  Future<void> enableCategory(AlertCategory category) async {
+  /// If the user is on the Free tier, it explicitly avoids enabling Pro-only alerts.
+  Future<void> enableCategory(AlertCategory category, {required bool isUserPremium}) async {
     for (final type in AlertType.values) {
       if (type.category == category) {
+        if (!type.isFree && !isUserPremium) continue; // Deny Free users from bulk-enabling Pro alerts
         await setEnabled(type, true);
       }
     }

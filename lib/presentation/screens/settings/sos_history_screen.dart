@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:safora/l10n/app_localizations.dart';
@@ -59,29 +60,35 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
       await getIt<SosHistoryDatasource>().clear();
       setState(() => _loadEntries());
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.historyCleared)),
-        );
+        SaforaToast.showInfo(context, l.historyCleared);
       }
     }
   }
 
-  String _triggerLabel(SosTriggerSource source, AppLocalizations l) {
-    return switch (source) {
-      SosTriggerSource.manual => l.triggerManual,
-      SosTriggerSource.shake => l.triggerShake,
-      SosTriggerSource.crashDetection => l.triggerCrash,
-      SosTriggerSource.background => l.triggerBackground,
-    };
+  IconData _triggerIcon(SosTriggerSource source) {
+    switch (source) {
+      case SosTriggerSource.shake:
+        return Icons.vibration_rounded;
+      case SosTriggerSource.crashDetection:
+        return Icons.minor_crash_rounded;
+      case SosTriggerSource.background:
+        return Icons.dns_rounded;
+      case SosTriggerSource.manual:
+        return Icons.touch_app_rounded;
+    }
   }
 
-  IconData _triggerIcon(SosTriggerSource source) {
-    return switch (source) {
-      SosTriggerSource.manual => Icons.touch_app_rounded,
-      SosTriggerSource.shake => Icons.vibration_rounded,
-      SosTriggerSource.crashDetection => Icons.car_crash_rounded,
-      SosTriggerSource.background => Icons.schedule_rounded,
-    };
+  String _triggerLabel(SosTriggerSource source, AppLocalizations l) {
+    switch (source) {
+      case SosTriggerSource.shake:
+        return l.triggerShake;
+      case SosTriggerSource.crashDetection:
+        return l.triggerCrash;
+      case SosTriggerSource.background:
+        return l.triggerBackground;
+      case SosTriggerSource.manual:
+        return l.triggerManual;
+    }
   }
 
   @override
@@ -93,115 +100,137 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
         actions: [
           if (_entries.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.delete_outline_rounded),
-              tooltip: l.clearHistory,
+              icon: const Icon(Icons.delete_sweep_rounded),
               onPressed: () => _clearHistory(l),
+              tooltip: l.clearHistory,
             ),
         ],
       ),
       body: _entries.isEmpty
           ? Center(
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.history_rounded,
                     size: 64,
-                    color: AppColors.textDisabled,
+                    color: AppColors.textDisabled.withValues(alpha: 0.2),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     l.noSosHistory,
-                    style: AppTypography.bodyLarge.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AppTypography.titleMedium.copyWith(
+                      color: AppColors.textDisabled,
                     ),
                   ),
                 ],
               ),
             )
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
+          : ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: _entries.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final entry = _entries[index];
-                final dateStr = DateFormat('MMM d, yyyy – h:mm a')
-                    .format(entry.timestamp.toLocal());
-                return ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: entry.wasCancelled
-                          ? AppColors.warning.withValues(alpha: 0.1)
-                          : AppColors.danger.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      _triggerIcon(entry.triggerSource),
-                      color: entry.wasCancelled ? AppColors.warning : AppColors.danger,
-                      size: 22,
-                    ),
-                  ),
-                  title: Row(
-                    children: [
-                      Text(
-                        _triggerLabel(entry.triggerSource, l),
-                        style: AppTypography.titleSmall,
+                final dateStr = DateFormat.yMMMd().add_jm().format(entry.timestamp);
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
+                    ],
+                  ),
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: entry.wasCancelled
+                            ? AppColors.warning.withValues(alpha: 0.1)
+                            : AppColors.danger.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        _triggerIcon(entry.triggerSource),
+                        color: entry.wasCancelled
+                            ? AppColors.warning
+                            : AppColors.danger,
+                        size: 22,
+                      ),
+                    ),
+                    title: Row(
+                      children: [
+                        Text(
+                          _triggerLabel(entry.triggerSource, l),
+                          style: AppTypography.titleSmall,
                         ),
-                        decoration: BoxDecoration(
-                          color: entry.wasCancelled
-                              ? AppColors.warning.withValues(alpha: 0.15)
-                              : AppColors.success.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          entry.wasCancelled
-                              ? l.cancelledLabel
-                              : l.completedLabel,
-                          style: AppTypography.labelSmall.copyWith(
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
                             color: entry.wasCancelled
-                                ? AppColors.warning
-                                : AppColors.success,
-                            fontWeight: FontWeight.w600,
+                                ? AppColors.warning.withValues(alpha: 0.15)
+                                : AppColors.success.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            entry.wasCancelled
+                                ? l.cancelledLabel
+                                : l.completedLabel,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: entry.wasCancelled
+                                  ? AppColors.warning
+                                  : AppColors.success,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      Text(dateStr,
-                          style: AppTypography.bodySmall
-                              .copyWith(color: AppColors.textSecondary)),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${l.contactsNotifiedLabel}: ${entry.contactsNotified} · '
-                        '${l.smsSentLabel}: ${entry.smsSentCount}',
-                        style: AppTypography.bodySmall
-                            .copyWith(color: AppColors.textSecondary),
-                      ),
-                      if (entry.address != null) ...[
+                      ],
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(
+                          dateStr,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                         const SizedBox(height: 2),
                         Text(
-                          entry.address!,
-                          style: AppTypography.bodySmall
-                              .copyWith(color: AppColors.textSecondary),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          '${l.contactsNotifiedLabel}: ${entry.contactsNotified} · '
+                          '${l.smsSentLabel}: ${entry.smsSentCount}',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
+                        if (entry.address != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            entry.address!,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                   ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
                 );
               },
             ),

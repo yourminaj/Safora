@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -53,17 +54,7 @@ class CountdownOverlay extends StatelessWidget {
             Navigator.of(context).pop();
           }
           // Show error in the parent context's scaffold.
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(_localizeFailureReason(context, state.reason)),
-              backgroundColor: Colors.red.shade700,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 4),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
+          SaforaToast.showError(context, _localizeFailureReason(context, state.reason));
         }
 
         // Haptic feedback on each tick.

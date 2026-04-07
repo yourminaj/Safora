@@ -1,4 +1,5 @@
 
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -540,12 +541,7 @@ class _LiveLocationSheet extends StatelessWidget {
           color: const Color(0xFF43A047),
           onTap: () {
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Live location shared for 15 minutes'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            SaforaToast.showSuccess(context, 'Live location shared for 15 minutes');
           },
         ),
         const SizedBox(height: 10),
@@ -554,12 +550,7 @@ class _LiveLocationSheet extends StatelessWidget {
           color: const Color(0xFF1565C0),
           onTap: () {
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Live location shared for 1 hour'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            SaforaToast.showSuccess(context, 'Live location shared for 1 hour');
           },
         ),
         const SizedBox(height: 10),
@@ -568,12 +559,7 @@ class _LiveLocationSheet extends StatelessWidget {
           color: const Color(0xFFE53935),
           onTap: () {
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Live location shared continuously'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            SaforaToast.showSuccess(context, 'Live location shared continuously');
           },
         ),
       ],

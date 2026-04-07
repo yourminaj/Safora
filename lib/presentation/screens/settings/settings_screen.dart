@@ -1,3 +1,4 @@
+import 'package:safora/presentation/widgets/safora_toast.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -116,6 +117,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _voiceSubscription?.cancel();
     _anomalySubscription?.cancel();
     _roadSubscription?.cancel();
+    _geofenceSubscription?.cancel();
+    _snatchSubscription?.cancel();
+    _speedSubscription?.cancel();
+    _contextSubscription?.cancel();
+    getIt<GeofenceService>().stop();
+    getIt<SnatchDetectionService>().stop();
+    getIt<SpeedAlertService>().stop();
+    getIt<ContextAlertService>().stop();
     super.dispose();
   }
 
@@ -171,9 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await _lockService.enableLock();
         setState(() => _lockEnabled = true);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l.lockEnabled)));
+          SaforaToast.showInfo(context, l.lockEnabled);
         }
       }
     } else {
@@ -183,9 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await _lockService.disableLock();
         setState(() => _lockEnabled = false);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l.lockDisabled)));
+          SaforaToast.showInfo(context, l.lockDisabled);
         }
       }
     }
@@ -202,9 +207,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (newPin != null && mounted) {
       await _lockService.setPin(newPin);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l.changePinSuccess)));
+        SaforaToast.showInfo(context, l.changePinSuccess);
       }
     }
   }
@@ -213,6 +216,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   StreamSubscription<VoiceDistressEvent>? _voiceSubscription;
   StreamSubscription<AnomalyMovementEvent>? _anomalySubscription;
   StreamSubscription<RoadConditionEvent>? _roadSubscription;
+  StreamSubscription<void>? _geofenceSubscription;
+  StreamSubscription<void>? _snatchSubscription;
+  StreamSubscription<void>? _speedSubscription;
+  StreamSubscription<void>? _contextSubscription;
 
   /// Small PRO badge widget for premium-gated features.
   Widget _proBadge() {
@@ -287,396 +294,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _crashSubscription?.cancel();
       _crashSubscription = null;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          enabled
-              ? AppLocalizations.of(context)!.crashFallEnabled
-              : AppLocalizations.of(context)!.crashFallDisabled,
-        ),
-      ),
+    SaforaToast.showInfo(
+      context,
+      enabled
+          ? 'Crash & Fall Detection Enabled'
+          : 'Crash & Fall Detection Disabled',
     );
-  }
-
-  /// Show crash/fall sensitivity settings bottom sheet.
-  void _showSensitivitySettings() {
-    final l = AppLocalizations.of(context)!;
-    double fallG =
-        _appSettings.get('fall_threshold_g', defaultValue: 3.0) as double;
-    double crashG =
-        _appSettings.get('crash_threshold_g', defaultValue: 4.0) as double;
-    double minConf =
-        _appSettings.get('min_confidence', defaultValue: 0.5) as double;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                24,
-                20,
-                24,
-                MediaQuery.of(ctx).viewInsets.bottom + 24,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    children: [
-                      const Icon(Icons.tune_rounded, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        l.sensitivitySettings,
-                        style: AppTypography.titleMedium,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Fall threshold slider
-                  Text(l.fallThreshold, style: AppTypography.labelMedium),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Slider(
-                          value: fallG,
-                          min: 1.5,
-                          max: 6.0,
-                          divisions: 9,
-                          label: '${fallG.toStringAsFixed(1)}G',
-                          onChanged: (v) => setSheetState(() => fallG = v),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 48,
-                        child: Text(
-                          '${fallG.toStringAsFixed(1)}G',
-                          style: AppTypography.bodySmall,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Crash threshold slider
-                  Text(l.crashThreshold, style: AppTypography.labelMedium),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Slider(
-                          value: crashG,
-                          min: 2.0,
-                          max: 10.0,
-                          divisions: 16,
-                          label: '${crashG.toStringAsFixed(1)}G',
-                          onChanged: (v) => setSheetState(() => crashG = v),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 48,
-                        child: Text(
-                          '${crashG.toStringAsFixed(1)}G',
-                          style: AppTypography.bodySmall,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Min confidence slider
-                  Text(l.minConfidence, style: AppTypography.labelMedium),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Slider(
-                          value: minConf,
-                          min: 0.1,
-                          max: 1.0,
-                          divisions: 9,
-                          label: '${(minConf * 100).toInt()}%',
-                          onChanged: (v) => setSheetState(() => minConf = v),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 48,
-                        child: Text(
-                          '${(minConf * 100).toInt()}%',
-                          style: AppTypography.bodySmall,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Actions
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton.icon(
-                        onPressed: () {
-                          setSheetState(() {
-                            fallG = 3.0;
-                            crashG = 4.0;
-                            minConf = 0.5;
-                          });
-                        },
-                        icon: const Icon(Icons.restore_rounded, size: 18),
-                        label: Text(l.resetDefaults),
-                      ),
-                      FilledButton(
-                        onPressed: () {
-                          _appSettings.put('fall_threshold_g', fallG);
-                          _appSettings.put('crash_threshold_g', crashG);
-                          _appSettings.put('min_confidence', minConf);
-
-                          // If service is running, restart with new config.
-                          if (_crashFallEnabled) {
-                            final service = getIt<CrashFallDetectionService>();
-                            service.stop();
-                            // Re-register with new thresholds.
-                            if (getIt
-                                .isRegistered<CrashFallDetectionService>()) {
-                              getIt.unregister<CrashFallDetectionService>();
-                            }
-                            getIt.registerLazySingleton<
-                              CrashFallDetectionService
-                            >(
-                              () => CrashFallDetectionService(
-                                engine: CrashFallDetectionEngine(
-                                  fallThresholdG: fallG,
-                                  crashThresholdG: crashG,
-                                  minConfidence: minConf,
-                                ),
-                              ),
-                            );
-                            _toggleCrashFall(true);
-                          }
-
-                          Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l.sensitivitySaved)),
-                          );
-                        },
-                        child: Text(l.save),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  /// Show upgrade dialog for Pro-only features.
-  void _showUpgradeDialog() {
-    final l = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.proFeatureTitle),
-        content: Text(l.proFeatureMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.push(AppRoutes.paywall);
-            },
-            child: Text(l.upgradeToPro),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _toggleGeofence(bool enabled) {
-    if (enabled &&
-        !getIt<PremiumManager>().isFeatureAvailable(
-          ProFeature.unlimitedGeofenceZones,
-        )) {
-      _showUpgradeDialog();
-      return;
-    }
-    setState(() => _geofenceEnabled = enabled);
-    _appSettings.put('geofence_enabled', enabled);
-    final service = getIt<GeofenceService>();
-    if (enabled) {
-      service.start(
-        onExitAllZones: (position) {
-          final l = AppLocalizations.of(context)!;
-          final zoneName =
-              l.geofenceTitle; // generic; API provides Position not name
-          // Inject into main alert pipeline.
-          final alertEvent = AlertEvent(
-            id: 'geofence_exit_${DateTime.now().millisecondsSinceEpoch}',
-            type: AlertType.geofenceExit,
-            title: l.alertGeofenceExitTitle(zoneName),
-            description: l.alertGeofenceExitDesc(zoneName),
-            latitude: position.latitude,
-            longitude: position.longitude,
-            timestamp: DateTime.now(),
-            source: 'On-Device GPS',
-          );
-          if (mounted) {
-            context.read<AlertsCubit>().addLocalAlert(alertEvent);
-          }
-        },
-      );
-    } else {
-      service.stop();
-    }
-  }
-
-  void _toggleSnatch(bool enabled) {
-    if (enabled &&
-        !getIt<PremiumManager>().isFeatureAvailable(
-          ProFeature.snatchDetection,
-        )) {
-      _showUpgradeDialog();
-      return;
-    }
-    setState(() => _snatchEnabled = enabled);
-    _appSettings.put('snatch_enabled', enabled);
-    final service = getIt<SnatchDetectionService>();
-    if (enabled) {
-      service.start(
-        onSnatchDetected: (confidence) {
-          final l = AppLocalizations.of(context)!;
-          // Build alert event first, then gate SOS behind preferences + risk score.
-          // Mirrors the exact guard from ServiceBootstrapper.
-          final pct = (confidence * 100).toStringAsFixed(0);
-          final alertEvent = AlertEvent(
-            id: 'snatch_${DateTime.now().millisecondsSinceEpoch}',
-            type: AlertType.phoneSnatching,
-            title: l.alertSnatchTitle,
-            description: l.alertSnatchDesc(pct),
-            latitude: _lastLat,
-            longitude: _lastLon,
-            timestamp: DateTime.now(),
-            source: 'On-Device Accelerometer',
-            magnitude: confidence,
-          );
-          if (mounted) {
-            context.read<AlertsCubit>().addLocalAlert(alertEvent);
-
-            // SOS gated by preferences + risk score threshold.
-            final prefs = getIt<AlertPreferences>();
-            if (prefs.shouldReceive(alertEvent.type)) {
-              const engine = RiskScoreEngine();
-              if (engine.computeScore(alertEvent) >= 80) {
-                context.read<SosCubit>().startCountdown();
-              }
-            }
-          }
-        },
-      );
-    } else {
-      service.stop();
-    }
-  }
-
-  void _toggleSpeedAlert(bool enabled) {
-    if (enabled &&
-        !getIt<PremiumManager>().isFeatureAvailable(ProFeature.speedAlert)) {
-      _showUpgradeDialog();
-      return;
-    }
-    setState(() => _speedAlertEnabled = enabled);
-    _appSettings.put('speed_alert_enabled', enabled);
-    final service = getIt<SpeedAlertService>();
-    if (enabled) {
-      final crashService = getIt<CrashFallDetectionService>();
-      service.start(
-        onSpeedExceeded: (speedKmh) {
-          final l = AppLocalizations.of(context)!;
-          final speedStr = speedKmh.toStringAsFixed(0);
-          final alertEvent = AlertEvent(
-            id: 'speed_${DateTime.now().millisecondsSinceEpoch}',
-            type: AlertType.speedWarning,
-            title: l.alertSpeedTitle(speedStr),
-            description: l.alertSpeedDesc(speedStr),
-            latitude: _lastLat,
-            longitude: _lastLon,
-            timestamp: DateTime.now(),
-            source: 'On-Device GPS',
-            magnitude: speedKmh,
-          );
-          if (mounted) {
-            context.read<AlertsCubit>().addLocalAlert(alertEvent);
-          }
-        },
-        // Cross-service wiring: feed live speed into crash/fall detector.
-        onSpeedUpdate: (speedKmh) {
-          crashService.currentSpeedKmh = speedKmh;
-        },
-      );
-    } else {
-      service.stop();
-    }
-  }
-
-  void _toggleContextAlert(bool enabled) {
-    if (enabled &&
-        !getIt<PremiumManager>().isFeatureAvailable(ProFeature.contextAlerts)) {
-      _showUpgradeDialog();
-      return;
-    }
-    setState(() => _contextAlertEnabled = enabled);
-    _appSettings.put('context_alert_enabled', enabled);
-    final service = getIt<ContextAlertService>();
-    final feed = getIt<WeatherFeedService>();
-    if (enabled) {
-      // Start app-level weather feed (persists across navigation).
-      feed.start();
-      service.start(
-        onContextAlert: (ctxAlert) {
-          // Map ContextAlertType to AlertType.
-          final alertType = _mapContextAlertType(ctxAlert.type);
-          // Localize title/message at display time.
-          final localized = _localizeContextAlert(ctxAlert);
-          final alertEvent = AlertEvent(
-            id: 'ctx_${ctxAlert.type.name}_${DateTime.now().millisecondsSinceEpoch}',
-            type: alertType,
-            title: localized.$1,
-            description: localized.$2,
-            latitude: _lastLat,
-            longitude: _lastLon,
-            timestamp: DateTime.now(),
-            source: 'On-Device Context',
-          );
-          if (mounted) {
-            context.read<AlertsCubit>().addLocalAlert(alertEvent);
-          }
-        },
-      );
-    } else {
-      service.stop();
-      feed.stop();
-    }
   }
 
   void _toggleDms(bool enabled) {
-    if (enabled &&
-        !getIt<PremiumManager>().isFeatureAvailable(
-          ProFeature.deadManSwitch,
-        )) {
-      _showUpgradeDialog();
-      return;
-    }
     setState(() => _dmsEnabled = enabled);
     _appSettings.put('dead_man_switch_enabled', enabled);
     final dms = getIt<DeadManSwitchService>();
@@ -685,6 +311,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } else {
       dms.stop();
     }
+    SaforaToast.showInfo(
+      context,
+      enabled ? 'Dead Man Switch Enabled' : 'Dead Man Switch Disabled',
+    );
   }
 
   void _changeDmsInterval(int minutes) {
@@ -746,18 +376,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _voiceSubscription = null;
       service.stop();
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          enabled
-              ? 'Voice Distress Detection enabled'
-              : 'Voice Distress Detection disabled',
-        ),
-      ),
+    SaforaToast.showInfo(
+      context,
+      enabled
+          ? 'Voice Distress Detection enabled'
+          : 'Voice Distress Detection disabled',
     );
   }
 
-  /// Anomaly Movement Detection toggle — 24-feature accel window → TFLite.
   void _toggleAnomalyMovement(bool enabled) {
     if (enabled &&
         !getIt<PremiumManager>().isFeatureAvailable(
@@ -770,56 +396,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _appSettings.put('anomaly_movement_enabled', enabled);
     final service = getIt<AnomalyMovementService>();
     if (enabled) {
-      service.start().then((_) {
-        _anomalySubscription?.cancel();
-        _anomalySubscription = service.onAnomalyDetected.listen((event) {
-          final alertEvent = AlertEvent(
-            id: 'anomaly_mov_${DateTime.now().millisecondsSinceEpoch}',
-            type: event.alertType,
-            title: 'Suspicious Movement: ${event.result.predictedClass.name}',
-            description:
-                'Anomalous movement detected '
-                '(${event.result.predictedClass.name}, '
-                'confidence: ${(event.result.confidence * 100).toStringAsFixed(0)}%). '
-                'SOS countdown started.',
-            latitude: _lastLat,
-            longitude: _lastLon,
-            timestamp: event.detectedAt,
-            source: 'On-Device Accelerometer',
-            magnitude: event.result.confidence,
-          );
-          if (mounted) {
-            context.read<AlertsCubit>().addLocalAlert(alertEvent);
-
-            // SOS gated by preferences + risk score threshold.
-            // Mirrors the exact guard from ServiceBootstrapper.
-            final prefs = getIt<AlertPreferences>();
-            if (prefs.shouldReceive(alertEvent.type)) {
-              const engine = RiskScoreEngine();
-              if (engine.computeScore(alertEvent) >= 80) {
-                context.read<SosCubit>().startCountdown();
-              }
+      service.start();
+      _anomalySubscription?.cancel();
+      _anomalySubscription = service.onAnomalyDetected.listen((event) {
+        final alertEvent = AlertEvent(
+          id: 'anomaly_${DateTime.now().millisecondsSinceEpoch}',
+          type: event.alertType,
+          title: 'Suspicious Movement Detected',
+          description: 'Anomalous movement detected: ${event.result.predictedClass.name} '
+              '(confidence: ${(event.result.confidence * 100).toStringAsFixed(0)}%). '
+              'SOS countdown started.',
+          latitude: _lastLat,
+          longitude: _lastLon,
+          timestamp: event.detectedAt,
+          source: 'On-Device Accelerometer',
+          magnitude: event.result.confidence,
+        );
+        if (mounted) {
+          context.read<AlertsCubit>().addLocalAlert(alertEvent);
+          final prefs = getIt<AlertPreferences>();
+          if (prefs.shouldReceive(alertEvent.type)) {
+            const engine = RiskScoreEngine();
+            if (engine.computeScore(alertEvent) >= 80) {
+              context.read<SosCubit>().startCountdown();
             }
           }
-        });
+        }
       });
     } else {
+      service.stop();
       _anomalySubscription?.cancel();
       _anomalySubscription = null;
-      service.stop();
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          enabled
-              ? 'Anomaly Movement Detection enabled'
-              : 'Anomaly Movement Detection disabled',
-        ),
-      ),
+    SaforaToast.showInfo(
+      context,
+      enabled
+          ? 'Anomaly Movement Detection enabled'
+          : 'Anomaly Movement Detection disabled',
     );
   }
 
-  /// Road Condition Detection toggle — 8-feature accel+GPS vector → TFLite.
   void _toggleRoadCondition(bool enabled) {
     if (enabled &&
         !getIt<PremiumManager>().isFeatureAvailable(
@@ -832,103 +448,200 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _appSettings.put('road_condition_enabled', enabled);
     final service = getIt<RoadConditionService>();
     if (enabled) {
-      service.start().then((_) {
-        _roadSubscription?.cancel();
-        _roadSubscription = service.onHazardDetected.listen((event) {
+      service.start();
+      _roadSubscription?.cancel();
+      _roadSubscription = service.onHazardDetected.listen((event) {
+        final alertEvent = AlertEvent(
+          id: 'road_hazard_${DateTime.now().millisecondsSinceEpoch}',
+          type: event.alertType,
+          title: 'Road Hazard Detected',
+          description: 'Hazard detected: ${event.result.condition.name} '
+              'at ${event.result.speedKmh.toStringAsFixed(1)} km/h '
+              '(confidence: ${(event.result.confidence * 100).toStringAsFixed(0)}%).',
+          latitude: _lastLat,
+          longitude: _lastLon,
+          timestamp: event.detectedAt,
+          source: 'Accelerometer + GPS',
+          magnitude: event.result.confidence,
+        );
+        if (mounted) {
+          context.read<AlertsCubit>().addLocalAlert(alertEvent);
+        }
+      });
+    } else {
+      service.stop();
+      _roadSubscription?.cancel();
+      _roadSubscription = null;
+    }
+  }
+
+  void _toggleGeofence(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(
+          ProFeature.unlimitedGeofenceZones,
+        )) {
+      _showUpgradeDialog();
+      return;
+    }
+    setState(() => _geofenceEnabled = enabled);
+    _appSettings.put('geofence_enabled', enabled);
+    final service = getIt<GeofenceService>();
+    if (enabled) {
+      service.start(
+        onExitAllZones: (position) {
           final alertEvent = AlertEvent(
-            id: 'road_${event.result.condition.name}_${DateTime.now().millisecondsSinceEpoch}',
-            type: event.alertType,
-            title: 'Road Hazard: ${event.result.condition.name}',
-            description:
-                'Road hazard detected at '
-                '${event.result.speedKmh.toStringAsFixed(0)} km/h '
-                '(${event.result.condition.name}, '
-                'confidence: ${(event.result.confidence * 100).toStringAsFixed(0)}%).',
+            id: 'geofence_exit_${DateTime.now().millisecondsSinceEpoch}',
+            type: AlertType.geofenceExit,
+            title: 'Left Safe Zone',
+            description: 'You have left all defined safe zones. '
+                'Emergency contacts have been notified.',
+            latitude: position.latitude,
+            longitude: position.longitude,
+            timestamp: DateTime.now(),
+            source: 'Geofence Engine',
+            magnitude: 1.0,
+          );
+          if (mounted) {
+            context.read<AlertsCubit>().addLocalAlert(alertEvent);
+            context.read<SosCubit>().startCountdown();
+          }
+        },
+      );
+    } else {
+      service.stop();
+    }
+    SaforaToast.showInfo(
+      context,
+      enabled ? 'Geofence Alerts enabled' : 'Geofence Alerts disabled',
+    );
+  }
+
+  void _toggleSnatch(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(
+          ProFeature.snatchDetection,
+        )) {
+      _showUpgradeDialog();
+      return;
+    }
+    setState(() => _snatchEnabled = enabled);
+    _appSettings.put('snatch_enabled', enabled);
+    final service = getIt<SnatchDetectionService>();
+    if (enabled) {
+      service.start(
+        onSnatchDetected: (peakG) {
+          final alertEvent = AlertEvent(
+            id: 'snatch_${DateTime.now().millisecondsSinceEpoch}',
+            type: AlertType.phoneSnatching,
+            title: 'Phone Snatch Detected',
+            description: 'A sudden directional grab was detected '
+                '(peak: ${peakG.toStringAsFixed(1)}G). '
+                'SOS countdown started.',
             latitude: _lastLat,
             longitude: _lastLon,
-            timestamp: event.detectedAt,
-            source: 'On-Device Accelerometer + GPS',
-            magnitude: event.result.confidence,
+            timestamp: DateTime.now(),
+            source: 'Accelerometer Snatch Detection',
+            magnitude: peakG / 10.0,
+          );
+          if (mounted) {
+            context.read<AlertsCubit>().addLocalAlert(alertEvent);
+            context.read<SosCubit>().startCountdown();
+          }
+        },
+      );
+    } else {
+      service.stop();
+    }
+    SaforaToast.showInfo(
+      context,
+      enabled ? 'Snatch Detection enabled' : 'Snatch Detection disabled',
+    );
+  }
+
+  void _toggleSpeedAlert(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(
+          ProFeature.speedAlert,
+        )) {
+      _showUpgradeDialog();
+      return;
+    }
+    setState(() => _speedAlertEnabled = enabled);
+    _appSettings.put('speed_alert_enabled', enabled);
+    final service = getIt<SpeedAlertService>();
+    if (enabled) {
+      service.start(
+        onSpeedExceeded: (speed) {
+          final alertEvent = AlertEvent(
+            id: 'speeding_${DateTime.now().millisecondsSinceEpoch}',
+            type: AlertType.speedWarning,
+            title: 'Overspeeding Detected',
+            description: 'Your speed exceeded the safe limit '
+                '(${speed.toStringAsFixed(1)} km/h). Please slow down.',
+            latitude: _lastLat,
+            longitude: _lastLon,
+            timestamp: DateTime.now(),
+            source: 'GPS Speed Monitor',
+            magnitude: speed / 120.0,
           );
           if (mounted) {
             context.read<AlertsCubit>().addLocalAlert(alertEvent);
           }
-        });
-      });
+        },
+      );
     } else {
-      _roadSubscription?.cancel();
-      _roadSubscription = null;
       service.stop();
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          enabled
-              ? 'Road Condition Detection enabled'
-              : 'Road Condition Detection disabled',
-        ),
-      ),
+    SaforaToast.showInfo(
+      context,
+      enabled ? 'Speed Alerts enabled' : 'Speed Alerts disabled',
     );
   }
 
-  /// Map ContextAlertType → AlertType via canonical single-source method.
-
-  AlertType _mapContextAlertType(ContextAlertType type) {
-    return ContextAlertService.mapToAlertType(type);
-  }
-
-  /// Localize context alert title + message at display time.
-  /// Returns (localizedTitle, localizedMessage).
-  (String, String) _localizeContextAlert(ContextAlert alert) {
-    final l = AppLocalizations.of(context)!;
-    return switch (alert.type) {
-      ContextAlertType.heatStroke => (
-        l.ctxHeatTitle,
-        l.ctxHeatMsg(
-          (getIt<ContextAlertService>().currentTemperatureCelsius ?? 0)
-              .toStringAsFixed(0),
-        ),
-      ),
-      ContextAlertType.hypothermia => (
-        l.ctxHypothermiaTitle,
-        l.ctxHypothermiaMsg(
-          (getIt<ContextAlertService>().currentTemperatureCelsius ?? 0)
-              .toStringAsFixed(0),
-          '—', // wind chill unavailable at this point; use service message as fallback
-        ),
-      ),
-      ContextAlertType.drowsyDriving => (
-        l.ctxDrowsyTitle,
-        l.ctxDrowsyMsg(
-          '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, "0")}',
-          (getIt<ContextAlertService>().currentSpeedKmh ?? 0).toStringAsFixed(
-            0,
-          ),
-        ),
-      ),
-      ContextAlertType.loneNightWalk => (
-        l.ctxNightWalkTitle,
-        l.ctxNightWalkMsg,
-      ),
-      ContextAlertType.altitudeSickness => (
-        l.ctxAltitudeTitle,
-        alert
-            .message, // keep service-generated message (has precise altitude data)
-      ),
-      ContextAlertType.flashFloodRisk => (
-        l.ctxFloodTitle,
-        alert
-            .message, // keep service-generated message (has precise precipitation data)
-      ),
-    };
+  void _toggleContextAlert(bool enabled) {
+    if (enabled &&
+        !getIt<PremiumManager>().isFeatureAvailable(
+          ProFeature.contextAlerts,
+        )) {
+      _showUpgradeDialog();
+      return;
+    }
+    setState(() => _contextAlertEnabled = enabled);
+    _appSettings.put('context_alert_enabled', enabled);
+    final service = getIt<ContextAlertService>();
+    if (enabled) {
+      service.start(
+        onContextAlert: (alert) {
+          final alertEvent = AlertEvent(
+            id: 'context_${DateTime.now().millisecondsSinceEpoch}',
+            type: ContextAlertService.mapToAlertType(alert.type),
+            title: alert.title,
+            description: alert.message,
+            latitude: _lastLat,
+            longitude: _lastLon,
+            timestamp: DateTime.now(),
+            source: 'Context AI Engine',
+            magnitude: alert.severity == ContextSeverity.critical ? 1.0 : 0.6,
+          );
+          if (mounted) {
+            context.read<AlertsCubit>().addLocalAlert(alertEvent);
+          }
+        },
+      );
+    } else {
+      service.stop();
+    }
+    SaforaToast.showInfo(
+      context,
+      enabled ? 'Smart Context Alerts enabled' : 'Smart Context Alerts disabled',
+    );
   }
 
   Future<String?> _showPinSetupDialog(AppLocalizations l) async {
-    String? firstPin;
     final pinController = TextEditingController();
+    String? firstPin;
 
-    // Step 1: Enter PIN
-    firstPin = await showDialog<String>(
+    final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
@@ -945,49 +658,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => Navigator.pop(ctx, false),
             child: Text(l.cancel),
           ),
           TextButton(
             onPressed: () {
               if (pinController.text.length == 4) {
-                Navigator.pop(ctx, pinController.text);
-              }
-            },
-            child: Text(l.next),
-          ),
-        ],
-      ),
-    );
-
-    if (firstPin == null || !mounted) return null;
-
-    // Step 2: Confirm PIN
-    pinController.clear();
-    final confirm = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.confirmPin),
-        content: TextField(
-          controller: pinController,
-          keyboardType: TextInputType.number,
-          maxLength: 4,
-          obscureText: true,
-          decoration: const InputDecoration(
-            hintText: '• • • •',
-            counterText: '',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l.cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              if (pinController.text.length == 4) {
-                Navigator.pop(ctx, pinController.text);
+                firstPin = pinController.text;
+                Navigator.pop(ctx, true);
               }
             },
             child: Text(l.ok),
@@ -996,18 +674,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
 
-    pinController.dispose();
-
-    if (confirm == null) return null;
-    if (firstPin != confirm) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l.pinMismatch)));
-      }
-      return null;
+    if (result == true && firstPin != null) {
+      pinController.clear();
+      final confirmResult = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.confirmPin),
+          content: TextField(
+            controller: pinController,
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            obscureText: true,
+            decoration: const InputDecoration(
+              hintText: '• • • •',
+              counterText: '',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.cancel),
+            ),
+            TextButton(
+              onPressed: () {
+                if (pinController.text == firstPin) {
+                  Navigator.pop(ctx, true);
+                } else {
+                  SaforaToast.showError(context, l.pinMismatch);
+                }
+              },
+              child: Text(l.ok),
+            ),
+          ],
+        ),
+      );
+      if (confirmResult == true) return firstPin;
     }
-    return firstPin;
+    return null;
   }
 
   Future<bool> _showPinVerifyDialog(AppLocalizations l) async {
@@ -1037,9 +741,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               final ok = _lockService.verifyPin(pinController.text);
               Navigator.pop(ctx, ok);
               if (!ok) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(l.wrongPin)));
+                SaforaToast.showInfo(context, l.wrongPin);
               }
             },
             child: Text(l.ok),
@@ -1716,6 +1418,108 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+
+  void _showUpgradeDialog() {
+    context.push('/paywall');
+  }
+
+  void _showSensitivitySettings() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Detection Sensitivity',
+              style: AppTypography.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Adjust the G-force threshold for crash detection.',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildSensitivityTile(
+              title: 'Fall Detection',
+              value: '3.0 G',
+              subtitle: 'Research standard for human falls.',
+            ),
+            _buildSensitivityTile(
+              title: 'Vehicle Crash',
+              value: '4.0 G',
+              subtitle: 'IEEE standard for moderate impacts.',
+            ),
+            _buildSensitivityTile(
+              title: 'Hard Impact',
+              value: '6.0 G',
+              subtitle: 'Severe impact detection threshold.',
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Done'),
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSensitivityTile({
+    required String title,
+    required String value,
+    required String subtitle,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: AppTypography.titleMedium),
+                Text(
+                  subtitle,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              value,
+              style: AppTypography.titleSmall.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SettingsSection extends StatelessWidget {
@@ -1743,6 +1547,7 @@ class _SettingsSection extends StatelessWidget {
     );
   }
 }
+
 
 class _SettingsTile extends StatelessWidget {
   const _SettingsTile({

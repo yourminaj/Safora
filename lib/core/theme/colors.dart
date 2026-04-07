@@ -68,4 +68,9 @@ abstract final class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  // Aliases for onboarding and legacy screens
+  static const LinearGradient primaryGradient = headerGradient;
+  static const LinearGradient secondaryGradient = safeGradient;
+  static const LinearGradient errorGradient = dangerGradient;
 }

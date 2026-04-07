@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:get_it/get_it.dart';
 import '../../../core/constants/alert_types.dart';
 import '../../../core/services/alert_permission_gate.dart';
+import '../../../core/services/premium_manager.dart';
 import '../../../data/models/alert_preferences.dart';
 
 /// State for alert preferences.
@@ -137,7 +139,8 @@ class AlertPreferencesCubit extends Cubit<AlertPreferencesState> {
       return;
     }
 
-    await _prefs.enableCategory(category);
+    final isPro = GetIt.instance<PremiumManager>().isPremium;
+    await _prefs.enableCategory(category, isUserPremium: isPro);
     _emitUpdated();
   }
 

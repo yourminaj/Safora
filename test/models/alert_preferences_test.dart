@@ -79,7 +79,7 @@ void main() {
 
     test('enableCategory turns on all types in that category', () async {
       await prefs.disableCategory(AlertCategory.naturalDisaster);
-      await prefs.enableCategory(AlertCategory.naturalDisaster);
+      await prefs.enableCategory(AlertCategory.naturalDisaster, isUserPremium: true);
 
       final typesInCategory = AlertType.values
           .where((t) => t.category == AlertCategory.naturalDisaster);
