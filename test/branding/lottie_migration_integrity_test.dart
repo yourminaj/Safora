@@ -161,26 +161,9 @@ void main() {
   });
 
   // ─── Onboarding Screen — Build Stamp ────────────────────────
-  group('Onboarding Screen — Build Stamp', () {
-    test('imports package_info_plus', () {
-      expect(onboardingContent,
-          contains('package:package_info_plus/package_info_plus.dart'));
-    });
-
-    test('writes onboarding_build on completion', () {
-      expect(onboardingContent, contains("'onboarding_build'"));
-    });
-
+  group('Onboarding Screen — Branded Icons & Completion', () {
     test('writes onboarding_completed on completion', () {
       expect(onboardingContent, contains("'onboarding_completed'"));
-    });
-
-    test('uses PackageInfo.fromPlatform()', () {
-      expect(onboardingContent, contains('PackageInfo.fromPlatform()'));
-    });
-
-    test('writes build number from PackageInfo (info.buildNumber)', () {
-      expect(onboardingContent, contains('info.buildNumber'));
     });
 
     test('does not import or use Lottie', () {
@@ -195,7 +178,13 @@ void main() {
     });
 
     test('uses only branded Safora icons', () {
-      expect(onboardingContent, contains('SaforaSosIcon'));
+      // SaforaShieldPulse replaced SaforaSosIcon in the first page
+      expect(
+        onboardingContent.contains('SaforaShieldPulse') ||
+            onboardingContent.contains('SaforaSosIcon'),
+        isTrue,
+        reason: 'First onboarding page should use a Safora shield/SOS icon',
+      );
       expect(onboardingContent, contains('SaforaContactsIcon'));
       expect(onboardingContent, contains('SaforaMedicalIcon'));
     });

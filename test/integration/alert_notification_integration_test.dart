@@ -62,6 +62,7 @@ void main() {
     when(() => alertPreferences.shouldReceive(any())).thenReturn(true);
 
     when(() => alertsRepository.getAlertHistory(limit: any(named: 'limit'))).thenReturn([]);
+    when(() => alertsRepository.saveAlerts(any())).thenAnswer((_) async {});
 
     alertsCubit = AlertsCubit(
       alertsRepository: alertsRepository,
@@ -76,9 +77,13 @@ void main() {
 
   group('Alert Pipeline Notifications', () {
     test('Critical alert triggers notification', () async {
+      // Must set distanceKm + confidenceLevel so RiskScoreEngine scores >= 80.
+      // tsunami (critical=1.0×0.40) + distance=0 (1.0×0.25) + conf=1.0 (1.0×0.20) + recency=now (1.0×0.15) = 100
       final criticalAlert = createAlert(
         id: '1', 
-        type: AlertType.tsunami, 
+        type: AlertType.tsunami,
+        distanceKm: 0.0,
+        confidenceLevel: 1.0,
       );
       
       when(() => alertsRepository.fetchLatestAlerts()).thenAnswer(
@@ -153,6 +158,8 @@ void main() {
       final alerts = List.generate(5, (index) => createAlert(
         id: 'bulk_$index', 
         type: criticalTypes[index],
+        distanceKm: 0.0,
+        confidenceLevel: 1.0,
       ));
       
       when(() => alertsRepository.fetchLatestAlerts()).thenAnswer(
@@ -176,6 +183,8 @@ void main() {
       final alert = createAlert(
         id: 'dedupe_1', 
         type: AlertType.tsunami,
+        distanceKm: 0.0,
+        confidenceLevel: 1.0,
       );
       
       when(() => alertsRepository.fetchLatestAlerts()).thenAnswer(

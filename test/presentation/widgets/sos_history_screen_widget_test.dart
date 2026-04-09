@@ -121,13 +121,13 @@ void main() {
       ));
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.delete_outline_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.delete_sweep_rounded), findsOneWidget);
     });
 
     testWidgets('does not show clear button when empty', (tester) async {
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.delete_outline_rounded), findsNothing);
+      expect(find.byIcon(Icons.delete_sweep_rounded), findsNothing);
     });
   });
 }

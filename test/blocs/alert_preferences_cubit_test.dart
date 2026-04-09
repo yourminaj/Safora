@@ -4,6 +4,7 @@ import 'package:hive/hive.dart';
 
 import 'package:safora/core/constants/alert_types.dart';
 import 'package:safora/core/services/alert_permission_gate.dart';
+import 'package:safora/core/services/premium_manager.dart';
 import 'package:safora/data/models/alert_preferences.dart';
 import 'package:safora/presentation/blocs/alert_preferences/alert_preferences_cubit.dart';
 
@@ -20,6 +21,15 @@ class _FakeGate extends Fake implements AlertPermissionGate {
   }
 }
 
+class _FakePremiumManager extends Fake implements PremiumManager {
+  bool _isPremium = false;
+
+  @override
+  bool get isPremium => _isPremium;
+
+  set isPremium(bool value) => _isPremium = value;
+}
+
 // ── Test helpers ──────────────────────────────────────────────────────────────
 
 void main() {
@@ -27,6 +37,7 @@ void main() {
   late Box box;
   late AlertPreferences prefs;
   late _FakeGate gate;
+  late _FakePremiumManager fakePremium;
   late AlertPreferencesCubit cubit;
 
   setUp(() async {
@@ -35,9 +46,11 @@ void main() {
     box = await Hive.openBox<dynamic>('test_cubit_prefs');
     prefs = AlertPreferences(box);
     gate = _FakeGate();
+    fakePremium = _FakePremiumManager();
     cubit = AlertPreferencesCubit(
       alertPreferences: prefs,
       permissionGate: gate,
+      premiumManager: fakePremium,
     );
   });
 
@@ -113,6 +126,7 @@ void main() {
       'enabling alert with permission granted → alert becomes enabled',
       () async {
         gate.grantAll = true;
+        fakePremium.isPremium = true;
         final premType = AlertType.values.firstWhere((t) => !t.isFree);
 
         await cubit.toggleAlert(premType);
@@ -127,6 +141,7 @@ void main() {
       'enabling alert with permission denied → alert stays disabled',
       () async {
         gate.grantAll = false;
+        fakePremium.isPremium = true;
         final premType = AlertType.values.firstWhere((t) => !t.isFree);
 
         await cubit.toggleAlert(premType);
@@ -151,6 +166,7 @@ void main() {
       'toggleAlert NEVER emits isLoading:true (dim-screen regression)',
       () async {
         gate.grantAll = true;
+        fakePremium.isPremium = true;
         final premType = AlertType.values.firstWhere((t) => !t.isFree);
 
         var sawLoadingTrue = false;
@@ -176,6 +192,7 @@ void main() {
   group('enableCategory', () {
     test('permission granted → all alerts in category enabled', () async {
       gate.grantAll = true;
+      fakePremium.isPremium = true;
       const cat = AlertCategory.healthMedical;
 
       await cubit.enableCategory(cat);
@@ -192,6 +209,7 @@ void main() {
 
     test('permission denied → no alerts enabled, message set', () async {
       gate.grantAll = false;
+      fakePremium.isPremium = true;
       const cat = AlertCategory.healthMedical;
 
       await cubit.enableCategory(cat);
@@ -216,6 +234,7 @@ void main() {
     test('enableCategory NEVER emits isLoading:true '
         '(Health & Medical dim-screen regression)', () async {
       gate.grantAll = true;
+      fakePremium.isPremium = true;
 
       var sawLoadingTrue = false;
       final sub = cubit.stream.listen((s) {
@@ -236,6 +255,7 @@ void main() {
 
     test('successive enable then disable leaves category disabled', () async {
       gate.grantAll = true;
+      fakePremium.isPremium = true;
       const cat = AlertCategory.naturalDisaster;
 
       await cubit.enableCategory(cat);
@@ -253,6 +273,7 @@ void main() {
       'disables all alerts in category without permission request',
       () async {
         gate.grantAll = true;
+        fakePremium.isPremium = true;
         const cat = AlertCategory.naturalDisaster;
         // First enable everything.
         await cubit.enableCategory(cat);
@@ -289,6 +310,7 @@ void main() {
   group('isEnabled helper', () {
     test('reflects persisted state', () async {
       gate.grantAll = true;
+      fakePremium.isPremium = true;
       final premType = AlertType.values.firstWhere((t) => !t.isFree);
 
       expect(cubit.isEnabled(premType), isFalse);

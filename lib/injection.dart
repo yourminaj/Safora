@@ -298,6 +298,7 @@ Future<void> configureDependencies() async {
     () => AlertPreferencesCubit(
       alertPreferences: getIt<AlertPreferences>(),
       permissionGate: getIt<AlertPermissionGate>(),
+      premiumManager: getIt<PremiumManager>(),
     ),
   );
 

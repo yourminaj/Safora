@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:safora/core/constants/alert_types.dart';
 import 'package:safora/core/services/alert_permission_gate.dart';
+import 'package:safora/core/services/premium_manager.dart';
 import 'package:safora/data/models/alert_preferences.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import 'package:safora/presentation/blocs/alert_preferences/alert_preferences_cubit.dart';
@@ -14,9 +15,12 @@ class _MockAlertPreferences extends Mock implements AlertPreferences {}
 
 class _MockAlertPermissionGate extends Mock implements AlertPermissionGate {}
 
+class _MockPremiumManager extends Mock implements PremiumManager {}
+
 void main() {
   late _MockAlertPreferences mockPrefs;
   late _MockAlertPermissionGate mockGate;
+  late _MockPremiumManager mockPremium;
   late AlertPreferencesCubit cubit;
 
   setUpAll(() {
@@ -28,6 +32,8 @@ void main() {
   setUp(() {
     mockPrefs = _MockAlertPreferences();
     mockGate = _MockAlertPermissionGate();
+    mockPremium = _MockPremiumManager();
+    when(() => mockPremium.isPremium).thenReturn(false);
 
     // Stub AlertPreferences behavior.
     when(() => mockPrefs.isEnabled(any())).thenReturn(true);
@@ -47,6 +53,7 @@ void main() {
     cubit = AlertPreferencesCubit(
       alertPreferences: mockPrefs,
       permissionGate: mockGate,
+      premiumManager: mockPremium,
     );
   });
 

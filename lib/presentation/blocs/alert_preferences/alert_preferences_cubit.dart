@@ -80,8 +80,10 @@ class AlertPreferencesCubit extends Cubit<AlertPreferencesState> {
   AlertPreferencesCubit({
     required AlertPreferences alertPreferences,
     required AlertPermissionGate permissionGate,
+    PremiumManager? premiumManager,
   })  : _prefs = alertPreferences,
         _gate = permissionGate,
+        _premiumManager = premiumManager ?? GetIt.instance<PremiumManager>(),
         super(AlertPreferencesState(
           preferences: _buildInitial(alertPreferences),
           severityThreshold: alertPreferences.minimumSeverity,
@@ -89,6 +91,7 @@ class AlertPreferencesCubit extends Cubit<AlertPreferencesState> {
 
   final AlertPreferences _prefs;
   final AlertPermissionGate _gate;
+  final PremiumManager _premiumManager;
 
   /// Build initial state from Hive.
   static Map<AlertType, bool> _buildInitial(AlertPreferences prefs) {
@@ -111,7 +114,7 @@ class AlertPreferencesCubit extends Cubit<AlertPreferencesState> {
       return;
     }
 
-    if (!type.isFree && !GetIt.instance<PremiumManager>().isPremium) {
+    if (!type.isFree && !_premiumManager.isPremium) {
       emit(AlertPreferencesState(
         preferences: _buildInitial(_prefs),
         severityThreshold: _prefs.minimumSeverity,
@@ -166,7 +169,7 @@ class AlertPreferencesCubit extends Cubit<AlertPreferencesState> {
       return;
     }
 
-    final isPro = GetIt.instance<PremiumManager>().isPremium;
+    final isPro = _premiumManager.isPremium;
     final enabledCount = await _prefs.enableCategory(category, isUserPremium: isPro);
 
     String message = 'Enabled $enabledCount alerts in ${category.label}';
