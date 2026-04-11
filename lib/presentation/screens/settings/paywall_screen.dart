@@ -297,9 +297,9 @@ class _PaywallScreenState extends State<PaywallScreen>
                 ),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                   ),
                 ),
               ],
@@ -410,7 +410,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                 border: Border.all(
                   color: isSelected
                       ? AppColors.primary
-                      : AppColors.textSecondary,
+                      : (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                   width: 2,
                 ),
                 color: isSelected ? AppColors.primary : Colors.transparent,
@@ -478,9 +478,9 @@ class _PaywallScreenState extends State<PaywallScreen>
                 ),
                 Text(
                   plan.period,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                   ),
                 ),
               ],
@@ -573,13 +573,13 @@ class _PaywallScreenState extends State<PaywallScreen>
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Subscriptions auto-renew unless cancelled at least 24 hours'
           ' before the end of the current period. Cancel anytime in'
           ' Google Play Store settings.',
           style: TextStyle(
             fontSize: 11,
-            color: AppColors.textSecondary,
+            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
             height: 1.4,
           ),
           textAlign: TextAlign.center,

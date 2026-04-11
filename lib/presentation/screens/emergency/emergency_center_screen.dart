@@ -279,7 +279,7 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       text,
       style: AppTypography.labelSmall.copyWith(
-        color: AppColors.textSecondary,
+        color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
         fontWeight: FontWeight.w700,
         letterSpacing: 1.2,
       ),
@@ -414,7 +414,7 @@ class _ResourceTile extends StatelessWidget {
                     Text(
                       subtitle,
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                       ),
                     ),
                   ],
@@ -533,7 +533,7 @@ class _LiveLocationSheet extends StatelessWidget {
       children: [
         Text(
           'Your live location will be shared with all emergency contacts via SMS with a real-time tracking link.',
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+          style: AppTypography.bodyMedium.copyWith(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary)),
         ),
         const SizedBox(height: 20),
         _SheetAction(
@@ -590,7 +590,7 @@ class _ContactsDialerSheet extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'No emergency contacts added yet',
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodyMedium.copyWith(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary)),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton(
@@ -654,7 +654,7 @@ class _SafePlacesSheet extends StatelessWidget {
       children: [
         Text(
           'Find the closest safe locations near you. Tap to navigate.',
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+          style: AppTypography.bodyMedium.copyWith(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary)),
         ),
         const SizedBox(height: 16),
         _SafePlaceCategory(
@@ -861,7 +861,7 @@ class _FirstAidCardState extends State<_FirstAidCard> {
                     ),
                     Icon(
                       _expanded ? Icons.expand_less : Icons.expand_more,
-                      color: AppColors.textSecondary,
+                      color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -874,7 +874,7 @@ class _FirstAidCardState extends State<_FirstAidCard> {
                         child: Text(
                           step,
                           style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                             height: 1.4,
                           ),
                         ),
@@ -965,7 +965,7 @@ class _SurvivalSection extends StatelessWidget {
             Text(
               content,
               style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                 height: 1.5,
               ),
             ),

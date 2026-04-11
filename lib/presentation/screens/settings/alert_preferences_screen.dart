@@ -99,12 +99,12 @@ class _AlertPreferencesScreenState extends State<AlertPreferencesScreen> {
                             size: 48,
                             color: isDark
                                 ? AppColors.textDisabled
-                                : AppColors.textSecondary),
+                                : (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary)),
                         const SizedBox(height: 12),
                         Text(
                           'No alerts match "$_searchQuery"',
                           style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                           ),
                         ),
                       ],
@@ -317,16 +317,16 @@ class _SearchBar extends StatelessWidget {
         controller: controller,
         onChanged: onChanged,
         style: AppTypography.bodyMedium.copyWith(
-          color: isDark ? AppColors.darkOnSurface : AppColors.textPrimary,
+          color: (Theme.of(context).brightness == Brightness.dark ? AppColors.darkOnSurface : AppColors.textPrimary),
         ),
         decoration: InputDecoration(
           hintText: 'Search 127 alert types...',
           hintStyle: AppTypography.bodyMedium.copyWith(
             color: AppColors.textDisabled,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search_rounded,
-            color: AppColors.textSecondary,
+            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
             size: 20,
           ),
           suffixIcon: controller.text.isNotEmpty
@@ -381,7 +381,7 @@ class _QuickActions extends StatelessWidget {
               return Text(
                 '$freeEnabled/$totalFree free enabled',
                 style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                 ),
               );
             },
@@ -454,9 +454,9 @@ class _SeverityThresholdSelector extends StatelessWidget {
     'Only life-threatening critical alerts',
   ];
 
-  Color _sliderColor(int idx) {
+  Color _sliderColor(BuildContext context, int idx) {
     return switch (idx) {
-      0 => AppColors.textSecondary,
+      0 => (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
       1 => AppColors.info,
       2 => AppColors.warning,
       3 => AppColors.high,
@@ -471,7 +471,7 @@ class _SeverityThresholdSelector extends StatelessWidget {
         final cubit = context.read<AlertPreferencesCubit>();
         final currentIdx =
             AlertPreferences.priorityLevels.indexOf(state.severityThreshold);
-        final color = _sliderColor(currentIdx);
+        final color = _sliderColor(context, currentIdx);
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
@@ -572,7 +572,7 @@ class _SeverityThresholdSelector extends StatelessWidget {
                         _severityIcons[i],
                         size: isActive ? 20 : 14,
                         color: isActive
-                            ? _sliderColor(i)
+                            ? _sliderColor(context, i)
                             : AppColors.textDisabled,
                       );
                     }),
@@ -582,7 +582,7 @@ class _SeverityThresholdSelector extends StatelessWidget {
                 Text(
                   _descriptions[currentIdx],
                   style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                   ),
                 ),
               ],
@@ -763,7 +763,7 @@ class _PremiumCategoryCardState extends State<_PremiumCategoryCard> {
                                   Text(
                                     '${widget.enabledCount}/${widget.alerts.length}',
                                     style: AppTypography.labelSmall.copyWith(
-                                      color: AppColors.textSecondary,
+                                      color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -791,9 +791,9 @@ class _PremiumCategoryCardState extends State<_PremiumCategoryCard> {
                         AnimatedRotation(
                           turns: _expanded ? 0.5 : 0,
                           duration: const Duration(milliseconds: 200),
-                          child: const Icon(
+                          child: Icon(
                             Icons.expand_more_rounded,
-                            color: AppColors.textSecondary,
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                             size: 22,
                           ),
                         ),
@@ -853,7 +853,7 @@ class _PremiumAlertTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<AlertPreferencesCubit>();
     final type = alertStatus.type;
-    final priorityColor = _priorityColor(type.priority);
+    final priorityColor = _priorityColor(context, type.priority);
 
     return Container(
       decoration: BoxDecoration(
@@ -876,8 +876,8 @@ class _PremiumAlertTile extends StatelessWidget {
                   fontWeight:
                       alertStatus.enabled ? FontWeight.w600 : FontWeight.w400,
                   color: alertStatus.enabled
-                      ? (isDark ? AppColors.darkOnSurface : AppColors.textPrimary)
-                      : AppColors.textSecondary,
+                      ? ((Theme.of(context).brightness == Brightness.dark ? AppColors.darkOnSurface : AppColors.textPrimary))
+                      : (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                 ),
               ),
             ),
@@ -944,13 +944,13 @@ class _PremiumAlertTile extends StatelessWidget {
     };
   }
 
-  Color _priorityColor(AlertPriority p) {
+  Color _priorityColor(BuildContext context, AlertPriority p) {
     return switch (p) {
       AlertPriority.critical => AppColors.danger,
       AlertPriority.danger => AppColors.high,
       AlertPriority.warning => AppColors.warning,
       AlertPriority.advisory => AppColors.info,
-      AlertPriority.info => AppColors.textSecondary,
+      AlertPriority.info => (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
     };
   }
 }

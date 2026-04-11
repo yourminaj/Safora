@@ -219,7 +219,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 label: l.filterVehicle,
                 isSelected:
                     state.filterCategory == AlertCategory.vehicleTransport,
-                color: AppColors.textSecondary,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                 onTap: () => context
                     .read<AlertsCubit>()
                     .filterByCategory(AlertCategory.vehicleTransport),
@@ -254,14 +254,14 @@ class _AlertsScreenState extends State<AlertsScreen> {
               Text(
                 l.nAlerts(filtered.length),
                 style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                 ),
               ),
               const Spacer(),
               Text(
                 l.autoRefreshNote,
                 style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                 ),
               ),
             ],
@@ -334,7 +334,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
             Text(
               l.noActiveAlerts,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
               ),
               textAlign: TextAlign.center,
             ),
@@ -352,10 +352,10 @@ class _AlertsScreenState extends State<AlertsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.cloud_off_rounded,
               size: 48,
-              color: AppColors.textSecondary,
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
             Text(
@@ -366,7 +366,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
             Text(
               l.checkConnection,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
               ),
               textAlign: TextAlign.center,
             ),
@@ -461,7 +461,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                       Text(
                         alert.description!,
                         style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
+                          color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                         ),
                       ),
                     ],
@@ -657,7 +657,7 @@ class _TrustDetailSection extends StatelessWidget {
                 Text(
                   title,
                   style: AppTypography.labelMedium.copyWith(
-                    color: AppColors.textSecondary,
+                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -744,7 +744,7 @@ class _FalseAlertReportSheetState extends State<_FalseAlertReportSheet> {
             Text(
               'Help improve alert accuracy by reporting false alerts. Select a reason below.',
               style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
               ),
             ),
             const SizedBox(height: 16),
@@ -910,7 +910,7 @@ class _FilterChip extends StatelessWidget {
                     ? chipColor
                     : isDark
                         ? Colors.white54
-                        : AppColors.textSecondary,
+                        : (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 fontSize: 12.5,
                 letterSpacing: isSelected ? 0.1 : 0,

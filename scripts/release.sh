@@ -100,16 +100,19 @@ build_release() {
   mkdir -p "$OUTPUT_DIR"
   check_dart_defines
   
+  # Enforce Dart Obfuscation for Production Security
+  local OBFUSCATE_FLAGS="--obfuscate --split-debug-info=build/app/outputs/symbols"
+  
   echo ""
   info "Building App Bundle (AAB) for Play Store..."
   # shellcheck disable=SC2086
-  flutter build appbundle --release $DART_DEFINES
+  flutter build appbundle --release $OBFUSCATE_FLAGS $DART_DEFINES
   log "AAB built successfully"
   
   echo ""
   info "Building split APKs for direct distribution..."
   # shellcheck disable=SC2086
-  flutter build apk --release --split-per-abi $DART_DEFINES
+  flutter build apk --release --split-per-abi $OBFUSCATE_FLAGS $DART_DEFINES
   log "Split APKs built successfully"
   
   # Copy to PlayStore directory with versioned names

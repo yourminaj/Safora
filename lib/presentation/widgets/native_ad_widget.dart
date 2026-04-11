@@ -124,7 +124,7 @@ class _NativeAdCardState extends State<NativeAdCard> {
             child: Text(
               'Ad',
               style: AppTypography.labelSmall.copyWith(
-                color: AppColors.textSecondary,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                 fontSize: 10,
               ),
             ),

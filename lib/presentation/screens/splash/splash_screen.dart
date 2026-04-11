@@ -68,9 +68,7 @@ class _SplashScreenState extends State<SplashScreen> {
       'storedBuild=$storedBuild currentBuild=$currentBuild',
     );
 
-    // If onboarding was never stamped with a build number it means the flag
-    // came from an old / migrated install — reset and re-show onboarding.
-    final needsOnboarding = !onboardingDone || storedBuild.isEmpty;
+    final needsOnboarding = !onboardingDone;
 
     if (!mounted) return;
 

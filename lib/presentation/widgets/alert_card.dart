@@ -30,12 +30,12 @@ class AlertCard extends StatelessWidget {
   };
 
   /// Confidence indicator color.
-  Color get _confidenceColor {
+  Color _confidenceColor(BuildContext context) {
     final c = alert.confidenceLevel ?? 0.0;
     if (c >= 0.8) return AppColors.safe;
     if (c >= 0.5) return AppColors.warning;
     if (c >= 0.3) return const Color(0xFFFFD54F);
-    return AppColors.textSecondary;
+    return (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary);
   }
 
   IconData get _confidenceIcon {
@@ -128,7 +128,7 @@ class AlertCard extends StatelessWidget {
                           Text(
                             alert.description!,
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -146,7 +146,7 @@ class AlertCard extends StatelessWidget {
                               _TrustBadge(
                                 icon: Icons.source_rounded,
                                 label: alert.source!,
-                                color: AppColors.textSecondary,
+                                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                               ),
 
                             // Confidence badge
@@ -154,7 +154,7 @@ class AlertCard extends StatelessWidget {
                               _TrustBadge(
                                 icon: _confidenceIcon,
                                 label: alert.confidenceLabel,
-                                color: _confidenceColor,
+                                color: _confidenceColor(context),
                               ),
 
                             // Risk score
@@ -171,14 +171,14 @@ class AlertCard extends StatelessWidget {
                                 icon: Icons.near_me_rounded,
                                 label:
                                     '${alert.distanceKm!.toStringAsFixed(1)} km',
-                                color: AppColors.textSecondary,
+                                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                               ),
 
                             // Time
                             _TrustBadge(
                               icon: Icons.access_time_rounded,
                               label: _formatTime(context, alert.timestamp),
-                              color: AppColors.textSecondary,
+                              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                             ),
                           ],
                         ),

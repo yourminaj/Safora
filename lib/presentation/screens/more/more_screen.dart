@@ -43,7 +43,7 @@ class MoreScreen extends StatelessWidget {
           ),
           _MoreTile(
             icon: Icons.settings_rounded,
-            color: AppColors.textSecondary,
+            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
             label: l.settings,
             subtitle: l.settingsSubtitle,
             onTap: () => context.push('/settings'),
@@ -111,7 +111,7 @@ class MoreScreen extends StatelessWidget {
           const SizedBox(height: 8),
           _MoreTile(
             icon: Icons.info_outline_rounded,
-            color: AppColors.textSecondary,
+            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
             label: l.aboutSafora,
             subtitle: l.aboutSaforaSubtitle,
             onTap: () => _showAboutDialog(context),
@@ -158,7 +158,7 @@ class MoreScreen extends StatelessWidget {
             Text(
               l.appTagline,
               style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
               ),
               textAlign: TextAlign.center,
             ),
@@ -206,7 +206,7 @@ class _SectionHeader extends StatelessWidget {
           Text(
             title.toUpperCase(),
             style: AppTypography.labelSmall.copyWith(
-              color: isDark ? Colors.white38 : AppColors.textSecondary,
+              color: isDark ? Colors.white38 : (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
               fontWeight: FontWeight.w800,
               letterSpacing: 1.5,
               fontSize: 10,
@@ -308,7 +308,7 @@ class _MoreTile extends StatelessWidget {
                           style: AppTypography.bodySmall.copyWith(
                             color: isDark
                                 ? Colors.white38
-                                : AppColors.textSecondary,
+                                : (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                             fontSize: 12,
                           ),
                         ),

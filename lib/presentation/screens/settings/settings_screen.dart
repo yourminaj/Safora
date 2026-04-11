@@ -818,7 +818,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Text(
                             l.premiumRoadmap,
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                             ),
                           ),
                         ],
@@ -891,7 +891,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _SettingsTile(
                 icon: Icons.lock_rounded,
-                iconColor: AppColors.textSecondary,
+                iconColor: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                 title: l.appLock,
                 subtitle: l.appLockDesc,
                 onTap: () => _toggleLock(!_lockEnabled),
@@ -904,7 +904,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (_lockEnabled)
                 _SettingsTile(
                   icon: Icons.pin_rounded,
-                  iconColor: AppColors.textSecondary,
+                  iconColor: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                   title: l.changePinTitle,
                   subtitle: l.changePinDesc,
                   onTap: _changePin,
@@ -1061,7 +1061,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Text(
                           'Check-in Interval',
                           style: AppTypography.labelMedium.copyWith(
-                            color: AppColors.textSecondary,
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -1087,7 +1087,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       style: AppTypography.labelMedium.copyWith(
                                         color: isSelected
                                             ? Colors.white
-                                            : AppColors.textPrimary,
+                                            : (Theme.of(context).brightness == Brightness.dark ? AppColors.darkOnSurface : AppColors.textPrimary),
                                         fontWeight: isSelected
                                             ? FontWeight.w700
                                             : FontWeight.w500,
@@ -1196,7 +1196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Text(
                             l.customSoundFuture,
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                             ),
                           ),
                         ],
@@ -1246,7 +1246,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Text(
                             l.inAppLanguageFuture,
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                             ),
                           ),
                         ],
@@ -1263,7 +1263,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _SettingsTile(
                 icon: Icons.dark_mode_rounded,
-                iconColor: AppColors.textSecondary,
+                iconColor: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                 title: l.darkMode,
                 subtitle: l.systemDefault,
                 onTap: () {
@@ -1386,7 +1386,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: color ?? AppColors.textSecondary),
+          Icon(icon, size: 18, color: color ?? (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary)),
           const SizedBox(width: 6),
           Flexible(child: Text(text)),
         ],
@@ -1445,7 +1445,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(
               'Adjust the G-force threshold for crash detection.',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
               ),
             ),
             const SizedBox(height: 24),
@@ -1496,7 +1496,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Text(
                   subtitle,
                   style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                   ),
                 ),
               ],
@@ -1590,7 +1590,7 @@ class _SettingsTile extends StatelessWidget {
       title: Text(title, style: AppTypography.titleSmall),
       subtitle: Text(
         subtitle,
-        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+        style: AppTypography.bodySmall.copyWith(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary)),
       ),
       trailing: trailing ?? const Icon(Icons.chevron_right_rounded),
       onTap: onTap,

@@ -286,7 +286,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                         Text(
                           l.proFeatureMessage,
                           style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                           ),
                         ),
                       ],
@@ -361,7 +361,7 @@ class _EmptyState extends StatelessWidget {
             Text(
               l.addContactsHint,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
               ),
               textAlign: TextAlign.center,
             ),
@@ -431,7 +431,7 @@ class _ContactCard extends StatelessWidget {
               Text(
                 contact.relationship!,
                 style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                 ),
               ),
           ],

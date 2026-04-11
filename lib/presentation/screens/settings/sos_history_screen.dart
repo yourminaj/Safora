@@ -202,7 +202,7 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
                         Text(
                           dateStr,
                           style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -210,7 +210,7 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
                           '${l.contactsNotifiedLabel}: ${entry.contactsNotified} · '
                           '${l.smsSentLabel}: ${entry.smsSentCount}',
                           style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                           ),
                         ),
                         if (entry.address != null) ...[
@@ -218,7 +218,7 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
                           Text(
                             entry.address!,
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

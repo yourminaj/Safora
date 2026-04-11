@@ -188,7 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     l.createProfileHint,
                     style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
+                      color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                     ),
                     textAlign: TextAlign.center,
                   ),

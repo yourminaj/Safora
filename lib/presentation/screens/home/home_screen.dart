@@ -189,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Text(
                                   l.noRemindersSet,
                                   style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -197,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   l.addRemindersHint,
                                   textAlign: TextAlign.center,
                                   style: AppTypography.bodySmall.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                                   ),
                                 ),
                               ],
@@ -660,7 +660,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Text(
                                   l.noRecentAlerts,
                                   style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
                                   ),
                                 ),
                               ],

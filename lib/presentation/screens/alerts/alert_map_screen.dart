@@ -542,7 +542,7 @@ class _DetailChip extends StatelessWidget {
           Text(
             '$label: ',
             style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSecondary,
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textDisabled : AppColors.textSecondary),
               fontWeight: FontWeight.w600,
             ),
           ),
