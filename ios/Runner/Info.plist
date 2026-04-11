@@ -49,6 +49,10 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Safora uses the microphone for the decoy call feature to simulate realistic incoming calls.</string>
 
+	<!-- Google AdMob App ID (required by google_mobile_ads) -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3413399953381965~9948948338</string>
+
 	<!-- Background modes -->
 	<key>UIBackgroundModes</key>
 	<array>

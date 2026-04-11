@@ -85,7 +85,7 @@
         <!-- Google AdMob App ID (required by google_mobile_ads) -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3413399953381965~6491284202"/>
+            android:value="ca-app-pub-3413399953381965~9948948338"/>
         
         <!-- FCM default notification icon (white silhouette for status bar) -->
         <meta-data
