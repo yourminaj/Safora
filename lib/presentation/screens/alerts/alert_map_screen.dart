@@ -110,7 +110,7 @@ class _AlertMapScreenState extends State<AlertMapScreen> {
                   TileLayer(
                     urlTemplate:
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.digitaldrive.safora',
+                    userAgentPackageName: 'com.safora.safora',
                     maxZoom: 19,
                   ),
                   // Alert markers.

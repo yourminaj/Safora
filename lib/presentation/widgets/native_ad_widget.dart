@@ -122,7 +122,7 @@ class _NativeAdCardState extends State<NativeAdCard> {
               ),
             ),
             child: Text(
-              'Sponsored',
+              'Ad',
               style: AppTypography.labelSmall.copyWith(
                 color: AppColors.textSecondary,
                 fontSize: 10,

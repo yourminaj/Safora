@@ -153,7 +153,7 @@ class _LiveMapScreenState extends State<LiveMapScreen>
               TileLayer(
                 urlTemplate:
                     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.digitaldrive.safora',
+                userAgentPackageName: 'com.safora.safora',
                 maxZoom: 19,
                 errorTileCallback: (tile, error, stackTrace) {
                   // Suppress SocketException (offline/no route) silently.

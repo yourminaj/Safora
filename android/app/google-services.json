@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:384094437605:android:e0aec2f6b724e0a1f4d40c",
         "android_client_info": {
-          "package_name": "com.digitaldrive.safora"
+          "package_name": "com.safora.safora"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "384094437605-a02h2935iq12dh0msva8sgl1li9a6q8h.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.digitaldrive.safora",
+            "package_name": "com.safora.safora",
             "certificate_hash": "840b1e5076aebcdb75bb0dd3040e2511dc742f14"
           }
         },
@@ -25,7 +25,7 @@
           "client_id": "384094437605-kosov51vk0juj0f04uj5dq361c5j1ua9.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.digitaldrive.safora",
+            "package_name": "com.safora.safora",
             "certificate_hash": "a4adec7af8eb29b6c10aa9bd32e3aa90e64251fb"
           }
         },
@@ -50,7 +50,7 @@
               "client_id": "384094437605-ft69eoci1cqgslosf435o68hh0qqs559.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.digitaldrive.safora"
+                "bundle_id": "com.safora.safora"
               }
             }
           ]
