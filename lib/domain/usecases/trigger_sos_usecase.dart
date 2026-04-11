@@ -133,12 +133,16 @@ class TriggerSosUseCase {
       return false;
     }
 
-    // On Android, check CALL_PHONE permission silently.
+    // On Android, request CALL_PHONE permission. If already granted (from
+    // onboarding or SOS pre-flight), this returns instantly. If not, user sees
+    // the native OS dialog — last chance to grant before the call.
+    // Whether granted or denied, the tel: URI is still attempted — it opens
+    // the dialer either way (just doesn't auto-dial without permission).
     if (Platform.isAndroid) {
-      final hasPhonePermission = await Permission.phone.isGranted;
-      if (!hasPhonePermission) {
+      final status = await Permission.phone.request();
+      if (!status.isGranted) {
         AppLogger.warning(
-          '[SOS] CALL_PHONE permission not granted — opening dialer instead',
+          '[SOS] CALL_PHONE not granted — opening dialer instead of auto-dial',
         );
       }
     }

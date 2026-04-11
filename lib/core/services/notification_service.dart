@@ -38,7 +38,14 @@ class NotificationService {
     await _plugin.initialize(settings: settings);
     _isInitialized = true;
 
-    await _initFcm();
+    // FCM is optional — SOS still works via SMS + local notifications.
+    // Token fetch can fail due to FIS_AUTH_ERROR, network issues, or
+    // emulator limitations. Gracefully degrade instead of crashing startup.
+    try {
+      await _initFcm();
+    } catch (e) {
+      AppLogger.warning('[NotificationService] FCM init failed (non-fatal): $e');
+    }
   }
 
   /// Initialize Firebase Cloud Messaging for push notifications.

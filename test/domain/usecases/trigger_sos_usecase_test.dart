@@ -341,5 +341,31 @@ void main() {
         expect(result.callInitiated, false);
       },
     );
+
+    test(
+      'GIVEN SMS service returns 0 (all sends failed), '
+      'WHEN execute completes, '
+      'THEN auto-call is STILL initiated to primary contact',
+      () async {
+        // SMS permission denied → SmsService returns 0.
+        when(() => mockSms.sendEmergencySms(
+              contacts: any(named: 'contacts'),
+              userName: any(named: 'userName'),
+            )).thenAnswer((_) async => 0);
+
+        final result = await useCase.execute(
+          contacts: [primaryContact, secondaryContact],
+        );
+
+        // Call was still initiated despite SMS failure.
+        expect(result.callInitiated, true);
+        expect(result.smsSentCount, 0);
+        expect(capturedCallUris, hasLength(1));
+        expect(
+          capturedCallUris.first.toString(),
+          contains('tel:'),
+        );
+      },
+    );
   });
 }

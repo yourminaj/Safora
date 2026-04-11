@@ -92,26 +92,26 @@ class SosCubit extends Cubit<SosState> {
       return;
     }
 
-    // On Android, direct background SMS requires SEND_SMS permission.
-    // If it's denied, emit a non-fatal failure so the UI can direct the
-    // user to grant it.  iOS uses url_launcher fallback — no check needed.
+    // On Android, request SOS-critical permissions NOW — shows native OS
+    // dialog if not yet granted. If already allowed (from onboarding), this
+    // returns instantly with zero delay.
+    //
+    // SMS denial → SmsService falls back to url_launcher (opens SMS app).
+    // Phone denial → tel: URI still opens dialer (just doesn't auto-dial).
+    // Neither blocks the SOS flow — it's a safety-first approach.
     if (Platform.isAndroid) {
-      // FIX: Silent permission check — avoids showing a native dialog mid-emergency.
-      // Permission should be requested proactively in Settings when shake is enabled.
-      final hasPermission = await Permission.sms.isGranted;
-      if (!hasPermission) {
+      final statuses = await [Permission.sms, Permission.phone].request();
+      final smsGranted = statuses[Permission.sms]?.isGranted ?? false;
+      final phoneGranted = statuses[Permission.phone]?.isGranted ?? false;
+      if (!smsGranted) {
         AppLogger.warning(
-          '[SOS] Pre-flight: SEND_SMS permission denied — blocking SOS',
+          '[SOS] SEND_SMS not granted — SmsService will use url_launcher fallback.',
         );
-        emit(
-          const SosPreflightFailed(
-            reason: SosFailureReason.smsPermissionDenied,
-          ),
+      }
+      if (!phoneGranted) {
+        AppLogger.warning(
+          '[SOS] CALL_PHONE not granted — will open dialer instead of auto-dial.',
         );
-        Future.delayed(const Duration(seconds: 3), () {
-          if (!isClosed) emit(const SosIdle());
-        });
-        return;
       }
     }
 

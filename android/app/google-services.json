@@ -1,28 +1,21 @@
 {
   "project_info": {
-    "project_number": "384094437605",
-    "project_id": "safora-9ae75",
-    "storage_bucket": "safora-9ae75.firebasestorage.app"
+    "project_number": "373596274131",
+    "firebase_url": "https://safora-8b1b9-default-rtdb.firebaseio.com",
+    "project_id": "safora-8b1b9",
+    "storage_bucket": "safora-8b1b9.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:384094437605:android:e0aec2f6b724e0a1f4d40c",
+        "mobilesdk_app_id": "1:373596274131:android:015787242cc48753460326",
         "android_client_info": {
           "package_name": "com.safora.safora"
         }
       },
       "oauth_client": [
         {
-          "client_id": "384094437605-a02h2935iq12dh0msva8sgl1li9a6q8h.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.safora.safora",
-            "certificate_hash": "840b1e5076aebcdb75bb0dd3040e2511dc742f14"
-          }
-        },
-        {
-          "client_id": "384094437605-kosov51vk0juj0f04uj5dq361c5j1ua9.apps.googleusercontent.com",
+          "client_id": "373596274131-9ebqb69q9bkhdhb78vjj8tdedd7j80ms.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.safora.safora",
@@ -30,24 +23,24 @@
           }
         },
         {
-          "client_id": "384094437605-95urkj0c4pd8vip2nqk97lanue6m9k4e.apps.googleusercontent.com",
+          "client_id": "373596274131-25dr14rmq1qfbd25rktt99p5eb033i0v.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDN3KviHs6tMq8KlNhwc7k9xZjnOKykBSE"
+          "current_key": "AIzaSyC8xlmm1hMMH7EqyKCfyvvgyG5mNKZSmwk"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "384094437605-95urkj0c4pd8vip2nqk97lanue6m9k4e.apps.googleusercontent.com",
+              "client_id": "373596274131-25dr14rmq1qfbd25rktt99p5eb033i0v.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "384094437605-ft69eoci1cqgslosf435o68hh0qqs559.apps.googleusercontent.com",
+              "client_id": "373596274131-pepfmp3i75cqv7d2fsnmcgoa2g1p1pu2.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.safora.safora"

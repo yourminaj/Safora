@@ -742,4 +742,90 @@ void main() {
       },
     );
   });
+
+  // ── GROUP 6: SOS proceeds even when SMS permission is denied ───────────
+  //
+  // Critical behavioral test: previously, missing SMS permission blocked
+  // the ENTIRE SOS flow. After the fix, SOS proceeds with url_launcher
+  // fallback for SMS and still initiates the auto-call.
+
+  group('SOS BLoC Integration — SMS Permission Not a Blocker', () {
+    test(
+      'GIVEN contacts exist, '
+      'WHEN countdown is started (SMS permission irrelevant at cubit level), '
+      'THEN SosPreparing and SosCountdown are emitted (not SosPreflightFailed)',
+      () async {
+        // SosCubit no longer blocks on SMS permission — it proceeds and
+        // lets SmsService handle the fallback internally.
+        final cubit = _buildCubit(
+          audio: mockAudio,
+          sms: mockSms,
+          location: mockLocation,
+          contacts: mockContacts,
+          history: mockHistory,
+          connectivity: mockConnectivity,
+          sosEventService: mockSosEventService,
+          notifications: mockNotifications,
+          settingsBox: mockBox,
+        );
+        final states = <SosState>[];
+        final sub = cubit.stream.listen(states.add);
+        cubit.startCountdown();
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+        await sub.cancel();
+        await cubit.close();
+
+        // Must see SosPreparing → SosCountdown — NOT SosPreflightFailed.
+        expect(states.first, isA<SosPreparing>());
+        expect(states.whereType<SosCountdown>(), isNotEmpty);
+        expect(states.whereType<SosPreflightFailed>(), isEmpty);
+      },
+    );
+
+    test(
+      'GIVEN SMS service returns 0 (permission denied fallback), '
+      'WHEN countdown expires, '
+      'THEN call is STILL initiated to primary contact',
+      () async {
+        // SmsService returns 0 (all sends failed), but call should proceed.
+        when(() => mockSms.sendEmergencySms(
+              contacts: any(named: 'contacts'),
+              userName: any(named: 'userName'),
+            )).thenAnswer((_) async => 0);
+
+        final cubit = _buildCubit(
+          audio: mockAudio,
+          sms: mockSms,
+          location: mockLocation,
+          contacts: mockContacts,
+          history: mockHistory,
+          connectivity: mockConnectivity,
+          sosEventService: mockSosEventService,
+          notifications: mockNotifications,
+          settingsBox: mockBox,
+        );
+
+        cubit.resumeCountdown(
+          DateTime.now().subtract(const Duration(seconds: 1)),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        await cubit.close();
+
+        // SMS was attempted (even if 0 sent).
+        verify(
+          () => mockSms.sendEmergencySms(
+            contacts: any(named: 'contacts'),
+            userName: any(named: 'userName'),
+          ),
+        ).called(1);
+
+        // Auto-call was still initiated despite SMS failure.
+        expect(capturedCallUris, hasLength(1));
+        expect(
+          capturedCallUris.first.toString(),
+          'tel:+8801712345678',
+        );
+      },
+    );
+  });
 }

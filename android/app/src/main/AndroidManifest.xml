@@ -36,6 +36,9 @@
     <!-- SmsService: telephony plugin sends SMS directly without opening Messages -->
     <uses-permission android:name="android.permission.SEND_SMS"/>
 
+    <!-- TriggerSosUseCase: auto-call primary contact during SOS -->
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
+
     <!-- SOS Foreground Service: keeps SOS monitoring alive when app is in background -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
@@ -111,6 +114,20 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Android 11+ package visibility: url_launcher needs these to
+             find apps that handle tel: and sms: intents for SOS calls/SMS -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="tel"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="sms"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="sms"/>
         </intent>
     </queries>
 </manifest>

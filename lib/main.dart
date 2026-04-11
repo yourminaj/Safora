@@ -119,7 +119,13 @@ void main() {
       await getIt<PremiumManager>().init();
 
       // Eagerly initialize notification channels + FCM.
-      await getIt<NotificationService>().init();
+      // Wrapped in try-catch: any init failure must NOT prevent the app from
+      // launching. Local notifications and SOS still work without FCM.
+      try {
+        await getIt<NotificationService>().init();
+      } catch (e) {
+        AppLogger.warning('[main] NotificationService init failed (non-fatal): $e');
+      }
 
       // Initialize SOS foreground service config.
       SosForegroundService.instance.init();
