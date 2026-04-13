@@ -17,6 +17,7 @@ import 'core/services/shake_detection_service.dart';
 import 'core/services/snatch_detection_service.dart';
 import 'core/services/sms_service.dart';
 import 'core/services/speed_alert_service.dart';
+import 'core/services/consent_service.dart';
 import 'core/services/subscription_service.dart';
 import 'core/services/premium_manager.dart';
 import 'services/dead_man_switch_service.dart';
@@ -110,6 +111,7 @@ Future<void> configureDependencies() async {
   );
   getIt.registerSingleton<PremiumManager>(PremiumManager.instance);
   getIt.registerSingleton<SubscriptionService>(SubscriptionService.instance);
+  getIt.registerSingleton<ConsentService>(ConsentService.instance);
 
   final contactsBox = await _openBoxSafe(ContactsLocalDataSource.boxName);
   getIt.registerLazySingleton<ContactsLocalDataSource>(

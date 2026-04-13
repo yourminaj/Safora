@@ -1987,6 +1987,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check-in confirmed — timer reset'**
   String get checkInConfirmed;
+
+  /// No description provided for @adPrivacySettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Ad Privacy Settings'**
+  String get adPrivacySettings;
+
+  /// No description provided for @adPrivacySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your ad personalization preferences'**
+  String get adPrivacySubtitle;
 }
 
 class _AppLocalizationsDelegate

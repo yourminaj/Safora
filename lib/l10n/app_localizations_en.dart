@@ -1049,4 +1049,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checkInConfirmed => 'Check-in confirmed — timer reset';
+
+  @override
+  String get adPrivacySettings => 'Ad Privacy Settings';
+
+  @override
+  String get adPrivacySubtitle => 'Manage your ad personalization preferences';
 }

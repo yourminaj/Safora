@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'app_logger.dart';
+import 'consent_service.dart';
 
 /// Centralized Ad management service for Safora.
 ///
@@ -60,12 +61,20 @@ class AdService {
   static String get nativeAlertsFeed =>
       kDebugMode ? _testNative : _nativeAlertsFeed;
 
-  /// Initialize the Mobile Ads SDK.
+  /// Initialize the Mobile Ads SDK (does NOT pre-load ads).
+  ///
+  /// Ad loading is deferred to [startLoadingAds] which should only be called
+  /// after consent has been resolved via [ConsentService].
   static Future<void> initialize() async {
     await MobileAds.instance.initialize();
     AppLogger.info('[AdService] Mobile Ads SDK initialized');
-    // Pre-load interstitial ad for free users.
-    instance._loadInterstitial();
+  }
+
+  /// Pre-load ads after consent has been confirmed.
+  ///
+  /// Call this only when [ConsentService.canRequestAds] is true.
+  void startLoadingAds() {
+    _loadInterstitial();
   }
 
   /// Set premium status (skips all ads for Pro users).
@@ -106,9 +115,10 @@ class AdService {
     );
   }
 
-  /// Show interstitial if allowed (cooldown + not premium + not emergency).
+  /// Show interstitial if allowed (consent + cooldown + not premium + not emergency).
   void showInterstitial() {
     if (_isPremium || _emergencyActive) return;
+    if (!ConsentService.instance.canRequestAds) return;
 
     // Frequency cap check.
     if (_lastInterstitialTime != null) {

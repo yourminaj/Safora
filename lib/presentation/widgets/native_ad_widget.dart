@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../core/services/ad_service.dart';
 import '../../core/services/app_logger.dart';
+import '../../core/services/consent_service.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/typography.dart';
 
@@ -39,6 +40,7 @@ class _NativeAdCardState extends State<NativeAdCard> {
   }
 
   void _loadAd() {
+    if (!ConsentService.instance.canRequestAds) return;
     _nativeAd = NativeAd(
       adUnitId: widget.adUnitId,
       request: const AdRequest(),

@@ -1,7 +1,7 @@
 name: safora
 description: "Your Family's Safety Guardian — All-in-one personal safety & emergency alert app."
 publish_to: 'none'
-version: 1.2.15+33
+version: 1.2.15+34
 
 environment:
   sdk: ^3.11.1

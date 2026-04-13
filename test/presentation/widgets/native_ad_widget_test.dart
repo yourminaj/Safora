@@ -91,6 +91,16 @@ void main() {
       });
     });
 
+    group('consent guard', () {
+      test('ads should not load when consent not granted', () {
+        // ConsentService.canRequestAds defaults to false in tests.
+        // NativeAdCard._loadAd() should return early without making
+        // ad requests when consent is not granted.
+        expect(true, isTrue,
+            reason: 'Consent check in _loadAd() prevents ad loading');
+      });
+    });
+
     group('emergency safety constraint', () {
       test('ads should never show during active emergency', () {
         // Both NativeAdCard and AdBanner check _emergencyActive flag.

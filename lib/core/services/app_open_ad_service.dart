@@ -1,6 +1,8 @@
 
+import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'app_logger.dart';
+import 'consent_service.dart';
 
 /// Lifecycle-aware App Open Ad service.
 ///
@@ -13,7 +15,12 @@ class AppOpenAdService {
   AppOpenAdService._();
   static final AppOpenAdService instance = AppOpenAdService._();
 
-  static const _adUnitId = 'ca-app-pub-3413399953381965/4261837520';
+  // Production + Google test App Open ad unit IDs.
+  static const _prodAdUnitId = 'ca-app-pub-3413399953381965/4261837520';
+  static const _testAdUnitId = 'ca-app-pub-3940256099942544/9257395921';
+
+  /// Returns test ID in debug, production ID in release.
+  static String get _adUnitId => kDebugMode ? _testAdUnitId : _prodAdUnitId;
 
   /// Show ad every Nth foreground resume.
   static const _frequencyCap = 3;
@@ -51,6 +58,7 @@ class AppOpenAdService {
   /// running in a test environment) are caught and logged — they are
   /// non-fatal because ad loading is best-effort.
   void loadAd() {
+    if (!ConsentService.instance.canRequestAds) return;
     try {
       AppOpenAd.load(
         adUnitId: _adUnitId,
@@ -78,6 +86,7 @@ class AppOpenAdService {
   /// when not premium, not in emergency, and ad is loaded + fresh.
   void onAppResumed() {
     if (_isPremium || _emergencyActive) return;
+    if (!ConsentService.instance.canRequestAds) return;
 
     _resumeCount++;
 

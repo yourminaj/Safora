@@ -13,6 +13,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'app.dart';
 import 'core/services/ad_service.dart';
+import 'core/services/consent_service.dart';
 import 'core/services/premium_manager.dart';
 import 'core/services/app_open_ad_service.dart';
 import 'core/services/subscription_service.dart';
@@ -135,15 +136,22 @@ void main() {
       runApp(const SaforaApp());
 
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        // Initialize Google Mobile Ads SDK.
+        // Initialize Google Mobile Ads SDK (does not load ads yet).
         await AdService.initialize();
 
-        // Sync premium state to ad services (single source of truth).
-        AdService.instance.setPremium(getIt<PremiumManager>().isPremium);
-        AppOpenAdService.instance.setPremium(getIt<PremiumManager>().isPremium);
+        // Resolve UMP consent before requesting any ads.
+        final canRequestAds = await ConsentService.instance.initialize();
 
-        // Pre-load App Open Ad for foreground resumes.
-        AppOpenAdService.instance.loadAd();
+        // Sync premium state to ad services (single source of truth).
+        final isPremium = getIt<PremiumManager>().isPremium;
+        AdService.instance.setPremium(isPremium);
+        AppOpenAdService.instance.setPremium(isPremium);
+
+        // Only pre-load ads after consent is confirmed.
+        if (canRequestAds) {
+          AdService.instance.startLoadingAds();
+          AppOpenAdService.instance.loadAd();
+        }
 
         // Initialize RevenueCat subscription service.
         await getIt<SubscriptionService>().init();

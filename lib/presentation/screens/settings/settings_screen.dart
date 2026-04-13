@@ -10,6 +10,7 @@ import 'package:safora/l10n/app_localizations.dart';
 import '../../../app.dart';
 import '../../../core/constants/alert_types.dart';
 import '../../../data/models/alert_event.dart';
+import '../../../core/services/consent_service.dart';
 import '../../../core/services/premium_manager.dart';
 import '../../../core/services/subscription_service.dart';
 import '../../../core/services/app_lock_service.dart';
@@ -1309,6 +1310,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: 'View, change, or cancel your plan',
                   onTap: () {
                     getIt<SubscriptionService>().presentCustomerCenter();
+                  },
+                ),
+              if (!getIt<PremiumManager>().isPremium)
+                FutureBuilder<bool>(
+                  future: ConsentService.instance.isPrivacyOptionsRequired,
+                  builder: (context, snapshot) {
+                    if (snapshot.data != true) return const SizedBox.shrink();
+                    return _SettingsTile(
+                      icon: Icons.privacy_tip_rounded,
+                      iconColor: AppColors.info,
+                      title: l.adPrivacySettings,
+                      subtitle: l.adPrivacySubtitle,
+                      onTap: () {
+                        ConsentService.instance.showPrivacyOptions();
+                      },
+                    );
                   },
                 ),
 

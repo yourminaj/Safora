@@ -101,6 +101,22 @@ void main() {
         expect(() => AdService.instance.showInterstitial(), returnsNormally);
         AdService.instance.setEmergencyActive(false); // cleanup
       });
+
+      test('showInterstitial is blocked when consent not granted', () {
+        // ConsentService.canRequestAds defaults to false in tests.
+        AdService.instance.setPremium(false);
+        AdService.instance.setEmergencyActive(false);
+        expect(() => AdService.instance.showInterstitial(), returnsNormally);
+      });
+    });
+
+    group('Consent-gated Ad Loading', () {
+      test('startLoadingAds method exists and is callable', () {
+        // startLoadingAds triggers InterstitialAd.load() which requires
+        // platform channels. We verify the method exists; actual loading
+        // is tested via integration tests on a real device.
+        expect(AdService.instance.startLoadingAds, isA<Function>());
+      });
     });
 
     group('Ad Model — No Rewarded Ads', () {

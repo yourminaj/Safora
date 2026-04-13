@@ -53,6 +53,21 @@
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3413399953381965~9948948338</string>
 
+	<!-- Allow cleartext HTTP for Bangladesh Flood Forecasting (no HTTPS support) -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>www.ffwc.gov.bd</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+
 	<!-- Background modes -->
 	<key>UIBackgroundModes</key>
 	<array>

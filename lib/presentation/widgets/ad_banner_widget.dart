@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../core/services/ad_service.dart';
 import '../../core/services/app_logger.dart';
+import '../../core/services/consent_service.dart';
 
 /// Reusable adaptive banner ad widget.
 ///
@@ -37,6 +38,7 @@ class _AdBannerState extends State<AdBanner> {
   }
 
   void _loadAd() {
+    if (!ConsentService.instance.canRequestAds) return;
     const adSize = AdSize.banner;
 
     _bannerAd = BannerAd(

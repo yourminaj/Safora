@@ -1034,4 +1034,11 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get checkInConfirmed => 'চেক-ইন নিশ্চিত — টাইমার রিসেট করা হয়েছে';
+
+  @override
+  String get adPrivacySettings => 'বিজ্ঞাপন গোপনীয়তা সেটিংস';
+
+  @override
+  String get adPrivacySubtitle =>
+      'আপনার বিজ্ঞাপন ব্যক্তিগতকরণ পছন্দ পরিচালনা করুন';
 }

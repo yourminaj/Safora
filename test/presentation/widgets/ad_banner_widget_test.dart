@@ -30,5 +30,20 @@ void main() {
       // Before ad loads, should show SizedBox.shrink (zero size)
       expect(find.byType(SizedBox), findsAtLeast(1));
     });
+
+    testWidgets('shows nothing when consent not granted', (tester) async {
+      // ConsentService.canRequestAds defaults to false in tests.
+      // Banner should render SizedBox.shrink without making ad requests.
+      await tester.pumpWidget(
+        buildTestableWidget(
+          child: const AdBanner(
+            adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.byType(AdBanner), findsOneWidget);
+      expect(find.byType(SizedBox), findsAtLeast(1));
+    });
   });
 }
