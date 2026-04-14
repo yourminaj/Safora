@@ -8,6 +8,7 @@ import '../../core/services/notification_service.dart';
 import '../../core/services/sos_event_service.dart';
 import '../../core/services/sms_service.dart';
 import '../../data/models/emergency_contact.dart';
+import '../../data/models/user_profile.dart';
 
 /// Signature for the phone-call launcher, extracted for testability.
 ///
@@ -56,18 +57,20 @@ class TriggerSosUseCase {
   Future<SosResult> execute({
     required List<EmergencyContact> contacts,
     String? userName,
+    UserProfile? userProfile,
     String triggerType = 'manual',
   }) async {
     // 1. Pre-fetch GPS location (warms up cache for SMS).
     await _locationService.getCurrentPosition();
     final position = _locationService.lastPosition;
 
-    // 2. Send emergency SMS to all contacts.
+    // 2. Send emergency SMS to all contacts (includes medical profile).
     int smsSent = 0;
     if (contacts.isNotEmpty) {
       smsSent = await _smsService.sendEmergencySms(
         contacts: contacts,
-        userName: userName,
+        userName: userName ?? userProfile?.fullName,
+        userProfile: userProfile,
       );
     }
 

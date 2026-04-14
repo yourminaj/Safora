@@ -1041,4 +1041,8 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get adPrivacySubtitle =>
       'আপনার বিজ্ঞাপন ব্যক্তিগতকরণ পছন্দ পরিচালনা করুন';
+
+  @override
+  String get enableLocationHint =>
+      'মানচিত্রে আপনার অবস্থান দেখতে আপনার ডিভাইস সেটিংসে GPS সক্রিয় করুন।';
 }

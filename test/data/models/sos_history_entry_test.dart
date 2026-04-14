@@ -102,10 +102,16 @@ void main() {
 
   group('SosTriggerSource', () {
     test('has correct values', () {
-      expect(SosTriggerSource.values.length, 4);
+      expect(SosTriggerSource.values.length, 10);
       expect(SosTriggerSource.manual.name, 'manual');
       expect(SosTriggerSource.shake.name, 'shake');
       expect(SosTriggerSource.crashDetection.name, 'crashDetection');
+      expect(SosTriggerSource.fall.name, 'fall');
+      expect(SosTriggerSource.snatch.name, 'snatch');
+      expect(SosTriggerSource.voiceDistress.name, 'voiceDistress');
+      expect(SosTriggerSource.anomalyMovement.name, 'anomalyMovement');
+      expect(SosTriggerSource.deadManSwitch.name, 'deadManSwitch');
+      expect(SosTriggerSource.geofenceExit.name, 'geofenceExit');
       expect(SosTriggerSource.background.name, 'background');
     });
   });

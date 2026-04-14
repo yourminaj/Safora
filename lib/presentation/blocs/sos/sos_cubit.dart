@@ -6,11 +6,13 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../core/services/audio_service.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../../core/services/location_service.dart';
+import '../../../core/services/sms_service.dart';
 import '../../../core/services/sos_foreground_service.dart';
 import '../../../core/services/app_logger.dart';
 import '../../../data/datasources/sos_history_datasource.dart';
 import '../../../data/models/sos_history_entry.dart';
 import '../../../data/repositories/contacts_repository.dart';
+import '../../../data/repositories/profile_repository.dart';
 import '../../../domain/usecases/trigger_sos_usecase.dart';
 import 'sos_state.dart';
 
@@ -25,6 +27,8 @@ class SosCubit extends Cubit<SosState> {
     required LocationService locationService,
     required Box settingsBox,
     ConnectivityService? connectivityService,
+    SmsService? smsService,
+    ProfileRepository? profileRepository,
   }) : _audioService = audioService,
        _triggerSosUseCase = triggerSosUseCase,
        _contactsRepository = contactsRepository,
@@ -32,6 +36,8 @@ class SosCubit extends Cubit<SosState> {
        _locationService = locationService,
        _settingsBox = settingsBox,
        _connectivityService = connectivityService,
+       _smsService = smsService,
+       _profileRepository = profileRepository,
        super(const SosIdle());
 
   static const String _deadlineKey = 'sos_countdown_deadline';
@@ -43,8 +49,12 @@ class SosCubit extends Cubit<SosState> {
   final LocationService _locationService;
   final Box _settingsBox;
   final ConnectivityService? _connectivityService;
+  final SmsService? _smsService;
+  final ProfileRepository? _profileRepository;
   Timer? _countdownTimer;
+  Timer? _autoResetTimer;
   int _secondsRemaining = 30;
+  SosTriggerSource _currentTriggerSource = SosTriggerSource.manual;
 
   static const int countdownDuration = 30;
 
@@ -54,11 +64,14 @@ class SosCubit extends Cubit<SosState> {
   /// 1. GPS: attempts a fresh fix if no cached position.
   /// 2. Network: checks connectivity (warn-only, doesn't block).
   /// 3. Contacts: verifies at least one emergency contact exists (blocks SOS).
-  void startCountdown() {
+  void startCountdown({
+    SosTriggerSource triggerSource = SosTriggerSource.manual,
+  }) {
     if (state is SosPreparing || state is SosCountdown || state is SosActive) {
       return;
     }
 
+    _currentTriggerSource = triggerSource;
     _runPreflightAndStart();
   }
 
@@ -202,11 +215,13 @@ class SosCubit extends Cubit<SosState> {
         contactsNotified: 0,
         smsSentCount: 0,
         wasCancelled: true,
+        triggerSource: _currentTriggerSource,
       ),
     );
 
-    // Return to idle after a brief pause.
-    Future.delayed(const Duration(seconds: 1), () {
+    // Return to idle after a brief pause (guarded timer to prevent race).
+    _autoResetTimer?.cancel();
+    _autoResetTimer = Timer(const Duration(seconds: 1), () {
       if (!isClosed) emit(const SosIdle());
     });
   }
@@ -219,11 +234,16 @@ class SosCubit extends Cubit<SosState> {
     // Play siren (fire-and-forget — siren runs independently from SMS flow).
     unawaited(_audioService.playSiren());
 
-    // Service is already started at countdown begin.
+    // Load medical profile for SMS (non-blocking — null if unavailable).
+    final profile = _profileRepository?.load();
 
     // Send SMS + notification via use case.
     final contacts = _contactsRepository.getAll();
-    final result = await _triggerSosUseCase.execute(contacts: contacts);
+    final result = await _triggerSosUseCase.execute(
+      contacts: contacts,
+      userProfile: profile,
+      triggerType: _currentTriggerSource.name,
+    );
 
     // Log successful SOS in history.
     final pos = _locationService.lastPosition;
@@ -235,11 +255,12 @@ class SosCubit extends Cubit<SosState> {
         contactsNotified: result.totalContacts,
         smsSentCount: result.smsSentCount,
         wasCancelled: false,
+        triggerSource: _currentTriggerSource,
       ),
     );
   }
 
-  /// Deactivate SOS and stop the siren.
+  /// Deactivate SOS, stop the siren, and notify contacts that user is safe.
   Future<void> deactivateSos() async {
     _settingsBox.delete(_deadlineKey);
     await _audioService.stopAll();
@@ -248,12 +269,22 @@ class SosCubit extends Cubit<SosState> {
     _countdownTimer?.cancel();
     _countdownTimer = null;
     _secondsRemaining = countdownDuration;
+
+    // Notify emergency contacts that user is safe.
+    if (_smsService != null) {
+      final contacts = _contactsRepository.getAll();
+      if (contacts.isNotEmpty) {
+        unawaited(_smsService.sendIAmSafeSms(contacts: contacts));
+      }
+    }
+
     emit(const SosIdle());
   }
 
   @override
   Future<void> close() {
     _countdownTimer?.cancel();
+    _autoResetTimer?.cancel();
     _audioService.stopAll();
     return super.close();
   }

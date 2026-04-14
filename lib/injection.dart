@@ -268,6 +268,8 @@ Future<void> configureDependencies() async {
       locationService: getIt<LocationService>(),
       connectivityService: getIt<ConnectivityService>(),
       settingsBox: getIt<Box>(instanceName: 'app_settings'),
+      smsService: getIt<SmsService>(),
+      profileRepository: getIt<ProfileRepository>(),
     ),
   );
   // AlertsCubit registered BEFORE BatteryCubit (BatteryCubit depends on it).

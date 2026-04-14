@@ -14,9 +14,11 @@ import '../services/snatch_detection_service.dart';
 import '../services/speed_alert_service.dart';
 import '../services/weather_feed_service.dart';
 import '../services/app_logger.dart';
+import '../services/notification_service.dart';
 import '../services/sos_foreground_service.dart';
 import '../../services/dead_man_switch_service.dart';
 import '../../services/risk_score_engine.dart';
+import '../../data/models/sos_history_entry.dart';
 import '../../core/services/voice_distress_service.dart';
 import '../../core/services/anomaly_movement_service.dart';
 import '../../core/services/road_condition_service.dart';
@@ -137,7 +139,9 @@ class ServiceBootstrapper {
             if (prefs.shouldReceive(alertEvent.type)) {
               const engine = RiskScoreEngine();
               if (engine.computeScore(alertEvent) >= 80) {
-                sl<SosCubit>().startCountdown();
+                sl<SosCubit>().startCountdown(
+                  triggerSource: SosTriggerSource.shake,
+                );
               }
             }
           },
@@ -170,15 +174,24 @@ class ServiceBootstrapper {
             );
             sl<AlertsCubit>().addLocalAlert(alertEvent);
 
-            // Auto-trigger SOS for vehicle crashes.
-            if (detectionAlert.alertType == AlertType.carAccident ||
+            // Auto-trigger SOS for vehicle crashes and falls.
+            final isCrash =
+                detectionAlert.alertType == AlertType.carAccident ||
                 detectionAlert.alertType == AlertType.motorcycleCrash ||
-                detectionAlert.alertType == AlertType.pedestrianHit) {
+                detectionAlert.alertType == AlertType.pedestrianHit;
+            final isFall =
+                detectionAlert.alertType == AlertType.elderlyFall;
+
+            if (isCrash || isFall) {
               final prefs = sl<AlertPreferences>();
               if (prefs.shouldReceive(detectionAlert.alertType)) {
                 const engine = RiskScoreEngine();
                 if (engine.computeScore(alertEvent) >= 80) {
-                  sl<SosCubit>().startCountdown();
+                  sl<SosCubit>().startCountdown(
+                    triggerSource: isFall
+                        ? SosTriggerSource.fall
+                        : SosTriggerSource.crashDetection,
+                  );
                 }
               }
             }
@@ -218,6 +231,17 @@ class ServiceBootstrapper {
               source: 'On-Device GPS',
             );
             sl<AlertsCubit>().addLocalAlert(alertEvent);
+
+            // Trigger SOS if risk is high enough.
+            final prefs = sl<AlertPreferences>();
+            if (prefs.shouldReceive(alertEvent.type)) {
+              const engine = RiskScoreEngine();
+              if (engine.computeScore(alertEvent) >= 80) {
+                sl<SosCubit>().startCountdown(
+                  triggerSource: SosTriggerSource.geofenceExit,
+                );
+              }
+            }
           },
         );
         AppLogger.info('[ServiceBootstrapper] Geofence re-hydrated');
@@ -250,7 +274,9 @@ class ServiceBootstrapper {
             if (prefs.shouldReceive(alertEvent.type)) {
               const engine = RiskScoreEngine();
               if (engine.computeScore(alertEvent) >= 80) {
-                sl<SosCubit>().startCountdown();
+                sl<SosCubit>().startCountdown(
+                  triggerSource: SosTriggerSource.snatch,
+                );
               }
             }
           },
@@ -283,6 +309,13 @@ class ServiceBootstrapper {
               magnitude: speedKmh,
             );
             sl<AlertsCubit>().addLocalAlert(alertEvent);
+
+            // Show push notification so user sees alert while driving.
+            sl<NotificationService>().showDisasterAlert(
+              title: 'Overspeeding: ${speedKmh.toStringAsFixed(0)} km/h',
+              body: 'Your speed exceeded the safe limit. Slow down.',
+              soundName: 'phone_ring',
+            );
           },
           // Cross-service wiring: feed live speed into crash/fall detector
           // so it can differentiate vehicle crash (high speed) from
@@ -339,6 +372,19 @@ class ServiceBootstrapper {
               '[ServiceBootstrapper] DMS deadline PASSED while app was closed. Triggering SOS.',
             );
             dms.onTrigger();
+
+            // Inject alert into pipeline for visibility.
+            sl<AlertsCubit>().addLocalAlert(AlertEvent(
+              id: 'dms_${DateTime.now().millisecondsSinceEpoch}',
+              type: AlertType.loneWorker,
+              title: 'Dead Man\'s Switch Triggered',
+              description:
+                  'You did not check in. Emergency SOS was sent to your contacts.',
+              latitude: lastLat(),
+              longitude: lastLon(),
+              timestamp: DateTime.now(),
+              source: 'Dead Man\'s Switch',
+            ));
           } else {
             // Restore active countdown.
             AppLogger.info(
@@ -386,7 +432,9 @@ class ServiceBootstrapper {
           if (prefs.shouldReceive(alertEvent.type)) {
             const engine = RiskScoreEngine();
             if (engine.computeScore(alertEvent) >= 80) {
-              sl<SosCubit>().startCountdown();
+              sl<SosCubit>().startCountdown(
+                triggerSource: SosTriggerSource.voiceDistress,
+              );
             }
           }
         });
@@ -423,7 +471,9 @@ class ServiceBootstrapper {
           if (prefs.shouldReceive(alertEvent.type)) {
             const engine = RiskScoreEngine();
             if (engine.computeScore(alertEvent) >= 80) {
-              sl<SosCubit>().startCountdown();
+              sl<SosCubit>().startCountdown(
+                triggerSource: SosTriggerSource.anomalyMovement,
+              );
             }
           }
         });

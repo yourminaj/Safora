@@ -35,6 +35,7 @@ class _LiveMapScreenState extends State<LiveMapScreen>
   bool _showSafeZones = true;
   bool _isLocating = true;
   bool _followUser = true;
+  bool _locationFailed = false;
 
   @override
   void initState() {
@@ -52,7 +53,10 @@ class _LiveMapScreenState extends State<LiveMapScreen>
       });
       _reverseGeocode(pos);
     } else if (mounted) {
-      setState(() => _isLocating = false);
+      setState(() {
+        _isLocating = false;
+        _locationFailed = true;
+      });
     }
 
     // Start streaming position updates.
@@ -72,7 +76,10 @@ class _LiveMapScreenState extends State<LiveMapScreen>
   void _onPositionUpdate(Position pos) {
     if (!mounted) return;
     final newPos = LatLng(pos.latitude, pos.longitude);
-    setState(() => _userPosition = newPos);
+    setState(() {
+      _userPosition = newPos;
+      _locationFailed = false;
+    });
 
     if (_followUser) {
       _animateMapTo(newPos);
@@ -237,6 +244,53 @@ class _LiveMapScreenState extends State<LiveMapScreen>
                       Text(
                         l.myLocation,
                         style: theme.textTheme.bodyLarge,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          // GPS unavailable — show error banner with retry action.
+          if (_locationFailed && !_isLocating && _userPosition == null)
+            Center(
+              child: Card(
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.location_off_rounded,
+                          size: 48, color: AppColors.warning),
+                      const SizedBox(height: 12),
+                      Text(
+                        l.locationUnavailable,
+                        style: theme.textTheme.titleMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l.enableLocationHint,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _isLocating = true;
+                            _locationFailed = false;
+                          });
+                          _initializeLocation();
+                        },
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: Text(l.retry),
                       ),
                     ],
                   ),

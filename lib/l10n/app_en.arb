@@ -385,5 +385,7 @@
   "checkInConfirmed": "Check-in confirmed — timer reset",
 
   "adPrivacySettings": "Ad Privacy Settings",
-  "adPrivacySubtitle": "Manage your ad personalization preferences"
+  "adPrivacySubtitle": "Manage your ad personalization preferences",
+
+  "enableLocationHint": "Enable GPS in your device settings to see your location on the map."
 }

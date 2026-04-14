@@ -10,6 +10,7 @@ import 'package:safora/core/services/location_service.dart';
 import 'package:safora/core/services/service_bootstrapper.dart';
 import 'package:safora/core/services/sos_contact_alert_listener.dart';
 import 'package:safora/data/models/alert_event.dart';
+import 'package:safora/data/models/sos_history_entry.dart';
 import 'package:safora/data/models/alert_preferences.dart';
 import 'package:safora/detection/ml/crash_fall_detection_service.dart';
 import 'package:safora/detection/ml/crash_fall_detection_engine.dart';
@@ -50,6 +51,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(AlertType.carAccident);
+    registerFallbackValue(SosTriggerSource.manual);
     registerFallbackValue(
       AlertEvent(
         id: 'test',
@@ -102,7 +104,9 @@ void main() {
 
     // Stubs
     when(() => mockAlertsCubit.addLocalAlert(any())).thenAnswer((_) {});
-    when(() => mockSosCubit.startCountdown()).thenAnswer((_) {});
+    when(() => mockSosCubit.startCountdown(
+      triggerSource: any(named: 'triggerSource'),
+    )).thenAnswer((_) {});
     when(() => sl<ConnectivityService>().startMonitoring(
         onChanged: any(named: 'onChanged'))).thenAnswer((_) {});
     when(() => sl<SosContactAlertListener>().startListening())
@@ -149,7 +153,9 @@ void main() {
 
       // The risk score engine computed >= 80 (because it's a car accident + 10.5 G),
       // so the system autonomously triggers the SOS countdown.
-      verify(() => mockSosCubit.startCountdown()).called(1);
+      verify(() => mockSosCubit.startCountdown(
+        triggerSource: any(named: 'triggerSource'),
+      )).called(1);
     });
 
     test(
@@ -182,7 +188,9 @@ void main() {
           .called(1);
 
       // SOS countdown NEVER starts
-      verifyNever(() => mockSosCubit.startCountdown());
+      verifyNever(() => mockSosCubit.startCountdown(
+        triggerSource: any(named: 'triggerSource'),
+      ));
     });
 
     test(
@@ -216,7 +224,9 @@ void main() {
           .called(1);
 
       // SOS countdown NEVER starts because risk score < 80
-      verifyNever(() => mockSosCubit.startCountdown());
+      verifyNever(() => mockSosCubit.startCountdown(
+        triggerSource: any(named: 'triggerSource'),
+      ));
     });
   });
 }

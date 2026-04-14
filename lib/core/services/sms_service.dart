@@ -3,6 +3,7 @@ import 'package:another_telephony/telephony.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/models/emergency_contact.dart';
+import '../../data/models/user_profile.dart';
 import 'app_logger.dart';
 import 'location_service.dart';
 
@@ -22,13 +23,16 @@ class SmsService {
   Future<int> sendEmergencySms({
     required List<EmergencyContact> contacts,
     String? userName,
+    UserProfile? userProfile,
   }) async {
     if (contacts.isEmpty) return 0;
 
     final locationMsg = await _locationService.buildLocationMessage();
-    final name = userName ?? 'Someone';
+    final name = userName ?? userProfile?.fullName ?? 'Someone';
+    final medicalInfo = _buildMedicalSummary(userProfile);
     final message = 'EMERGENCY SOS!\n\n'
         '$name needs immediate help!\n\n'
+        '$medicalInfo'
         '$locationMsg\n\n'
         'Sent via Safora';
 
@@ -90,12 +94,38 @@ class SmsService {
     return _sendSms(phone: phone, message: message);
   }
 
+  /// Build a concise medical summary for emergency SMS.
+  String _buildMedicalSummary(UserProfile? profile) {
+    if (profile == null) return '';
+
+    final parts = <String>[];
+    if (profile.bloodType != null && profile.bloodType!.isNotEmpty) {
+      parts.add('Blood: ${profile.bloodType}');
+    }
+    if (profile.allergies.isNotEmpty) {
+      parts.add('Allergies: ${profile.allergies.join(', ')}');
+    }
+    if (profile.medicalConditions.isNotEmpty) {
+      parts.add('Conditions: ${profile.medicalConditions.join(', ')}');
+    }
+    if (profile.medications.isNotEmpty) {
+      parts.add('Meds: ${profile.medications.join(', ')}');
+    }
+
+    if (parts.isEmpty) return '';
+    return 'MEDICAL: ${parts.join(' | ')}\n\n';
+  }
+
   /// Route to direct send (Android) or url_launcher fallback (iOS).
   Future<bool> _sendSms({
     required String phone,
     required String message,
   }) async {
     final cleanPhone = phone.replaceAll(RegExp(r'[^\d+]'), '');
+    if (cleanPhone.length < 7) {
+      AppLogger.warning('[SMS] Invalid phone number (too short): $phone');
+      return false;
+    }
 
     if (Platform.isAndroid) {
       return _sendDirectAndroid(cleanPhone, message);

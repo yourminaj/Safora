@@ -1055,4 +1055,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adPrivacySubtitle => 'Manage your ad personalization preferences';
+
+  @override
+  String get enableLocationHint =>
+      'Enable GPS in your device settings to see your location on the map.';
 }

@@ -1999,6 +1999,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage your ad personalization preferences'**
   String get adPrivacySubtitle;
+
+  /// No description provided for @enableLocationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable GPS in your device settings to see your location on the map.'**
+  String get enableLocationHint;
 }
 
 class _AppLocalizationsDelegate

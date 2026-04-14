@@ -85,6 +85,24 @@ enum SosTriggerSource {
   /// Triggered by crash/fall detection engine.
   crashDetection,
 
+  /// Triggered by fall detection (elderly safety).
+  fall,
+
+  /// Triggered by phone snatch detection.
+  snatch,
+
+  /// Triggered by voice distress detection.
+  voiceDistress,
+
+  /// Triggered by anomaly movement detection.
+  anomalyMovement,
+
+  /// Triggered by Dead Man's Switch expiry.
+  deadManSwitch,
+
+  /// Triggered by geofence zone exit.
+  geofenceExit,
+
   /// Triggered by the foreground service.
   background,
 }

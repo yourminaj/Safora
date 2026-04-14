@@ -97,6 +97,7 @@ void main() {
     );
 
     registerFallbackValue(AlertType.shakeSos);
+    registerFallbackValue(SosTriggerSource.manual);
     registerFallbackValue(
       AlertEvent(
         id: 'fallback',
@@ -188,7 +189,9 @@ void main() {
     when(() => mockLocation.lastPosition).thenReturn(null);
     when(() => mockBattery.startMonitoring()).thenAnswer((_) {});
     when(() => mockAlertsCubit.addLocalAlert(any())).thenAnswer((_) {});
-    when(() => mockSosCubit.startCountdown()).thenAnswer((_) {});
+    when(() => mockSosCubit.startCountdown(
+      triggerSource: any(named: 'triggerSource'),
+    )).thenAnswer((_) {});
     when(() => mockSosCubit.isClosed).thenReturn(false);
     when(() => mockSosCubit.state).thenReturn(const SosIdle());
 
@@ -227,7 +230,9 @@ void main() {
         // Full chain verified:
         // processAccelerometerEvent → _onShakeDetected → AlertEvent(confidence=1.0)
         // → RiskScoreEngine(88≥80) → SosCubit.startCountdown() ✅
-        verify(() => mockSosCubit.startCountdown()).called(1);
+        verify(() => mockSosCubit.startCountdown(
+          triggerSource: any(named: 'triggerSource'),
+        )).called(1);
       },
     );
 
@@ -268,7 +273,9 @@ void main() {
         triggerShake(realShakeService);
         await Future<void>.delayed(const Duration(milliseconds: 50));
 
-        verifyNever(() => mockSosCubit.startCountdown());
+        verifyNever(() => mockSosCubit.startCountdown(
+          triggerSource: any(named: 'triggerSource'),
+        ));
       },
     );
 
@@ -288,7 +295,9 @@ void main() {
         triggerShake(realShakeService);
         await Future<void>.delayed(const Duration(milliseconds: 50));
 
-        verifyNever(() => mockSosCubit.startCountdown());
+        verifyNever(() => mockSosCubit.startCountdown(
+          triggerSource: any(named: 'triggerSource'),
+        ));
       },
     );
 
@@ -307,7 +316,9 @@ void main() {
         // each trigger, so the second shake starts fresh and also fires.
         // Cooldown is a UI concern (SosCubit.startCountdown guards against
         // duplicate state), not a ShakeDetectionService concern.
-        verify(() => mockSosCubit.startCountdown()).called(2);
+        verify(() => mockSosCubit.startCountdown(
+          triggerSource: any(named: 'triggerSource'),
+        )).called(2);
       },
     );
   });
@@ -410,7 +421,9 @@ void main() {
         triggerShake(realShakeService);
         await Future<void>.delayed(const Duration(milliseconds: 50));
 
-        verifyNever(() => mockSosCubit.startCountdown());
+        verifyNever(() => mockSosCubit.startCountdown(
+          triggerSource: any(named: 'triggerSource'),
+        ));
       },
     );
   });

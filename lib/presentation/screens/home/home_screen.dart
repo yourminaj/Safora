@@ -633,7 +633,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 .map(
                                   (alert) => Padding(
                                     padding: const EdgeInsets.only(bottom: 10),
-                                    child: AlertCard(alert: alert),
+                                    child: AlertCard(
+                                      alert: alert,
+                                      onTap: () => context.go('/alerts'),
+                                    ),
                                   ),
                                 )
                                 .toList(),

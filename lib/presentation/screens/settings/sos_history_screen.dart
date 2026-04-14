@@ -71,6 +71,18 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
         return Icons.vibration_rounded;
       case SosTriggerSource.crashDetection:
         return Icons.minor_crash_rounded;
+      case SosTriggerSource.fall:
+        return Icons.accessibility_new_rounded;
+      case SosTriggerSource.snatch:
+        return Icons.pan_tool_rounded;
+      case SosTriggerSource.voiceDistress:
+        return Icons.mic_rounded;
+      case SosTriggerSource.anomalyMovement:
+        return Icons.directions_walk_rounded;
+      case SosTriggerSource.deadManSwitch:
+        return Icons.timer_off_rounded;
+      case SosTriggerSource.geofenceExit:
+        return Icons.location_off_rounded;
       case SosTriggerSource.background:
         return Icons.dns_rounded;
       case SosTriggerSource.manual:
@@ -84,6 +96,18 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
         return l.triggerShake;
       case SosTriggerSource.crashDetection:
         return l.triggerCrash;
+      case SosTriggerSource.fall:
+        return 'Fall Detection';
+      case SosTriggerSource.snatch:
+        return 'Snatch Detection';
+      case SosTriggerSource.voiceDistress:
+        return 'Voice Distress';
+      case SosTriggerSource.anomalyMovement:
+        return 'Anomaly Movement';
+      case SosTriggerSource.deadManSwitch:
+        return 'Dead Man\'s Switch';
+      case SosTriggerSource.geofenceExit:
+        return 'Geofence Exit';
       case SosTriggerSource.background:
         return l.triggerBackground;
       case SosTriggerSource.manual:
