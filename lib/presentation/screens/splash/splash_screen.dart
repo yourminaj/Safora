@@ -68,7 +68,7 @@ class _SplashScreenState extends State<SplashScreen> {
       'storedBuild=$storedBuild currentBuild=$currentBuild',
     );
 
-    final needsOnboarding = !onboardingDone;
+    final needsOnboarding = !onboardingDone || storedBuild.isEmpty;
 
     if (!mounted) return;
 

@@ -44,6 +44,7 @@ import '../../core/services/premium_manager.dart';
 class ServiceBootstrapper {
   ServiceBootstrapper._();
 
+  static StreamSubscription<dynamic>? _authSubscription;
   static StreamSubscription<DetectionAlert>? _crashSubscription;
   static StreamSubscription<VoiceDistressEvent>? _voiceSubscription;
   static StreamSubscription<AnomalyMovementEvent>? _anomalySubscription;
@@ -70,7 +71,8 @@ class ServiceBootstrapper {
       await pm.checkAndSeedPro(initialUser?.email);
 
       // 2. Listen for future logins to apply seed immediately
-      auth.authStateChanges.listen((user) async {
+      await _authSubscription?.cancel();
+      _authSubscription = auth.authStateChanges.listen((user) async {
         if (user != null) {
           await pm.checkAndSeedPro(user.email);
         } else {
@@ -152,6 +154,15 @@ class ServiceBootstrapper {
       }
     }
 
+    if (_isEnabled(settings, 'crash_fall_enabled') &&
+        !sl<PremiumManager>().isFeatureAvailable(
+          ProFeature.crashFallDetection,
+        )) {
+      await settings.put('crash_fall_enabled', false);
+      AppLogger.info(
+        '[ServiceBootstrapper] Disabled stale crash_fall_enabled for Free tier',
+      );
+    }
     if (_isEnabled(settings, 'crash_fall_enabled')) {
       try {
         final service = sl<CrashFallDetectionService>();
@@ -209,6 +220,15 @@ class ServiceBootstrapper {
       }
     }
 
+    if (_isEnabled(settings, 'geofence_enabled') &&
+        !sl<PremiumManager>().isFeatureAvailable(
+          ProFeature.unlimitedGeofenceZones,
+        )) {
+      await settings.put('geofence_enabled', false);
+      AppLogger.info(
+        '[ServiceBootstrapper] Disabled stale geofence_enabled for Free tier',
+      );
+    }
     if (_isEnabled(settings, 'geofence_enabled')) {
       try {
         final service = sl<GeofenceService>();
@@ -250,6 +270,13 @@ class ServiceBootstrapper {
       }
     }
 
+    if (_isEnabled(settings, 'snatch_enabled') &&
+        !sl<PremiumManager>().isFeatureAvailable(ProFeature.snatchDetection)) {
+      await settings.put('snatch_enabled', false);
+      AppLogger.info(
+        '[ServiceBootstrapper] Disabled stale snatch_enabled for Free tier',
+      );
+    }
     if (_isEnabled(settings, 'snatch_enabled')) {
       try {
         sl<SnatchDetectionService>().start(
@@ -287,6 +314,13 @@ class ServiceBootstrapper {
       }
     }
 
+    if (_isEnabled(settings, 'speed_alert_enabled') &&
+        !sl<PremiumManager>().isFeatureAvailable(ProFeature.speedAlert)) {
+      await settings.put('speed_alert_enabled', false);
+      AppLogger.info(
+        '[ServiceBootstrapper] Disabled stale speed_alert_enabled for Free tier',
+      );
+    }
     if (_isEnabled(settings, 'speed_alert_enabled')) {
       try {
         // Wire speed data into CrashFallDetectionService for improved
@@ -334,6 +368,13 @@ class ServiceBootstrapper {
       }
     }
 
+    if (_isEnabled(settings, 'context_alert_enabled') &&
+        !sl<PremiumManager>().isFeatureAvailable(ProFeature.contextAlerts)) {
+      await settings.put('context_alert_enabled', false);
+      AppLogger.info(
+        '[ServiceBootstrapper] Disabled stale context_alert_enabled for Free tier',
+      );
+    }
     if (_isEnabled(settings, 'context_alert_enabled')) {
       try {
         sl<WeatherFeedService>().start();
@@ -359,6 +400,13 @@ class ServiceBootstrapper {
       }
     }
 
+    if (_isEnabled(settings, 'dead_man_switch_enabled') &&
+        !sl<PremiumManager>().isFeatureAvailable(ProFeature.deadManSwitch)) {
+      await settings.put('dead_man_switch_enabled', false);
+      AppLogger.info(
+        '[ServiceBootstrapper] Disabled stale dead_man_switch_enabled for Free tier',
+      );
+    }
     if (_isEnabled(settings, 'dead_man_switch_enabled')) {
       try {
         final dms = sl<DeadManSwitchService>();
@@ -406,6 +454,15 @@ class ServiceBootstrapper {
       }
     }
 
+    if (_isEnabled(settings, 'voice_distress_enabled') &&
+        !sl<PremiumManager>().isFeatureAvailable(
+          ProFeature.voiceDistressDetection,
+        )) {
+      await settings.put('voice_distress_enabled', false);
+      AppLogger.info(
+        '[ServiceBootstrapper] Disabled stale voice_distress_enabled for Free tier',
+      );
+    }
     if (_isEnabled(settings, 'voice_distress_enabled')) {
       try {
         final voiceService = sl<VoiceDistressService>();
@@ -444,6 +501,15 @@ class ServiceBootstrapper {
       }
     }
 
+    if (_isEnabled(settings, 'anomaly_movement_enabled') &&
+        !sl<PremiumManager>().isFeatureAvailable(
+          ProFeature.anomalyMovementDetection,
+        )) {
+      await settings.put('anomaly_movement_enabled', false);
+      AppLogger.info(
+        '[ServiceBootstrapper] Disabled stale anomaly_movement_enabled for Free tier',
+      );
+    }
     if (_isEnabled(settings, 'anomaly_movement_enabled')) {
       try {
         final movService = sl<AnomalyMovementService>();
@@ -483,6 +549,15 @@ class ServiceBootstrapper {
       }
     }
 
+    if (_isEnabled(settings, 'road_condition_enabled') &&
+        !sl<PremiumManager>().isFeatureAvailable(
+          ProFeature.roadConditionDetection,
+        )) {
+      await settings.put('road_condition_enabled', false);
+      AppLogger.info(
+        '[ServiceBootstrapper] Disabled stale road_condition_enabled for Free tier',
+      );
+    }
     if (_isEnabled(settings, 'road_condition_enabled')) {
       try {
         final roadService = sl<RoadConditionService>();
@@ -538,6 +613,8 @@ class ServiceBootstrapper {
 
   /// Dispose resources managed by the bootstrapper.
   static void dispose() {
+    _authSubscription?.cancel();
+    _authSubscription = null;
     _crashSubscription?.cancel();
     _crashSubscription = null;
     _voiceSubscription?.cancel();

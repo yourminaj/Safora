@@ -216,6 +216,54 @@ void main() {
   });
 
   group('addLocalAlert', () {
+    test('drops local alert when shouldReceive is false', () {
+      when(() => mockPrefs.shouldReceive(any())).thenReturn(false);
+
+      final alert = AlertEvent(
+        id: 'filtered_1',
+        type: AlertType.speedWarning,
+        title: 'Filtered Alert',
+        timestamp: DateTime.now(),
+        latitude: 23.8,
+        longitude: 90.4,
+      );
+
+      cubit.addLocalAlert(alert);
+
+      expect(cubit.state, const AlertsInitial());
+      verifyNever(() => mockRepo.saveAlerts(any()));
+      verifyNever(
+        () => mockNotifs.showDisasterAlert(
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          soundName: any(named: 'soundName'),
+          color: any(named: 'color'),
+        ),
+      );
+    });
+
+    test('uses shouldReceive gate (not only isEnabled)', () {
+      // Simulate alert type enabled but blocked by severity threshold.
+      when(() => mockPrefs.isEnabled(any())).thenReturn(true);
+      when(() => mockPrefs.shouldReceive(any())).thenReturn(false);
+
+      final alert = AlertEvent(
+        id: 'severity_blocked',
+        type: AlertType.speedWarning,
+        title: 'Severity Blocked Alert',
+        timestamp: DateTime.now(),
+        latitude: 23.8,
+        longitude: 90.4,
+      );
+
+      cubit.addLocalAlert(alert);
+
+      expect(cubit.state, const AlertsInitial());
+      verifyNever(() => mockRepo.saveAlerts(any()));
+      verify(() => mockPrefs.shouldReceive(AlertType.speedWarning)).called(1);
+      verifyNever(() => mockPrefs.isEnabled(AlertType.speedWarning));
+    });
+
     test('injects alert into empty (initial) state', () {
       // State is AlertsInitial — no loadAlerts() called.
       final alert = AlertEvent(

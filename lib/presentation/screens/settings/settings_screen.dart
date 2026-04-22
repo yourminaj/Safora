@@ -33,6 +33,7 @@ import '../../blocs/contacts/contacts_cubit.dart';
 import '../../blocs/contacts/contacts_state.dart';
 import '../../blocs/alerts/alerts_cubit.dart';
 import '../../blocs/sos/sos_cubit.dart';
+import '../../../data/models/sos_history_entry.dart';
 import '../../blocs/theme/theme_cubit.dart';
 import '../../../data/models/alert_preferences.dart';
 import '../../../services/risk_score_engine.dart';
@@ -120,10 +121,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _snatchSubscription?.cancel();
     _speedSubscription?.cancel();
     _contextSubscription?.cancel();
-    getIt<GeofenceService>().stop();
-    getIt<SnatchDetectionService>().stop();
-    getIt<SpeedAlertService>().stop();
-    getIt<ContextAlertService>().stop();
     super.dispose();
   }
 
@@ -158,7 +155,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (prefs.shouldReceive(alertEvent.type)) {
               const engine = RiskScoreEngine();
               if (engine.computeScore(alertEvent) >= 80) {
-                context.read<SosCubit>().startCountdown();
+                context.read<SosCubit>().startCountdown(
+                  triggerSource: SosTriggerSource.shake,
+                );
               }
             }
           }
@@ -282,7 +281,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (prefs.shouldReceive(detectionAlert.alertType)) {
               const engine = RiskScoreEngine();
               if (engine.computeScore(alertEvent) >= 80) {
-                context.read<SosCubit>().startCountdown();
+                context.read<SosCubit>().startCountdown(
+                  triggerSource: SosTriggerSource.crashDetection,
+                );
               }
             }
           }
@@ -364,7 +365,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (prefs.shouldReceive(alertEvent.type)) {
               const engine = RiskScoreEngine();
               if (engine.computeScore(alertEvent) >= 80) {
-                context.read<SosCubit>().startCountdown();
+                context.read<SosCubit>().startCountdown(
+                  triggerSource: SosTriggerSource.voiceDistress,
+                );
               }
             }
           }
@@ -417,7 +420,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (prefs.shouldReceive(alertEvent.type)) {
             const engine = RiskScoreEngine();
             if (engine.computeScore(alertEvent) >= 80) {
-              context.read<SosCubit>().startCountdown();
+              context.read<SosCubit>().startCountdown(
+                triggerSource: SosTriggerSource.anomalyMovement,
+              );
             }
           }
         }
@@ -502,7 +507,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           );
           if (mounted) {
             context.read<AlertsCubit>().addLocalAlert(alertEvent);
-            context.read<SosCubit>().startCountdown();
+            context.read<SosCubit>().startCountdown(
+              triggerSource: SosTriggerSource.geofenceExit,
+            );
           }
         },
       );
@@ -544,7 +551,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           );
           if (mounted) {
             context.read<AlertsCubit>().addLocalAlert(alertEvent);
-            context.read<SosCubit>().startCountdown();
+            context.read<SosCubit>().startCountdown(
+              triggerSource: SosTriggerSource.snatch,
+            );
           }
         },
       );

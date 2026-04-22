@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:safora/l10n/app_localizations.dart';
 import '../../../core/theme/colors.dart';
@@ -67,7 +68,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _completeOnboarding() async {
     final settingsBox = getIt<Box>(instanceName: 'app_settings');
+    final info = await PackageInfo.fromPlatform();
     await settingsBox.put('onboarding_completed', true);
+    await settingsBox.put('onboarding_build', info.buildNumber);
     // Always route to login after onboarding — auth state determines
     // whether the user is taken to /home or /verify-email.
     if (mounted) context.go('/login');

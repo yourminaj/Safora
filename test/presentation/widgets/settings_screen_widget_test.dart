@@ -40,6 +40,10 @@ void main() {
   late MockBox mockBox;
   late MockAuthService mockAuth;
   late MockContactsRepository mockContacts;
+  late MockGeofenceService mockGeofence;
+  late MockSnatchDetectionService mockSnatch;
+  late MockSpeedAlertService mockSpeed;
+  late MockContextAlertService mockContext;
   late ContactsCubit contactsCubit;
 
   setUp(() {
@@ -51,6 +55,10 @@ void main() {
     mockBox = MockBox();
     mockAuth = MockAuthService();
     mockContacts = MockContactsRepository();
+    mockGeofence = MockGeofenceService();
+    mockSnatch = MockSnatchDetectionService();
+    mockSpeed = MockSpeedAlertService();
+    mockContext = MockContextAlertService();
 
     // Stub required methods
     when(() => mockLock.isLockEnabled).thenReturn(false);
@@ -83,10 +91,10 @@ void main() {
     getIt.registerSingleton<Box>(mockBox, instanceName: 'app_settings');
     getIt.registerSingleton<AuthService>(mockAuth);
     getIt.registerSingleton<CrashFallDetectionService>(MockCrashFallDetectionService());
-    getIt.registerSingleton<GeofenceService>(MockGeofenceService());
-    getIt.registerSingleton<SnatchDetectionService>(MockSnatchDetectionService());
-    getIt.registerSingleton<SpeedAlertService>(MockSpeedAlertService());
-    getIt.registerSingleton<ContextAlertService>(MockContextAlertService());
+    getIt.registerSingleton<GeofenceService>(mockGeofence);
+    getIt.registerSingleton<SnatchDetectionService>(mockSnatch);
+    getIt.registerSingleton<SpeedAlertService>(mockSpeed);
+    getIt.registerSingleton<ContextAlertService>(mockContext);
     getIt.registerSingleton<ThemeCubit>(MockThemeCubit());
 
     contactsCubit = ContactsCubit(mockContacts);
@@ -217,6 +225,21 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       expect(find.byIcon(Icons.volume_up_rounded), findsOneWidget);
+    });
+
+    testWidgets('disposing settings does not stop global detection services',
+        (tester) async {
+      await tester.pumpWidget(buildScreen());
+      await tester.pump(const Duration(seconds: 2));
+
+      // Remove SettingsScreen from tree to trigger dispose().
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+
+      verifyNever(() => mockGeofence.stop());
+      verifyNever(() => mockSnatch.stop());
+      verifyNever(() => mockSpeed.stop());
+      verifyNever(() => mockContext.stop());
     });
   });
 }

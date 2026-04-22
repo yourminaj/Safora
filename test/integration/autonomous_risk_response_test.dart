@@ -9,6 +9,8 @@ import 'package:safora/core/services/connectivity_service.dart';
 import 'package:safora/core/services/location_service.dart';
 import 'package:safora/core/services/service_bootstrapper.dart';
 import 'package:safora/core/services/sos_contact_alert_listener.dart';
+import 'package:safora/core/services/premium_manager.dart';
+import 'package:safora/core/services/auth_service.dart';
 import 'package:safora/data/models/alert_event.dart';
 import 'package:safora/data/models/sos_history_entry.dart';
 import 'package:safora/data/models/alert_preferences.dart';
@@ -38,6 +40,10 @@ class MockLocationService extends Mock implements LocationService {}
 class MockSosContactAlertListener extends Mock
     implements SosContactAlertListener {}
 
+class MockPremiumManager extends Mock implements PremiumManager {}
+
+class MockAuthService extends Mock implements AuthService {}
+
 void main() {
   late GetIt sl;
   late MockBox mockSettings;
@@ -49,9 +55,12 @@ void main() {
   // Real stream controller to simulate alerts emitted by the ML service
   late StreamController<DetectionAlert> crashAlertController;
 
+  late MockPremiumManager mockPremiumManager;
+
   setUpAll(() {
     registerFallbackValue(AlertType.carAccident);
     registerFallbackValue(SosTriggerSource.manual);
+    registerFallbackValue(ProFeature.crashFallDetection);
     registerFallbackValue(
       AlertEvent(
         id: 'test',
@@ -75,6 +84,7 @@ void main() {
     mockAlertsCubit = MockAlertsCubit();
     mockSosCubit = MockSosCubit();
     mockAlertPrefs = MockAlertPreferences();
+    mockPremiumManager = MockPremiumManager();
     crashAlertController = StreamController<DetectionAlert>.broadcast();
 
     // Default mock setups
@@ -85,13 +95,18 @@ void main() {
       return false;
     });
 
+    when(() => mockSettings.put(any(), any())).thenAnswer((_) async {});
+
     when(() => mockCrashService.alerts)
         .thenAnswer((_) => crashAlertController.stream);
     when(() => mockCrashService.start()).thenAnswer((_) async {});
 
     when(() => mockAlertPrefs.shouldReceive(any())).thenReturn(true);
 
+    when(() => mockPremiumManager.isFeatureAvailable(any())).thenReturn(false);
+
     // Provide dependencies into GetIt that Bootstrapper needs
+    sl.registerSingleton<AuthService>(MockAuthService());
     sl.registerSingleton<ConnectivityService>(MockConnectivityService());
     sl.registerSingleton<SosContactAlertListener>(
         MockSosContactAlertListener());
@@ -101,6 +116,7 @@ void main() {
     sl.registerSingleton<SosCubit>(mockSosCubit);
     sl.registerSingleton<BatteryCubit>(MockBatteryCubit());
     sl.registerSingleton<AlertPreferences>(mockAlertPrefs);
+    sl.registerSingleton<PremiumManager>(mockPremiumManager);
 
     // Stubs
     when(() => mockAlertsCubit.addLocalAlert(any())).thenAnswer((_) {});

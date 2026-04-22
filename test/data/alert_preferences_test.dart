@@ -96,5 +96,27 @@ void main() {
     test('totalAlerts matches AlertType.values.length', () {
       expect(prefs.totalAlerts, equals(AlertType.values.length));
     });
+
+    test('minimumSeverity defaults to info', () {
+      expect(prefs.minimumSeverity, AlertPriority.info);
+    });
+
+    test('setMinimumSeverity filters alerts below threshold', () async {
+      await prefs.setEnabled(AlertType.earthquake, true); // critical
+      await prefs.setEnabled(AlertType.speedWarning, true); // warning
+      await prefs.setMinimumSeverity(AlertPriority.danger);
+
+      expect(prefs.shouldReceive(AlertType.earthquake), isTrue);
+      expect(prefs.shouldReceive(AlertType.speedWarning), isFalse);
+    });
+
+    test('critical threshold allows only critical alerts', () async {
+      await prefs.setEnabled(AlertType.earthquake, true); // critical
+      await prefs.setEnabled(AlertType.curfew, true); // danger
+      await prefs.setMinimumSeverity(AlertPriority.critical);
+
+      expect(prefs.shouldReceive(AlertType.earthquake), isTrue);
+      expect(prefs.shouldReceive(AlertType.curfew), isFalse);
+    });
   });
 }

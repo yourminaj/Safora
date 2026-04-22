@@ -73,8 +73,9 @@ class AlertsCubit extends Cubit<AlertsState> {
   /// the cubit state and trigger notification — only if the user has
   /// enabled that alert type.
   void addLocalAlert(AlertEvent alert) {
-    // Gate: if the user has disabled this alert type, drop it silently.
-    if (!_prefs.isEnabled(alert.type)) return;
+    // Gate: keep local alerts consistent with remote alerts by applying the
+    // same full preference filter (enabled + severity threshold).
+    if (!_prefs.shouldReceive(alert.type)) return;
 
     // Enrich with composite risk score before inserting into pipeline.
     final enriched = _riskEngine.enrichWithScore(alert);

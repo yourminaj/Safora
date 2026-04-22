@@ -142,10 +142,16 @@ class TriggerSosUseCase {
     // Whether granted or denied, the tel: URI is still attempted — it opens
     // the dialer either way (just doesn't auto-dial without permission).
     if (Platform.isAndroid) {
-      final status = await Permission.phone.request();
-      if (!status.isGranted) {
+      try {
+        final status = await Permission.phone.request();
+        if (!status.isGranted) {
+          AppLogger.warning(
+            '[SOS] CALL_PHONE not granted — opening dialer instead of auto-dial',
+          );
+        }
+      } catch (e) {
         AppLogger.warning(
-          '[SOS] CALL_PHONE not granted — opening dialer instead of auto-dial',
+          '[SOS] CALL_PHONE request failed — attempting dialer launch anyway: $e',
         );
       }
     }

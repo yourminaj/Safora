@@ -162,6 +162,15 @@ void main() {
 
   // ─── Onboarding Screen — Build Stamp ────────────────────────
   group('Onboarding Screen — Branded Icons & Completion', () {
+    test('imports package_info_plus', () {
+      expect(onboardingContent,
+          contains('package:package_info_plus/package_info_plus.dart'));
+    });
+
+    test('writes onboarding_build stamp on completion', () {
+      expect(onboardingContent, contains("'onboarding_build'"));
+    });
+
     test('writes onboarding_completed on completion', () {
       expect(onboardingContent, contains("'onboarding_completed'"));
     });
