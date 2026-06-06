@@ -219,8 +219,11 @@ class AlertsCubit extends Cubit<AlertsState> {
       if (notificationCount >= _maxNotificationsPerRefresh) break;
 
       final id = alert.id ?? '${alert.title}_${alert.timestamp}';
-      if (!cachedIds.contains(id) &&
-          (alert.riskScore ?? 0) >= 80) {
+        // Keep remote/API behavior aligned with local detection behavior:
+        // notify for critical priority OR extreme composite risk.
+        if (!cachedIds.contains(id) &&
+          (alert.type.priority == AlertPriority.critical ||
+            (alert.riskScore ?? 0) >= 80)) {
 
         // Cross-method dedup: respect the per-type throttle from addLocalAlert.
         // If addLocalAlert already fired a notification for this type within 10s,

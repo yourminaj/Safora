@@ -76,6 +76,27 @@ void main() {
   });
 
   group('Alert Pipeline Notifications', () {
+    test('Critical alert from API notifies even when computed risk is below 80', () async {
+      // Critical + unknown distance/confidence typically computes below 80,
+      // but must still notify due to life-safety priority.
+      final criticalAlert = createAlert(
+        id: 'critical_low_risk',
+        type: AlertType.earthquake,
+      );
+
+      when(() => alertsRepository.fetchLatestAlerts()).thenAnswer(
+        (_) async => [criticalAlert],
+      );
+
+      await alertsCubit.loadAlerts();
+
+      verify(() => notificationService.showDisasterAlert(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        soundName: any(named: 'soundName'),
+      )).called(1);
+    });
+
     test('Critical alert triggers notification', () async {
       // Must set distanceKm + confidenceLevel so RiskScoreEngine scores >= 80.
       // tsunami (critical=1.0×0.40) + distance=0 (1.0×0.25) + conf=1.0 (1.0×0.20) + recency=now (1.0×0.15) = 100
@@ -225,12 +246,7 @@ void main() {
         (_) async => [highRiskLowPriority],
       );
 
-      // We need to test local alert injection for Risk Score override
-      // because loadAlerts only uses priority. Wait, the RiskScoreEngine sets riskScore in loadAlerts too. 
-      // Actually, looking at AlertsCubit._notifyNewCritical, it ONLY checks `alert.type.priority == AlertPriority.critical`. 
-      // The `riskScore >= 80` notification is ONLY for `addLocalAlert`!
-      
-      // So let's test addLocalAlert
+      // Test local alert injection path for risk-score override.
       when(() => alertsRepository.saveAlerts(any())).thenAnswer((_) async {});
 
       alertsCubit.addLocalAlert(highRiskLowPriority);
